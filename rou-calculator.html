@@ -1053,18 +1053,99 @@ function downloadFullAmortExcel() {
     XLSX.utils.book_append_sheet(wb, ws1, '汇总');
     usedNames.add('汇总');
 
-    // Detail sheet per contract - ensure unique names
+    // Detail sheet per contract - with Excel formulas
     lastResults.forEach((r, idx) => {
       if (r.exempted || r.amort.schedule.length === 0) return;
       const c = r.contract;
-      const detailRows = [['期数','日期','期初负债','本期付款','利息费用','偿还本金','期末负债','本期折旧','累计折旧','ROU净值']];
-      r.amort.schedule.forEach(s => {
-        detailRows.push([s.period, s.date, +s.openingLiability.toFixed(2), s.payment,
-          +s.interest.toFixed(2), +s.principal.toFixed(2), +s.closingLiability.toFixed(2),
-          +s.depr.toFixed(2), +s.accumulatedDepr.toFixed(2), +s.rouNet.toFixed(2)]);
+      const n = r.amort.n;
+      const payment = c.paymentAmount;
+      const isBeginning = c.paymentTiming === 'beginning';
+      const periodRate = r.amort.r; // decimal, e.g. 0.003675
+      const rouAsset = r.amort.rouAsset;
+      const deprPerPeriod = r.amort.deprPerPeriod;
+      const openingPV = r.amort.leaseLiabilityPV;
+
+      // Build sheet manually with formulas
+      const ws = {};
+
+      // --- Parameter area at Q1:R4 ---
+      const paramRow = (row, label, value) => {
+        ws['P' + row] = { t: 's', v: label };
+        ws['Q' + row] = { t: 'n', v: value };
+      };
+      paramRow(1, '每期租金', payment);
+      paramRow(2, '期折现率', +periodRate.toFixed(8));
+      paramRow(3, 'ROU资产原值', +rouAsset.toFixed(2));
+      paramRow(4, '每期折旧额', +deprPerPeriod.toFixed(2));
+
+      // --- Headers (Row 1) ---
+      const headers = ['期数','日期','期初负债','本期付款','利息费用','偿还本金','期末负债','本期折旧','累计折旧','ROU净值'];
+      headers.forEach((h, i) => {
+        const cell = XLSX.utils.encode_cell({ r: 0, c: i });
+        ws[cell] = { t: 's', v: h };
       });
-      const ws = XLSX.utils.aoa_to_sheet(detailRows);
-      ws['!cols'] = detailRows[0].map(() => ({ wch: 14 }));
+
+      // --- Data rows ---
+      const schedule = r.amort.schedule;
+      for (let t = 0; t < schedule.length; t++) {
+        const row = t + 1; // Excel row (1-indexed, row 1 is header)
+        const s = schedule[t];
+
+        // A: 期数 (static)
+        ws[XLSX.utils.encode_cell({ r: row, c: 0 })] = { t: 'n', v: s.period };
+        // B: 日期 (static)
+        ws[XLSX.utils.encode_cell({ r: row, c: 1 })] = { t: 's', v: s.date };
+
+        if (t === 0) {
+          // First period: opening liability is hardcoded PV
+          ws[XLSX.utils.encode_cell({ r: row, c: 2 })] = { t: 'n', v: +openingPV.toFixed(2) };
+        } else {
+          // C(t) = G(t-1) — opening = previous closing
+          const prevClosing = XLSX.utils.encode_cell({ r: row - 1, c: 6 });
+          ws[XLSX.utils.encode_cell({ r: row, c: 2 })] = { t: 'n', f: prevClosing };
+        }
+
+        // D: 本期付款 = $Q$1 (reference to parameter)
+        ws[XLSX.utils.encode_cell({ r: row, c: 3 })] = { t: 'n', f: '$Q$1', v: payment };
+
+        if (isBeginning && t === 0) {
+          // First payment at beginning: interest = 0, principal = full payment
+          ws[XLSX.utils.encode_cell({ r: row, c: 4 })] = { t: 'n', v: 0 };
+          ws[XLSX.utils.encode_cell({ r: row, c: 5 })] = { t: 'n', v: payment };
+        } else {
+          // E: 利息 = 期初负债 × 折现率
+          const openingCell = XLSX.utils.encode_cell({ r: row, c: 2 });
+          ws[XLSX.utils.encode_cell({ r: row, c: 4 })] = { t: 'n', f: openingCell + '*$Q$2' };
+          // F: 偿还本金 = 本期付款 - 利息
+          const payCell = XLSX.utils.encode_cell({ r: row, c: 3 });
+          const intCell = XLSX.utils.encode_cell({ r: row, c: 4 });
+          ws[XLSX.utils.encode_cell({ r: row, c: 5 })] = { t: 'n', f: payCell + '-' + intCell };
+        }
+
+        // G: 期末负债 = 期初负债 - 偿还本金
+        const cCell = XLSX.utils.encode_cell({ r: row, c: 2 });
+        const fCell = XLSX.utils.encode_cell({ r: row, c: 5 });
+        ws[XLSX.utils.encode_cell({ r: row, c: 6 })] = { t: 'n', f: cCell + '-' + fCell };
+
+        // H: 本期折旧 = $Q$4 (reference to parameter)
+        ws[XLSX.utils.encode_cell({ r: row, c: 7 })] = { t: 'n', f: '$Q$4' };
+
+        if (t === 0) {
+          // I: 累计折旧 = 本期折旧
+          ws[XLSX.utils.encode_cell({ r: row, c: 8 })] = { t: 'n', f: '$Q$4' };
+        } else {
+          // I: 累计折旧 = 前期累计 + 本期折旧
+          const prevAccDepr = XLSX.utils.encode_cell({ r: row - 1, c: 8 });
+          const thisDepr = XLSX.utils.encode_cell({ r: row, c: 7 });
+          ws[XLSX.utils.encode_cell({ r: row, c: 8 })] = { t: 'n', f: prevAccDepr + '+' + thisDepr };
+        }
+
+        // J: ROU净值 = ROU资产 - 累计折旧
+        const accDepr = XLSX.utils.encode_cell({ r: row, c: 8 });
+        ws[XLSX.utils.encode_cell({ r: row, c: 9 })] = { t: 'n', f: '$Q$3-' + accDepr };
+      }
+
+      ws['!cols'] = headers.map(() => ({ wch: 14 }));
 
       // Generate unique sheet name (Excel max 31 chars)
       let base = (c.name || '合同' + (idx + 1)).replace(/[\\\/\*\?\[\]:]/g, '-');
