@@ -1128,12 +1128,12 @@ function downloadFullAmortExcel() {
         }
       }
 
-      // Define sheet range
+      // Define sheet range (must include Q col for parameter cells)
       ws['!ref'] = XLSX.utils.encode_range({
         s: { r: 0, c: 0 },
-        e: { r: schedule.length, c: headers.length - 1 }
+        e: { r: Math.max(schedule.length, 4), c: 16 }
       });
-      ws['!cols'] = headers.map(() => ({ wch: 14 }));
+      ws['!cols'] = Array.from({ length: 17 }, () => ({ wch: 14 }));
 
       // Generate unique sheet name (Excel max 31 chars)
       let base = (c.name || '合同' + (idx + 1)).replace(/[\\\/\*\?\[\]:]/g, '-');
