@@ -499,7 +499,7 @@ function loadSheet(workbook, idx) {
   if (aoa.length === 0) { alert('工作表为空'); loadingOverlay.classList.remove('show'); return; }
 
   headers = aoa[0].map(h => String(h).trim() || `列${aoa[0].indexOf(h) + 1}`);
-  rawData = aoa.slice(1).filter(row => row.some(cell => String(cell).trim() !== ''));
+  rawData = aoa.slice(1);
   // Normalize row lengths
   const maxCols = headers.length;
   rawData = rawData.map(row => {
