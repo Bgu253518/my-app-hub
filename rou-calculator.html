@@ -997,62 +997,118 @@ function parseBool(v) {
 /* ============ Export Results ============ */
 function downloadResultsExcel() {
   if (lastResults.length === 0) return;
-  const rows = [['合同名称','租赁期(月)','每期租金','付款总额','租赁负债(PV)','ROU资产','总利息','月折旧额','状态']];
-  lastResults.forEach(r => {
-    const c = r.contract;
-    const totalMonths = (new Date(c.endDate).getFullYear() - new Date(c.startDate).getFullYear()) * 12
-      + (new Date(c.endDate).getMonth() - new Date(c.startDate).getMonth());
-    if (r.exempted) {
-      rows.push([c.name, totalMonths, c.paymentAmount, r.totalPayments, '', '', '', '', '豁免-'+r.exemptReason]);
-    } else {
-      const deprPerMonth = r.amort.deprMonths > 0 ? +(r.amort.rouAsset / r.amort.deprMonths).toFixed(2) : 0;
-      rows.push([c.name, totalMonths, c.paymentAmount, r.amort.totalPayments,
-        +r.amort.leaseLiabilityPV.toFixed(2), +r.amort.rouAsset.toFixed(2),
-        +r.amort.totalInterest.toFixed(2), deprPerMonth, '正常']);
-    }
-  });
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols'] = rows[0].map(() => ({ wch: 16 }));
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'ROU测算汇总');
-  XLSX.writeFile(wb, 'ROU租赁测算结果.xlsx');
+  try {
+    const rows = [['合同名称','租赁期(月)','付款期数','每期租金','付款总额','租赁负债(PV)','ROU资产','总利息','月折旧额','状态']];
+    lastResults.forEach(r => {
+      const c = r.contract;
+      const totalMonths = (new Date(c.endDate).getFullYear() - new Date(c.startDate).getFullYear()) * 12
+        + (new Date(c.endDate).getMonth() - new Date(c.startDate).getMonth());
+      if (r.exempted) {
+        rows.push([c.name, totalMonths, r.n, c.paymentAmount, r.totalPayments, '', '', '', '', '豁免-'+r.exemptReason]);
+      } else {
+        const deprPerMonth = r.amort.deprMonths > 0 ? +(r.amort.rouAsset / r.amort.deprMonths).toFixed(2) : 0;
+        rows.push([c.name, totalMonths, r.amort.n, c.paymentAmount, +r.amort.totalPayments.toFixed(2),
+          +r.amort.leaseLiabilityPV.toFixed(2), +r.amort.rouAsset.toFixed(2),
+          +r.amort.totalInterest.toFixed(2), deprPerMonth, '正常']);
+      }
+    });
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = rows[0].map(() => ({ wch: 16 }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'ROU测算汇总');
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([wbout], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'ROU租赁测算结果.xlsx';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch(err) {
+    showExportMsg('❌ 导出失败: ' + err.message, 'error');
+  }
 }
 
 function downloadFullAmortExcel() {
   if (lastResults.length === 0) return;
-  const wb = XLSX.utils.book_new();
+  showExportMsg('正在生成全部摊销明细，请稍候...', 'info');
 
-  // Summary sheet
-  const summaryRows = [['合同名称','租赁期(月)','每期租金','付款总额','租赁负债(PV)','ROU资产','总利息']];
-  lastResults.forEach(r => {
-    if (r.exempted) return;
-    const c = r.contract;
-    const m = (new Date(c.endDate).getFullYear() - new Date(c.startDate).getFullYear()) * 12
-      + (new Date(c.endDate).getMonth() - new Date(c.startDate).getMonth());
-    summaryRows.push([c.name, m, c.paymentAmount, r.amort.totalPayments,
-      +r.amort.leaseLiabilityPV.toFixed(2), +r.amort.rouAsset.toFixed(2), +r.amort.totalInterest.toFixed(2)]);
-  });
-  const ws1 = XLSX.utils.aoa_to_sheet(summaryRows);
-  ws1['!cols'] = summaryRows[0].map(() => ({ wch: 16 }));
-  XLSX.utils.book_append_sheet(wb, ws1, '汇总');
+  try {
+    const wb = XLSX.utils.book_new();
+    const usedNames = new Set();
 
-  // Detail sheet per contract
-  lastResults.forEach((r, idx) => {
-    if (r.exempted || r.amort.schedule.length === 0) return;
-    const c = r.contract;
-    const detailRows = [['期数','日期','期初负债','本期付款','利息费用','偿还本金','期末负债','本期折旧','累计折旧','ROU净值']];
-    r.amort.schedule.forEach(s => {
-      detailRows.push([s.period, s.date, +s.openingLiability.toFixed(2), s.payment,
-        +s.interest.toFixed(2), +s.principal.toFixed(2), +s.closingLiability.toFixed(2),
-        +s.depr.toFixed(2), +s.accumulatedDepr.toFixed(2), +s.rouNet.toFixed(2)]);
+    // Summary sheet
+    const summaryRows = [['合同名称','租赁期(月)','每期租金','付款总额','租赁负债(PV)','ROU资产','总利息','折旧月数','月折旧额']];
+    lastResults.forEach(r => {
+      if (r.exempted) return;
+      const c = r.contract;
+      const m = (new Date(c.endDate).getFullYear() - new Date(c.startDate).getFullYear()) * 12
+        + (new Date(c.endDate).getMonth() - new Date(c.startDate).getMonth());
+      const deprPerMonth = r.amort.deprMonths > 0 ? +(r.amort.rouAsset / r.amort.deprMonths).toFixed(2) : 0;
+      summaryRows.push([c.name, m, c.paymentAmount, +r.amort.totalPayments.toFixed(2),
+        +r.amort.leaseLiabilityPV.toFixed(2), +r.amort.rouAsset.toFixed(2),
+        +r.amort.totalInterest.toFixed(2), r.amort.deprMonths, deprPerMonth]);
     });
-    const ws = XLSX.utils.aoa_to_sheet(detailRows);
-    ws['!cols'] = detailRows[0].map(() => ({ wch: 14 }));
-    const sheetName = (c.name || '合同' + (idx+1)).substring(0, 31);
-    XLSX.utils.book_append_sheet(wb, ws, sheetName);
-  });
+    const ws1 = XLSX.utils.aoa_to_sheet(summaryRows);
+    ws1['!cols'] = summaryRows[0].map(() => ({ wch: 16 }));
+    XLSX.utils.book_append_sheet(wb, ws1, '汇总');
+    usedNames.add('汇总');
 
-  XLSX.writeFile(wb, 'ROU租赁摊销明细_全部合同.xlsx');
+    // Detail sheet per contract - ensure unique names
+    lastResults.forEach((r, idx) => {
+      if (r.exempted || r.amort.schedule.length === 0) return;
+      const c = r.contract;
+      const detailRows = [['期数','日期','期初负债','本期付款','利息费用','偿还本金','期末负债','本期折旧','累计折旧','ROU净值']];
+      r.amort.schedule.forEach(s => {
+        detailRows.push([s.period, s.date, +s.openingLiability.toFixed(2), s.payment,
+          +s.interest.toFixed(2), +s.principal.toFixed(2), +s.closingLiability.toFixed(2),
+          +s.depr.toFixed(2), +s.accumulatedDepr.toFixed(2), +s.rouNet.toFixed(2)]);
+      });
+      const ws = XLSX.utils.aoa_to_sheet(detailRows);
+      ws['!cols'] = detailRows[0].map(() => ({ wch: 14 }));
+
+      // Generate unique sheet name (Excel max 31 chars)
+      let base = (c.name || '合同' + (idx + 1)).replace(/[\\\/\*\?\[\]:]/g, '-');
+      let sheetName = base.substring(0, 31);
+      let counter = 1;
+      while (usedNames.has(sheetName)) {
+        const suffix = `(${counter})`;
+        sheetName = base.substring(0, 31 - suffix.length) + suffix;
+        counter++;
+      }
+      usedNames.add(sheetName);
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    });
+
+    // Use manual download (more reliable than writeFile)
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([wbout], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ROU租赁摊销明细_全部合同.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+    showExportMsg(`✅ 导出成功！包含 ${usedNames.size - 1} 份合同的摊销明细`, 'success');
+  } catch (err) {
+    showExportMsg('❌ 导出失败: ' + err.message, 'error');
+    console.error('导出全部摊销明细错误:', err);
+  }
+}
+
+function showExportMsg(text, type) {
+  let el = document.getElementById('export-msg');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'export-msg';
+    el.className = 'msg';
+    const resultDiv = document.getElementById('result-content');
+    if (resultDiv) resultDiv.insertBefore(el, resultDiv.firstChild);
+  }
+  el.textContent = text;
+  el.className = 'msg msg-' + type + ' show';
 }
 
 /* ============ Initialize ============ */
