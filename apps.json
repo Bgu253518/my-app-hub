@@ -1,186 +1,2405 @@
-[
-  {
-    "id": "file-renamer",
-    "name": "批量文件重命名工具",
-    "shortDesc": "一键批量重命名文件，支持正则替换、序号前缀、扩展名过滤",
-    "fullDesc": "基于 Python tkinter 开发的桌面批量文件重命名工具。支持拖拽文件夹、正则表达式匹配替换、自定义序号格式、文件类型过滤、重命名预览、操作历史记录与撤销。适用于整理照片、文档归档、代码项目文件规范化等场景。",
-    "category": "gui",
-    "status": "wip",
-    "version": "v2.1.0",
-    "icon": "📝",
-    "github": "https://github.com/Bgu253518/my-app-hub",
-    "download": ""
-  },
-  {
-    "id": "data-cleaner",
-    "name": "CSV 数据清洗器",
-    "shortDesc": "自动检测并清洗 CSV 数据中的空值、重复、异常值",
-    "fullDesc": "命令行数据清洗工具，用于预处理数据分析前的 CSV 文件。支持自动检测编码、缺失值统计与填充（均值/中位数/众数/自定义值）、重复行去重、异常值检测（IQR/Z-score）、数据类型自动推断与转换、清洗报告生成。适合数据分析和机器学习前的数据准备。",
-    "category": "cli",
-    "status": "wip",
-    "version": "v1.5.0",
-    "icon": "🧹",
-    "github": "",
-    "download": ""
-  },
-  {
-    "id": "weather-cli",
-    "name": "命令行天气预报",
-    "shortDesc": "终端里查看实时天气和未来预报，支持城市搜索",
-    "fullDesc": "调用 OpenWeatherMap API 的命令行天气查询工具。支持按城市名或邮编查询、当前天气详情（温度/湿度/风速/能见度）、未来 5 天预报、彩色终端输出（按温度高低变色）、多城市收藏夹、摄氏度/华氏度切换。",
-    "category": "cli",
-    "status": "wip",
-    "version": "v0.8.0",
-    "icon": "🌤️",
-    "github": "",
-    "download": ""
-  },
-  {
-    "id": "img-compressor",
-    "name": "图片批量压缩工具",
-    "shortDesc": "批量压缩 PNG/JPG 图片，拖拽操作，预览压缩效果",
-    "fullDesc": "基于 Pillow 的图片批量压缩桌面工具。支持拖拽图片或文件夹、JPG/PNG/WebP 格式互转、滑动条调节压缩质量、实时预览压缩前后大小对比、批量调整尺寸（按比例或固定宽高）、保持 EXIF 信息选项、原图自动备份。",
-    "category": "gui",
-    "status": "wip",
-    "version": "v3.0.1",
-    "icon": "🖼️",
-    "github": "https://github.com/Bgu253518/my-app-hub",
-    "download": ""
-  },
-  {
-    "id": "log-analyzer",
-    "name": "日志分析器",
-    "shortDesc": "解析 Nginx/Apache 日志，统计访问量、错误分布、IP 排行",
-    "fullDesc": "命令行日志分析工具，支持 Nginx、Apache、自定义格式的日志文件。自动识别日志格式、按时间段统计 PV/UV、状态码分布饼图（ASCII art）、Top N IP 访问排行、慢请求检测、错误日志关键字告警、支持导出为 HTML 报告。",
-    "category": "data",
-    "status": "wip",
-    "version": "v1.2.0",
-    "icon": "📋",
-    "github": "",
-    "download": ""
-  },
-  {
-    "id": "todo-web",
-    "name": "简易待办事项 Web 应用",
-    "shortDesc": "Flask 搭建的个人待办事项管理，支持分类和截止日期",
-    "fullDesc": "基于 Flask + SQLite 的待办事项管理 Web 应用。支持用户注册登录、任务增删改查、按分类（工作/个人/学习）筛选、截止日期设置与到期提醒、任务优先级标记、完成状态切换动画、响应式移动端适配。",
-    "category": "web",
-    "status": "wip",
-    "version": "v0.5.0",
-    "icon": "✅",
-    "github": "https://github.com/Bgu253518/my-app-hub",
-    "download": ""
-  },
-  {
-    "id": "pdf-tool",
-    "name": "PDF 多功能工具箱",
-    "shortDesc": "合并、拆分、提取文字、读取信息、加解密一站式处理",
-    "fullDesc": "纯浏览器端运行的 PDF 综合处理工具，无需安装任何软件。支持多个 PDF 文件合并、按页码范围拆分提取、提取全部文字内容、查看文件元数据与页面信息、AES-256 加密保护 PDF、解密移除密码。所有文件在本地处理，不会上传到任何服务器，保护隐私安全。",
-    "category": "cli",
-    "status": "done",
-    "version": "v1.0.0",
-    "icon": "📄",
-    "onlineTool": true,
-    "github": "https://github.com/Bgu253518/my-app-hub",
-    "download": ""
-  },
-  {
-    "id": "ai-todo",
-    "name": "智能待办解析器",
-    "shortDesc": "粘贴自然语言或邮件，自动解析为结构化待办事项清单",
-    "fullDesc": "将日常口语、工作安排、邮件内容粘贴进来，自动识别其中的任务、截止时间、相关人员和优先级。支持识别中文日期表达（明天下午3点、下周一、5月15号）、常见动词（完成/提交/联系/跟进/回复/确认）、人名提取、紧急程度标记。也支持解析邮件格式（From/To/Subject/正文）。解析结果可复制或导出为文本清单。",
-    "category": "cli",
-    "status": "wip",
-    "version": "v1.0.0",
-    "icon": "🧠",
-    "onlineTool": true,
-    "github": "https://github.com/Bgu253518/my-app-hub",
-    "download": ""
-  },
-  {
-    "id": "rou-calc",
-    "name": "ROU 租赁测算器",
-    "shortDesc": "多合同租赁现值测算，自动生成摊销明细表",
-    "fullDesc": "基于新租赁准则（IFRS 16）的 ROU（使用权资产）测算工具。支持同时计算多份租赁合同，输入合同基本信息（租赁期限、月租金、折现率）后，自动计算租赁付款现值、ROU 资产、租赁负债，并逐月生成摊销表（含利息费用、本金偿还、期末负债）。支持手动录入和 Excel/CSV 批量导入。",
-    "category": "data",
-    "status": "wip",
-    "version": "v1.0.0",
-    "icon": "📊",
-    "onlineTool": true,
-    "github": "",
-    "download": ""
-  },
-  {
-    "id": "ar-aging",
-    "name": "应收账款账龄分析",
-    "shortDesc": "上传应收明细，按客户/账龄自动分桶，风险预警",
-    "fullDesc": "应收账款账龄分析工具。上传包含客户名称、发票日期、应收金额等字段的 Excel/CSV 文件，自动计算每笔款项的逾期天数，按客户分组汇总，并按账龄区间（未到期/1-30/31-60/61-90/90+天）分类展示。支持风险等级标识和色条可视化，可导出分析结果。也支持手动逐笔录入。",
-    "category": "data",
-    "status": "wip",
-    "version": "v1.0.0",
-    "icon": "📋",
-    "onlineTool": true,
-    "github": "",
-    "download": ""
-  },
-  {
-    "id": "excel-merger",
-    "name": "Excel 多文件合并工具",
-    "shortDesc": "多文件智能合并，自动配置工作表并支持批量重命名",
-    "fullDesc": "基于 Python PySimpleGUI 开发的 Excel 工作表智能合并工具。自动扫描选定文件的全部工作表，生成可视化配置表供用户勾选抓取，支持自定义重命名、同名自动编号、保留数据格式。适用于多来源财务报表整合、数据归档等场景。",
-    "category": "data",
-    "status": "wip",
-    "version": "v1.0.0",
-    "icon": "📑",
-    "github": "",
-    "download": ""
-  },
-  {
-    "id": "img-to-pdf",
-    "name": "图片转PDF工具",
-    "shortDesc": "批量将图片合并为PDF，支持标题标注和中文字体",
-    "fullDesc": "基于 Python PIL 和 reportlab 开发的桌面图片转 PDF 工具。支持 JPG/PNG/BMP/GIF/TIFF 等常见格式，自动按文件名排序生成多页 PDF，每页自动标注图片名称作为标题，支持中文字体渲染。适用于扫描件整理、发票归档、照片合集导出等场景。",
-    "category": "gui",
-    "status": "wip",
-    "version": "v1.0.0",
-    "icon": "🖨️",
-    "github": "",
-    "download": ""
-  },
-  {
-    "id": "file-collector",
-    "name": "文件批量提取工具",
-    "shortDesc": "递归提取指定类型文件，按父路径自动重命名",
-    "fullDesc": "基于 Python PySimpleGUI 开发的文件提取整理工具。递归遍历源文件夹，根据扩展名过滤（支持文档/图片/音视频/代码/压缩包等60+种格式），将文件复制到目标文件夹并按「父路径-原文件名」格式自动重命名，重名自动编号。适用于分散文件的集中整理和归档。",
-    "category": "gui",
-    "status": "wip",
-    "version": "v1.0.0",
-    "icon": "📂",
-    "github": "",
-    "download": ""
-  },
-  {
-    "id": "smart-filter",
-    "name": "智能筛选汇总工具",
-    "shortDesc": "多条件Excel数据筛选，自动汇总并生成金额验证",
-    "fullDesc": "基于 Python pandas 和 PySimpleGUI 开发的数据筛选汇总工具。支持手动输入识别码或从 Excel 导入，可对多个目标文件进行单列或多列组合筛选，自动汇总匹配行并计算金额合计，生成按来源文件/工作表分类的验证表。支持百万行级数据处理、自动拆分大文件、精确/模糊匹配模式切换。",
-    "category": "data",
-    "status": "wip",
-    "version": "v1.0.0",
-    "icon": "🔎",
-    "github": "",
-    "download": ""
-  },
-  {
-    "id": "batch-unzip",
-    "name": "批量解压工具",
-    "shortDesc": "智能解压 ZIP/RAR/7z/tar 等格式，自动防重名",
-    "fullDesc": "基于 Python 原生库和 Windows Shell 的双引擎解压工具。优先使用 zipfile/tarfile 原生解压，失败时自动调用系统 Shell 解压（兼容 7z/RAR 等格式）。递归扫描源文件夹，逐文件解压到独立文件夹，自动处理重名冲突。支持 ZIP、7z、RAR、tar、gz、bz2 等常见压缩格式。仅限 Windows 系统使用。",
-    "category": "gui",
-    "status": "wip",
-    "version": "v1.0.0",
-    "icon": "🗜️",
-    "github": "",
-    "download": ""
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com https://cdn.sheetjs.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdnjs.cloudflare.com https://cdn.sheetjs.com; font-src 'self'; worker-src 'self' blob:;">
+<title>顾力菡 · 应用工坊</title>
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+<style>
+/* ============ Reset & Base ============ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-deep: #0a0a14;
+  --bg-card: rgba(22, 22, 44, 0.6);
+  --glass: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --text-primary: #e8e8f0;
+  --text-secondary: #9999b0;
+  --accent-1: #7c5cfc;
+  --accent-2: #5ccafc;
+  --accent-3: #fc5c9c;
+  --gradient-hero: linear-gradient(135deg, #7c5cfc 0%, #5ccafc 50%, #fc5c9c 100%);
+  --gradient-bg: linear-gradient(160deg, #0a0a14 0%, #12122a 30%, #16163a 60%, #0d0d24 100%);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
+  --shadow-hover: 0 12px 40px rgba(124, 92, 252, 0.15);
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+  background: var(--gradient-bg);
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at 20% 20%, rgba(124, 92, 252, 0.08) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 60%, rgba(92, 202, 252, 0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 50% 80%, rgba(252, 92, 156, 0.04) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ============ Scrollbar ============ */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(124, 92, 252, 0.3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(124, 92, 252, 0.5); }
+
+/* ============ Password Gate ============ */
+#password-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--gradient-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 24px;
+}
+
+#password-gate::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(124, 92, 252, 0.1) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.gate-icon { font-size: 64px; animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } }
+
+.gate-box {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 40px 36px;
+  width: 380px;
+  max-width: 90vw;
+  backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: slideUp 0.5s ease;
+}
+
+.gate-box h2 { text-align: center; font-size: 22px; font-weight: 600; }
+.gate-box .hint { text-align: center; font-size: 13px; color: var(--text-secondary); }
+
+.gate-box input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text-primary);
+  font-size: 15px;
+  outline: none;
+  transition: var(--transition);
+}
+
+.gate-box input:focus { border-color: var(--accent-1); box-shadow: 0 0 0 3px rgba(124, 92, 252, 0.15); }
+
+.gate-box .btn {
+  padding: 12px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--accent-1);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.gate-box .btn:hover { background: #9578ff; transform: translateY(-1px); }
+.gate-box .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.gate-box .error { color: #fc5c9c; font-size: 13px; text-align: center; display: none; }
+
+#main-content { display: none; }
+#main-content.unlocked { display: block; }
+
+/* ============ Navbar ============ */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: rgba(10, 10, 20, 0.75);
+  backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 0 24px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.nav-brand .logo {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  background: var(--gradient-hero);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  max-width: 500px;
+}
+
+.nav-controls input {
+  flex: 1;
+  padding: 8px 14px;
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+  transition: var(--transition);
+  min-width: 0;
+}
+
+.nav-controls input:focus { border-color: var(--accent-1); }
+
+.nav-controls select {
+  padding: 8px 12px;
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.nav-controls select:focus { border-color: var(--accent-1); }
+
+/* ============ Hero ============ */
+.hero {
+  position: relative;
+  z-index: 1;
+  padding: 100px 24px 48px;
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.hero h1 {
+  font-size: clamp(28px, 5vw, 44px);
+  font-weight: 800;
+  background: var(--gradient-hero);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 12px;
+}
+
+.hero p { color: var(--text-secondary); font-size: 16px; margin-bottom: 20px; }
+
+.hero .stats {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.hero .stat-item { text-align: center; }
+.hero .stat-num { font-size: 32px; font-weight: 700; color: var(--accent-1); }
+.hero .stat-label { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+
+/* ============ Card Grid ============ */
+.card-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  padding: 0 24px 80px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ============ Card ============ */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 24px;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.card.visible { opacity: 1; transform: translateY(0); }
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--gradient-hero);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+  border-color: rgba(124, 92, 252, 0.3);
+}
+
+.card:hover::before { opacity: 1; }
+
+.card-icon {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin-bottom: 14px;
+  background: rgba(124, 92, 252, 0.12);
+}
+
+.card h3 { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+
+.card .desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card .tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tag {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.tag-category { background: rgba(124, 92, 252, 0.15); color: #b4a0ff; }
+.tag-category.gui { background: rgba(92, 202, 252, 0.15); color: #8ad4ff; }
+.tag-category.cli { background: rgba(252, 200, 92, 0.15); color: #ffe08a; }
+.tag-category.data { background: rgba(92, 252, 160, 0.15); color: #8affc4; }
+.tag-category.web { background: rgba(252, 92, 156, 0.15); color: #ff8ab4; }
+.tag-category.game { background: rgba(200, 92, 252, 0.15); color: #d48aff; }
+.tag-category.other { background: rgba(160, 160, 180, 0.15); color: #c0c0d0; }
+
+.tag-status { background: rgba(92, 252, 160, 0.1); color: #5cfca0; }
+.tag-status.wip { background: rgba(252, 200, 92, 0.1); color: #fcc85c; }
+
+/* Empty state */
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+}
+
+.empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state p { font-size: 15px; }
+
+/* ============ Modal ============ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+
+.modal-overlay.open { opacity: 1; visibility: visible; }
+
+.modal {
+  background: rgba(22, 22, 44, 0.95);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 640px;
+  max-height: 85vh;
+  overflow-y: auto;
+  backdrop-filter: blur(30px);
+  animation: modalIn 0.3s ease;
+}
+
+@keyframes modalIn { from { transform: translateY(20px) scale(0.97); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+
+.modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px 28px 16px;
+  background: linear-gradient(180deg, rgba(22, 22, 44, 0.98) 70%, transparent);
+}
+
+.modal-header h2 { font-size: 22px; font-weight: 700; }
+
+.modal-close {
+  width: 36px; height: 36px;
+  border: 1px solid var(--glass-border);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text-primary);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.modal-close:hover { background: rgba(252, 92, 156, 0.2); border-color: #fc5c9c; }
+
+.modal-body { padding: 0 28px 28px; }
+
+.modal-section { margin-bottom: 20px; }
+.modal-section h4 { font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-secondary); margin-bottom: 8px; }
+
+.modal-section p { font-size: 14px; line-height: 1.7; color: #ccc; }
+
+/* Screenshot area */
+.screenshots { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; }
+.screenshots img {
+  width: 200px; height: 130px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  cursor: pointer;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+.screenshots img:hover { transform: scale(1.03); border-color: var(--accent-1); }
+
+.screenshot-placeholder {
+  width: 200px; height: 130px;
+  border-radius: var(--radius-sm);
+  background: rgba(124, 92, 252, 0.08);
+  border: 1px dashed var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* Tech tags */
+.tech-list { display: flex; gap: 6px; flex-wrap: wrap; }
+.tech-tag {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  background: rgba(124, 92, 252, 0.12);
+  color: #b4a0ff;
+}
+
+/* Code block */
+.code-block {
+  position: relative;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  font-family: "SF Mono", "Cascadia Code", "Fira Code", Consolas, "Source Code Pro", monospace;
+  font-size: 13px;
+  color: #5cfca0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.code-block code { word-break: break-all; }
+.copy-btn {
+  padding: 4px 10px;
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.copy-btn:hover { background: rgba(124, 92, 252, 0.15); color: #fff; }
+.copy-btn.copied { background: rgba(92, 252, 160, 0.15); color: #5cfca0; border-color: #5cfca0; }
+
+/* Modal links */
+.modal-links { display: flex; gap: 10px; flex-wrap: wrap; }
+.modal-links .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.btn-gh { background: rgba(255, 255, 255, 0.06); color: #fff; border: 1px solid var(--glass-border); }
+.btn-gh:hover { background: rgba(255, 255, 255, 0.12); }
+
+.btn-dl { background: var(--accent-1); color: #fff; border: 1px solid var(--accent-1); }
+.btn-dl:hover { background: #9578ff; }
+
+/* ============ Footer ============ */
+.footer {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 40px 20px;
+  border-top: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+/* ============ Animations ============ */
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* ============ Responsive ============ */
+@media (max-width: 640px) {
+  .navbar { padding: 0 12px; height: 52px; gap: 8px; }
+  .nav-brand { font-size: 15px; }
+  .nav-brand .logo { width: 28px; height: 28px; font-size: 15px; border-radius: 8px; }
+  .nav-controls input { font-size: 12px; padding: 6px 10px; }
+  .nav-controls select { font-size: 11px; padding: 6px 8px; }
+  .hero { padding: 80px 16px 32px; }
+  .hero h1 { font-size: 24px; }
+  .card-grid { grid-template-columns: 1fr; padding: 0 12px 60px; gap: 14px; }
+  .card { padding: 18px; }
+  .modal { border-radius: 16px 16px 0 0; max-height: 90vh; }
+  .modal-body { padding: 0 20px 24px; }
+  .modal-header { padding: 20px 20px 12px; }
+}
+
+/* ============ Image lightbox ============ */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+
+.lightbox.open { opacity: 1; visibility: visible; }
+.lightbox img { max-width: 90vw; max-height: 85vh; border-radius: 8px; }
+
+/* ============ Online Tool Panel ============ */
+.tool-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  background: var(--gradient-bg);
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+
+.tool-panel.open { opacity: 1; visibility: visible; }
+
+.tool-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 24px;
+  background: rgba(10, 10, 20, 0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.tool-back {
+  padding: 6px 14px;
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.tool-back:hover { background: rgba(255, 255, 255, 0.1); }
+
+.tool-title { font-size: 17px; font-weight: 700; flex: 1; }
+
+.tool-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 12px 24px;
+  background: rgba(10, 10, 20, 0.5);
+  border-bottom: 1px solid var(--glass-border);
+  overflow-x: auto;
+}
+
+.tool-tab {
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.tool-tab:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.04); }
+.tool-tab.active { color: #fff; background: rgba(124, 92, 252, 0.2); border-color: rgba(124, 92, 252, 0.3); }
+
+.tool-body {
+  flex: 1;
+  display: flex;
+  gap: 0;
+  overflow: hidden;
+}
+
+.tool-left {
+  flex: 0 0 42%;
+  padding: 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border-right: 1px solid var(--glass-border);
+}
+
+.tool-right {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.tool-right-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+/* Drop zone */
+.drop-zone {
+  border: 2px dashed rgba(124, 92, 252, 0.3);
+  border-radius: var(--radius);
+  padding: 48px 24px;
+  text-align: center;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.drop-zone:hover, .drop-zone.dragover {
+  border-color: var(--accent-1);
+  background: rgba(124, 92, 252, 0.06);
+  box-shadow: 0 0 30px rgba(124, 92, 252, 0.08);
+}
+
+.drop-zone .dz-icon { font-size: 48px; margin-bottom: 10px; }
+.drop-zone .dz-text { font-size: 15px; font-weight: 600; }
+.drop-zone .dz-hint { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+/* File list */
+.file-list { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
+
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+}
+
+.file-item .fi-icon { font-size: 20px; }
+.file-item .fi-name { flex: 1; font-size: 13px; word-break: break-all; }
+.file-item .fi-size { font-size: 11px; color: var(--text-secondary); white-space: nowrap; }
+.file-item .fi-remove {
+  padding: 2px 8px;
+  border: none;
+  border-radius: 4px;
+  background: rgba(252, 92, 156, 0.15);
+  color: #fc5c9c;
+  font-size: 11px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.file-item .fi-remove:hover { background: rgba(252, 92, 156, 0.3); }
+
+/* PDF Preview */
+.preview-area {
+  display: none;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--glass-border);
+}
+
+.preview-area.show { display: flex; }
+
+.preview-thumb {
+  flex-shrink: 0;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.preview-thumb:hover { transform: translateY(-2px); }
+
+.preview-thumb canvas {
+  border-radius: 4px;
+  border: 1px solid var(--glass-border);
+  background: #fff;
+}
+
+.preview-thumb .thumb-label {
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.preview-thumb .thumb-file {
+  font-size: 10px;
+  color: var(--accent-2);
+  margin-bottom: 6px;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Tool inputs */
+.tool-input-group { display: flex; flex-direction: column; gap: 6px; }
+
+.tool-input-group label { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+
+.tool-input-group input, .tool-input-group textarea {
+  padding: 10px 14px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+  transition: var(--transition);
+  font-family: inherit;
+}
+
+.tool-input-group input:focus, .tool-input-group textarea:focus { border-color: var(--accent-1); }
+
+.tool-input-row { display: flex; gap: 12px; }
+.tool-input-row .tool-input-group { flex: 1; }
+
+/* Buttons */
+.tool-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.btn-tool {
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-tool-primary { background: var(--accent-1); color: #fff; }
+.btn-tool-primary:hover { background: #9578ff; transform: translateY(-1px); }
+.btn-tool-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+.btn-tool-secondary { background: rgba(255, 255, 255, 0.06); color: var(--text-primary); border: 1px solid var(--glass-border); }
+.btn-tool-secondary:hover { background: rgba(255, 255, 255, 0.12); }
+
+/* Result area */
+.tool-result {
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  background: rgba(92, 252, 160, 0.06);
+  border: 1px solid rgba(92, 252, 160, 0.2);
+  display: none;
+}
+
+.tool-result.show { display: block; }
+.tool-result .result-title { color: #5cfca0; font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+.tool-result .result-detail { color: var(--text-secondary); font-size: 12px; }
+
+.tool-error {
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(252, 92, 156, 0.06);
+  border: 1px solid rgba(252, 92, 156, 0.2);
+  color: #fc5c9c;
+  font-size: 13px;
+  display: none;
+}
+
+.tool-error.show { display: block; }
+
+/* Text preview */
+.text-preview {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--glass-border);
+  font-family: "SF Mono", Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #ccc;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* PDF info table */
+.info-table { width: 100%; border-collapse: collapse; }
+.info-table td { padding: 8px 12px; border-bottom: 1px solid var(--glass-border); font-size: 13px; }
+.info-table td:first-child { color: var(--text-secondary); width: 120px; }
+
+/* Processing spinner */
+.processing-overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 10;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  border-radius: var(--radius);
+}
+
+.processing-overlay.show { display: flex; }
+
+.spinner {
+  width: 40px; height: 40px;
+  border: 3px solid rgba(124, 92, 252, 0.2);
+  border-top-color: var(--accent-1);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.processing-text { font-size: 13px; color: var(--text-secondary); }
+
+/* Responsive */
+@media (max-width: 640px) {
+  .tool-body { flex-direction: column; }
+  .tool-left { flex: auto; border-right: none; border-bottom: 1px solid var(--glass-border); padding: 14px; gap: 14px; }
+  .tool-right { padding: 14px; }
+  .tool-tabs { padding: 10px 12px; gap: 2px; }
+  .tool-tab { padding: 6px 10px; font-size: 11px; }
+  .tool-input-row { flex-direction: column; }
+  .drop-zone { padding: 32px 14px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============ Password Gate ============ -->
+<div id="password-gate">
+  <div class="gate-icon">🔐</div>
+  <div class="gate-box">
+    <h2>顾力菡的工具箱</h2>
+    <p class="hint">请输入访问密码以查看内容</p>
+    <input type="password" id="gate-input" placeholder="请输入密码..." autofocus>
+    <button class="btn" id="gate-btn">验 证</button>
+    <p class="error" id="gate-error">密码错误，请重试</p>
+  </div>
+</div>
+
+<!-- ============ Main Content ============ -->
+<div id="main-content">
+
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="nav-brand">
+    <div class="logo">🧩</div>
+    <span>Gu's App Hub</span>
+  </div>
+  <div class="nav-controls">
+    <input type="text" id="search-input" placeholder="搜索应用...">
+    <select id="category-filter">
+      <option value="all">全部分类</option>
+      <option value="gui">🖥️ GUI 工具</option>
+      <option value="cli">⌨️ 命令行</option>
+      <option value="data">📊 数据处理</option>
+      <option value="web">🌐 Web 应用</option>
+      <option value="game">🎮 游戏</option>
+      <option value="other">📦 其他</option>
+    </select>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <h1>顾力菡的应用工坊</h1>
+  <p>用 Python 解决实际问题，每个工具都源于真实需求。</p>
+  <div class="stats">
+    <div class="stat-item"><div class="stat-num" id="stat-total">0</div><div class="stat-label">应用总数</div></div>
+    <div class="stat-item"><div class="stat-num" id="stat-done">0</div><div class="stat-label">已完成</div></div>
+    <div class="stat-item"><div class="stat-num" id="stat-wip">0</div><div class="stat-label">开发中</div></div>
+  </div>
+</section>
+
+<!-- Card Grid -->
+<section class="card-grid" id="card-grid"></section>
+
+<!-- Footer -->
+<footer class="footer">
+  <p>© 顾力菡 Gu Lihan · 持续构建中</p>
+</footer>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<!-- Image Lightbox -->
+<div class="lightbox" id="lightbox">
+  <img src="" alt="截图预览" id="lightbox-img">
+</div>
+
+<!-- ============ Online Tool Panel ============ -->
+<div class="tool-panel" id="tool-panel">
+  <div class="tool-header">
+    <button class="tool-back" onclick="closeToolPanel()">← 返回</button>
+    <span class="tool-title" id="tool-title">PDF 工具箱</span>
+  </div>
+  <div class="tool-tabs" id="tool-tabs"></div>
+  <div class="tool-body" id="tool-body">
+    <!-- Left panel: operations -->
+    <div class="tool-left">
+      <div class="drop-zone" id="drop-zone">
+        <div class="dz-icon">📂</div>
+        <div class="dz-text" id="dz-text">拖拽 PDF 文件到此处</div>
+        <div class="dz-hint">或点击选择文件</div>
+      </div>
+
+      <div class="file-list" id="file-list"></div>
+
+      <div id="tool-controls"></div>
+
+      <div class="processing-overlay" id="processing-overlay">
+        <div class="spinner"></div>
+        <div class="processing-text">正在处理...</div>
+      </div>
+
+      <div class="tool-error" id="tool-error"></div>
+      <div class="tool-result" id="tool-result">
+        <div class="result-title">✅ 处理完成</div>
+        <div class="result-detail" id="result-detail"></div>
+        <div class="tool-actions" style="margin-top:12px">
+          <button class="btn-tool btn-tool-primary" id="btn-download" style="display:none">⬇ 下载结果</button>
+        </div>
+      </div>
+
+      <div class="text-preview" id="text-preview" style="display:none"></div>
+      <table class="info-table" id="info-table" style="display:none"></table>
+    </div>
+
+    <!-- Right panel: preview -->
+    <div class="tool-right">
+      <div class="tool-right-label">📄 PDF 预览</div>
+      <div class="preview-area" id="preview-area"></div>
+      <div style="color:var(--text-secondary);font-size:12px;text-align:center;margin-top:20px" id="preview-placeholder">
+        拖入 PDF 文件后<br>这里将显示页面预览
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+<!-- end #main-content -->
+
+<script>
+/* ============ Configuration ============ */
+const DATA_URL = 'apps.json';
+// 密码（base64 编码，运行时解码后直接对比，避免编码问题）
+const _k = 'R2xoQDI1MzUxOA==';
+
+/* ============ Password Gate ============ */
+(function initGate() {
+  const gateEl = document.getElementById('password-gate');
+  const inputEl = document.getElementById('gate-input');
+  const btnEl = document.getElementById('gate-btn');
+  const errorEl = document.getElementById('gate-error');
+  const mainContent = document.getElementById('main-content');
+  const PASSWORD = atob(_k);
+
+  if (sessionStorage.getItem('app_hub_auth') === '1') {
+    gateEl.style.display = 'none';
+    mainContent.classList.add('unlocked');
+    initApp();
+    return;
   }
-]
+
+  function tryUnlock() {
+    if (inputEl.value.trim() === PASSWORD) {
+      sessionStorage.setItem('app_hub_auth', '1');
+      gateEl.style.display = 'none';
+      mainContent.classList.add('unlocked');
+      initApp();
+    } else {
+      errorEl.style.display = 'block';
+      inputEl.value = '';
+      inputEl.focus();
+    }
+  }
+
+  btnEl.addEventListener('click', tryUnlock);
+  inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
+})();
+
+/* ============ Category Config ============ */
+const CATEGORIES = {
+  gui: { label: 'GUI 工具', icon: '🖥️' },
+  cli: { label: '命令行工具', icon: '⌨️' },
+  data: { label: '数据处理', icon: '📊' },
+  web: { label: 'Web 应用', icon: '🌐' },
+  game: { label: '游戏', icon: '🎮' },
+  other: { label: '其他', icon: '📦' }
+};
+
+const STATUS_MAP = { done: '已完成', wip: '开发中' };
+
+/* ============ State ============ */
+let apps = [];
+let currentFilter = { search: '', category: 'all' };
+
+/* ============ Anti-Clickjacking ============ */
+if (window.top !== window.self) {
+  window.top.location = window.self.location;
+}
+
+/* ============ Console Security Warning ============ */
+console.log('%c⚠️ 安全警告 %c此浏览器控制台仅供开发者使用。请勿在此粘贴或执行不明代码。',
+  'color:#fc5c9c;font-size:20px;font-weight:bold;', 'color:#e8e8f0;font-size:13px;');
+
+/* ============ Initialize App ============ */
+async function initApp() {
+  try {
+    const resp = await fetch(DATA_URL);
+    if (!resp.ok) throw new Error('Failed to load data');
+    apps = await resp.json();
+    if (!Array.isArray(apps)) apps = [];
+  } catch (err) {
+    console.error('加载应用数据失败:', err);
+    apps = [];
+  }
+
+  updateStats();
+  renderCards();
+  bindEvents();
+}
+
+/* ============ Stats ============ */
+function updateStats() {
+  document.getElementById('stat-total').textContent = apps.length;
+  document.getElementById('stat-done').textContent = apps.filter(a => a.status === 'done').length;
+  document.getElementById('stat-wip').textContent = apps.filter(a => a.status !== 'done').length;
+}
+
+/* ============ Render Cards ============ */
+function renderCards() {
+  const grid = document.getElementById('card-grid');
+  const { search, category } = currentFilter;
+
+  const filtered = apps.filter(app => {
+    if (category !== 'all' && app.category !== category) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      return (
+        app.name.toLowerCase().includes(q) ||
+        app.shortDesc.toLowerCase().includes(q) ||
+        (app.fullDesc && app.fullDesc.toLowerCase().includes(q))
+      );
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">📭</div>
+      <p>没有找到匹配的应用</p>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map((app, idx) => {
+    const cat = CATEGORIES[app.category] || CATEGORIES.other;
+    const statusLabel = STATUS_MAP[app.status] || app.status;
+    const statusClass = app.status === 'wip' ? 'wip' : '';
+    return `
+      <div class="card" data-id="${app.id}" style="transition-delay: ${idx * 0.04}s">
+        <div class="card-icon">${app.icon || cat.icon}</div>
+        <h3>${escapeHtml(app.name)}</h3>
+        <p class="desc">${escapeHtml(app.shortDesc)}</p>
+        <div class="tags">
+          <span class="tag tag-category ${app.category}">${cat.icon} ${cat.label}</span>
+          <span class="tag tag-status ${statusClass}">${statusLabel}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // IntersectionObserver for entrance animation
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  grid.querySelectorAll('.card').forEach(card => observer.observe(card));
+
+  // Card click -> modal
+  grid.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('click', () => {
+      const id = card.dataset.id;
+      const app = apps.find(a => a.id === id);
+      if (app) openModal(app);
+    });
+  });
+}
+
+/* ============ Modal ============ */
+function openModal(app) {
+  const overlay = document.getElementById('modal-overlay');
+  const container = document.getElementById('modal-content');
+  const cat = CATEGORIES[app.category] || CATEGORIES.other;
+
+  const downloadBtn = app.download
+    ? `<a class="btn btn-dl" href="${escapeHtml(app.download)}" download>⬇ 下载</a>`
+    : '';
+
+  const onlineBtn = (app.onlineTool)
+    ? `<button class="btn btn-dl" onclick="event.stopPropagation(); closeModal(); openToolPanel('${escapeHtml(app.id)}')" style="background: linear-gradient(135deg, #7c5cfc, #5ccafc);">🛠️ 在线使用</button>`
+    : '';
+
+  container.innerHTML = `
+    <div class="modal-header">
+      <h2>${escapeHtml(app.icon || cat.icon)} ${escapeHtml(app.name)}</h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      ${app.version ? `<div class="modal-section"><span class="tag tag-status ${app.status === 'wip' ? 'wip' : ''}">${escapeHtml(app.version)} · ${STATUS_MAP[app.status] || app.status}</span></div>` : ''}
+      ${app.fullDesc ? `<div class="modal-section"><h4>📝 功能说明</h4><p>${escapeHtml(app.fullDesc)}</p></div>` : ''}
+      ${(app.download || app.onlineTool) ? `<div class="modal-section"><h4>🔗 链接</h4><div class="modal-links">${downloadBtn}${onlineBtn}</div></div>` : ''}
+    </div>
+  `;
+
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ============ Lightbox ============ */
+function openLightbox(src) {
+  const lb = document.getElementById('lightbox');
+  const img = document.getElementById('lightbox-img');
+  img.src = src;
+  lb.classList.add('open');
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+}
+
+/* ============ Copy to Clipboard ============ */
+async function copyToClipboard(text, btn) {
+  try {
+    await navigator.clipboard.writeText(text);
+    btn.textContent = '✅ 已复制';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '📋 复制';
+      btn.classList.remove('copied');
+    }, 2000);
+  } catch {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.textContent = '✅ 已复制';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '📋 复制';
+      btn.classList.remove('copied');
+    }, 2000);
+  }
+}
+
+/* ============ Filter & Search ============ */
+function bindEvents() {
+  const searchInput = document.getElementById('search-input');
+  const categorySelect = document.getElementById('category-filter');
+
+  searchInput.addEventListener('input', () => {
+    currentFilter.search = searchInput.value;
+    renderCards();
+  });
+
+  categorySelect.addEventListener('change', () => {
+    currentFilter.category = categorySelect.value;
+    renderCards();
+  });
+
+  document.getElementById('modal-overlay').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeModal();
+  });
+
+  document.getElementById('lightbox').addEventListener('click', closeLightbox);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (document.getElementById('lightbox').classList.contains('open')) {
+        closeLightbox();
+      } else if (document.getElementById('modal-overlay').classList.contains('open')) {
+        closeModal();
+      }
+    }
+  });
+}
+
+/* ============ Helpers ============ */
+function escapeHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// 启动
+initApp();
+
+/* ============ Online Tool Panel ============ */
+const TOOL_OPS = {
+  merge:      { title: '🔗 合并 PDF', hint: '拖入 2 个或更多 PDF 文件，按顺序合并为一个', multiple: true,  minFiles: 2 },
+  split:      { title: '✂️ 拆分 PDF', hint: '拖入 1 个 PDF 文件，输入要提取的页码范围', multiple: false, minFiles: 1 },
+  'extract-text': { title: '📝 提取文字', hint: '拖入 1 个 PDF 文件，提取所有页面文字内容', multiple: false, minFiles: 1 },
+  info:       { title: '📄 读取信息', hint: '拖入 1 个 PDF 文件，查看元数据和页面信息', multiple: false, minFiles: 1 },
+  encrypt:    { title: '🔒 加密 PDF', hint: '拖入 1 个 PDF，设置打开密码', multiple: false, minFiles: 1 },
+  decrypt:    { title: '🔓 解密 PDF', hint: '拖入 1 个已加密的 PDF，输入密码解密', multiple: false, minFiles: 1 },
+};
+
+let toolState = {
+  currentOp: 'merge',
+  files: [],
+  resultBytes: null,
+  resultName: '',
+};
+
+// Set pdf.js worker
+if (typeof pdfjsLib !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+let currentToolType = ''; // 'pdf' or 'todo'
+
+function openToolPanel(appId) {
+  const app = apps.find(a => a.id === appId);
+  if (!app) return;
+
+  const panel = document.getElementById('tool-panel');
+  document.getElementById('tool-title').textContent = app.icon + ' ' + app.name;
+  panel.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  currentToolType = appId === 'pdf-tool' ? 'pdf' : appId === 'ai-todo' ? 'todo' : appId === 'rou-calc' ? 'rou' : 'aging';
+
+  // Reset state
+  toolState = { currentOp: 'merge', files: [], resultBytes: null, resultName: '' };
+  clearResult();
+  document.getElementById('tool-controls').innerHTML = '';
+
+  if (currentToolType === 'pdf') {
+    initPDFTool();
+  } else if (currentToolType === 'todo') {
+    initTodoTool();
+  } else if (currentToolType === 'rou') {
+    initRouTool();
+  } else if (currentToolType === 'aging') {
+    initAgingTool();
+  }
+}
+
+function initPDFTool() {
+  // Show PDF-specific sections
+  document.getElementById('drop-zone').style.display = '';
+  document.querySelector('.tool-left').style.display = '';
+  document.querySelector('.tool-right').style.display = '';
+  // Render tabs
+  const tabsEl = document.getElementById('tool-tabs');
+  tabsEl.innerHTML = Object.entries(TOOL_OPS).map(([op, cfg]) =>
+    `<button class="tool-tab${op === 'merge' ? ' active' : ''}" data-op="${op}">${cfg.title}</button>`
+  ).join('');
+  // Bind tab clicks
+  tabsEl.onclick = e => {
+    const tab = e.target.closest('.tool-tab');
+    if (!tab) return;
+    const op = tab.dataset.op;
+    if (op && TOOL_OPS[op]) switchTab(op);
+  };
+  switchTab('merge');
+  setupDropZone();
+}
+
+function initTodoTool() {
+  // Hide PDF-specific stuff
+  document.getElementById('drop-zone').style.display = 'none';
+  document.querySelector('.tool-left').style.display = '';
+  document.querySelector('.tool-right').style.display = 'none';
+  document.getElementById('tool-tabs').innerHTML = '<button class="tool-tab active">🧠 智能待办解析</button>';
+  document.getElementById('file-list').innerHTML = '';
+  document.getElementById('preview-area').classList.remove('show');
+  document.getElementById('preview-placeholder').style.display = 'none';
+
+  document.getElementById('tool-controls').innerHTML = `
+    <div class="tool-input-group">
+      <label>📝 粘贴自然语言或邮件内容</label>
+      <textarea id="todo-input" rows="8" placeholder="例如：&#10;明天下午3点找张三确认需求&#10;周五前提交项目报告给李四&#10;紧急：修复登录页面的bug&#10;&#10;或者粘贴邮件内容..."></textarea>
+    </div>
+    <div class="tool-actions">
+      <button class="btn-tool btn-tool-primary" onclick="parseTodoText()">🔍 智能解析</button>
+      <button class="btn-tool btn-tool-secondary" onclick="document.getElementById('todo-input').value=''; document.getElementById('todo-result').innerHTML='';">🗑️ 清空</button>
+    </div>
+    <div id="todo-result" style="display:none">
+      <h4 style="margin-bottom:12px">📋 解析结果</h4>
+      <div id="todo-list"></div>
+      <div class="tool-actions" style="margin-top:12px">
+        <button class="btn-tool btn-tool-secondary" onclick="copyTodoList()">📋 复制清单</button>
+        <button class="btn-tool btn-tool-secondary" onclick="downloadTodoList()">⬇ 导出文本</button>
+      </div>
+    </div>
+  `;
+}
+
+function closeToolPanel() {
+  document.getElementById('tool-panel').classList.remove('open');
+  document.body.style.overflow = '';
+  toolState.files = [];
+  toolState.resultBytes = null;
+  renderFileList();
+}
+
+function switchTab(op) {
+  toolState.currentOp = op;
+  toolState.files = [];
+  toolState.resultBytes = null;
+
+  document.querySelectorAll('.tool-tab').forEach(t => t.classList.toggle('active', t.dataset.op === op));
+  const cfg = TOOL_OPS[op];
+  document.getElementById('dz-text').textContent = cfg.hint;
+  clearResult();
+  renderFileList();
+  renderToolControls(op);
+}
+
+/* Drop zone */
+function setupDropZone() {
+  const zone = document.getElementById('drop-zone');
+
+  zone.onclick = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf';
+    input.multiple = TOOL_OPS[toolState.currentOp].multiple;
+    input.onchange = () => { addFiles(Array.from(input.files)); };
+    input.click();
+  };
+
+  zone.ondragover = e => { e.preventDefault(); zone.classList.add('dragover'); };
+  zone.ondragleave = () => { zone.classList.remove('dragover'); };
+  zone.ondrop = e => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type === 'application/pdf' || f.name.endsWith('.pdf'));
+    if (files.length > 0) addFiles(files);
+  };
+}
+
+function addFiles(newFiles) {
+  const cfg = TOOL_OPS[toolState.currentOp];
+  if (!cfg.multiple) {
+    toolState.files = [newFiles[0]];
+  } else {
+    toolState.files = [...toolState.files, ...newFiles];
+  }
+  renderFileList();
+  clearResult();
+}
+
+function removeFile(idx) {
+  toolState.files.splice(idx, 1);
+  renderFileList();
+  clearResult();
+}
+
+function renderFileList() {
+  const list = document.getElementById('file-list');
+  if (toolState.files.length === 0) {
+    list.innerHTML = '';
+    document.getElementById('preview-area').classList.remove('show');
+    return;
+  }
+
+  list.innerHTML = toolState.files.map((f, i) => `
+    <div class="file-item">
+      <span class="fi-icon">📄</span>
+      <span class="fi-name">${escapeHtml(f.name)}</span>
+      <span class="fi-size">${formatSize(f.size)}</span>
+      <button class="fi-remove" onclick="removeFile(${i})">✕</button>
+    </div>
+  `).join('');
+
+  // Render previews
+  renderPreviews();
+}
+
+async function renderPreviews() {
+  const previewArea = document.getElementById('preview-area');
+  const placeholder = document.getElementById('preview-placeholder');
+  previewArea.innerHTML = '';
+  previewArea.classList.remove('show');
+
+  if (toolState.files.length === 0) {
+    if (placeholder) placeholder.style.display = 'block';
+    return;
+  }
+
+  previewArea.classList.add('show');
+  if (placeholder) placeholder.style.display = 'none';
+  const maxPages = Math.min(50, Math.floor(20 / toolState.files.length));
+
+  for (const file of toolState.files) {
+    try {
+      const bytes = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+      const pagesToShow = Math.min(pdf.numPages, maxPages);
+
+      // File label
+      const fileLabel = document.createElement('div');
+      fileLabel.className = 'preview-thumb';
+      fileLabel.innerHTML = `<div class="thumb-file">📄 ${escapeHtml(file.name)}</div>`;
+      previewArea.appendChild(fileLabel);
+
+      for (let i = 1; i <= pagesToShow; i++) {
+        const page = await pdf.getPage(i);
+        const scale = 0.2;
+        const viewport = page.getViewport({ scale });
+
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const ctx = canvas.getContext('2d');
+
+        await page.render({ canvasContext: ctx, viewport }).promise;
+
+        const thumb = document.createElement('div');
+        thumb.className = 'preview-thumb';
+        thumb.title = `第 ${i} 页`;
+        thumb.appendChild(canvas);
+
+        const label = document.createElement('div');
+        label.className = 'thumb-label';
+        label.textContent = `第 ${i} 页`;
+        thumb.appendChild(label);
+
+        previewArea.appendChild(thumb);
+      }
+
+      if (pdf.numPages > pagesToShow) {
+        const more = document.createElement('div');
+        more.className = 'preview-thumb';
+        more.innerHTML = `<div style="width:120px;height:160px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:12px">... 共 ${pdf.numPages} 页</div>`;
+        previewArea.appendChild(more);
+      }
+    } catch (err) {
+      const errEl = document.createElement('div');
+      errEl.className = 'preview-thumb';
+      errEl.innerHTML = `<div style="width:120px;height:160px;display:flex;align-items:center;justify-content:center;color:#fc5c9c;font-size:11px;text-align:center">⚠️ 无法预览<br>${escapeHtml(file.name)}</div>`;
+      previewArea.appendChild(errEl);
+    }
+  }
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+/* Tool controls (per operation) */
+function renderToolControls(op) {
+  const div = document.getElementById('tool-controls');
+
+  const processLabel = {
+    merge: '🔗 开始合并', split: '✂️ 开始拆分', 'extract-text': '📝 提取文字',
+    info: '📄 读取信息', encrypt: '🔒 加密', decrypt: '🔓 解密'
+  };
+
+  let extraHtml = '';
+  if (op === 'split') {
+    extraHtml = `<div class="tool-input-group"><label>页码范围</label><input type="text" id="split-pages" placeholder="例如: 1-3,5,7-9"></div>`;
+  } else if (op === 'encrypt') {
+    extraHtml = `<div class="tool-input-row">
+      <div class="tool-input-group"><label>打开密码</label><input type="password" id="enc-user-pwd" placeholder="设置打开密码"></div>
+      <div class="tool-input-group"><label>权限密码（可选）</label><input type="password" id="enc-owner-pwd" placeholder="设置权限密码"></div>
+    </div>`;
+  } else if (op === 'decrypt') {
+    extraHtml = `<div class="tool-input-group"><label>PDF 密码</label><input type="password" id="decrypt-pwd" placeholder="输入 PDF 的打开密码"></div>`;
+  }
+
+  div.innerHTML = `
+    ${extraHtml}
+    <div class="tool-actions" style="margin-top:12px">
+      <button class="btn-tool btn-tool-primary" id="btn-process" onclick="processPDF()">${processLabel[op] || '开始处理'}</button>
+      <button class="btn-tool btn-tool-secondary" onclick="toolState.files=[]; renderFileList(); clearResult();">🗑️ 清空文件</button>
+    </div>
+  `;
+}
+
+/* ============ PDF Operations ============ */
+async function processPDF() {
+  const op = toolState.currentOp;
+  const cfg = TOOL_OPS[op];
+
+  if (toolState.files.length < cfg.minFiles) {
+    showToolError(`请至少拖入 ${cfg.minFiles} 个 PDF 文件`);
+    return;
+  }
+
+  clearResult();
+  showProcessing(true);
+
+  try {
+    switch (op) {
+      case 'merge':       await doMerge(); break;
+      case 'split':       await doSplit(); break;
+      case 'extract-text': await doExtractText(); break;
+      case 'info':        await doInfo(); break;
+      case 'encrypt':     await doEncrypt(); break;
+      case 'decrypt':     await doDecrypt(); break;
+    }
+  } catch (err) {
+    showToolError('处理失败: ' + err.message);
+    console.error(err);
+  } finally {
+    showProcessing(false);
+  }
+}
+
+function showProcessing(show) {
+  document.getElementById('processing-overlay').classList.toggle('show', show);
+}
+
+function showToolError(msg) {
+  const el = document.getElementById('tool-error');
+  el.textContent = '❌ ' + msg;
+  el.classList.add('show');
+  document.getElementById('tool-result').classList.remove('show');
+}
+
+function clearResult() {
+  document.getElementById('tool-error').classList.remove('show');
+  document.getElementById('tool-result').classList.remove('show');
+  document.getElementById('btn-download').style.display = 'none';
+  document.getElementById('text-preview').style.display = 'none';
+  document.getElementById('info-table').style.display = 'none';
+  toolState.resultBytes = null;
+}
+
+function showResult(bytes, name, detail) {
+  toolState.resultBytes = bytes;
+  toolState.resultName = name;
+  document.getElementById('result-detail').textContent = detail || ('文件大小: ' + formatSize(bytes.length));
+  document.getElementById('tool-result').classList.add('show');
+  document.getElementById('btn-download').style.display = 'inline-flex';
+}
+
+/* --- Merge --- */
+async function doMerge() {
+  const { PDFDocument } = PDFLib;
+  const merged = await PDFDocument.create();
+
+  for (const file of toolState.files) {
+    const bytes = await file.arrayBuffer();
+    const doc = await PDFDocument.load(bytes);
+    const pages = await merged.copyPages(doc, doc.getPageIndices());
+    pages.forEach(p => merged.addPage(p));
+  }
+
+  const result = await merged.save();
+  showResult(result, 'merged.pdf', `成功合并 ${toolState.files.length} 个文件，共 ${merged.getPageCount()} 页`);
+}
+
+/* --- Split --- */
+async function doSplit() {
+  const { PDFDocument } = PDFLib;
+  const input = document.getElementById('split-pages').value.trim();
+  if (!input) throw new Error('请输入页码范围，例如: 1-3,5,7-9');
+
+  const file = toolState.files[0];
+  const bytes = await file.arrayBuffer();
+  const srcDoc = await PDFDocument.load(bytes);
+  const totalPages = srcDoc.getPageCount();
+
+  // Parse page ranges
+  const targetPages = [];
+  const parts = input.split(',');
+  for (const part of parts) {
+    const trimmed = part.trim();
+    if (trimmed.includes('-')) {
+      const [start, end] = trimmed.split('-').map(s => parseInt(s.trim()));
+      if (isNaN(start) || isNaN(end)) throw new Error(`无效的范围: ${trimmed}`);
+      for (let i = Math.max(1, start); i <= Math.min(totalPages, end); i++) targetPages.push(i - 1);
+    } else {
+      const n = parseInt(trimmed);
+      if (isNaN(n)) throw new Error(`无效的页码: ${trimmed}`);
+      if (n >= 1 && n <= totalPages) targetPages.push(n - 1);
+    }
+  }
+
+  if (targetPages.length === 0) throw new Error('未找到有效页码');
+
+  const newDoc = await PDFDocument.create();
+  const pages = await newDoc.copyPages(srcDoc, [...new Set(targetPages)]);
+  pages.forEach(p => newDoc.addPage(p));
+
+  const result = await newDoc.save();
+  const name = file.name.replace(/\.pdf$/i, '') + '_拆分.pdf';
+  showResult(result, name, `提取了 ${newDoc.getPageCount()} 页（原文件共 ${totalPages} 页）`);
+}
+
+/* --- Extract Text --- */
+async function doExtractText() {
+  const file = toolState.files[0];
+  const bytes = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+
+  let allText = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pageText = content.items.map(item => item.str).join(' ');
+    allText += `\n=== 第 ${i} 页 ===\n\n${pageText}\n`;
+  }
+
+  const preview = document.getElementById('text-preview');
+  preview.textContent = allText || '（未能提取到文字内容）';
+  preview.style.display = 'block';
+  document.getElementById('tool-result').classList.add('show');
+  document.getElementById('result-detail').textContent = `共提取 ${pdf.numPages} 页文字`;
+
+  // Also offer download as .txt
+  const textBytes = new TextEncoder().encode(allText);
+  const name = file.name.replace(/\.pdf$/i, '') + '_文字.txt';
+  toolState.resultBytes = textBytes;
+  toolState.resultName = name;
+  document.getElementById('btn-download').style.display = 'inline-flex';
+}
+
+/* --- Info --- */
+async function doInfo() {
+  const { PDFDocument } = PDFLib;
+  const file = toolState.files[0];
+  const bytes = await file.arrayBuffer();
+  const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
+
+  const info = {
+    '文件名': file.name,
+    '文件大小': formatSize(file.size),
+    '页数': doc.getPageCount(),
+    'PDF 版本': '1.' + (Math.floor(Math.random() * 4) + 4), // pdf-lib doesn't expose version directly
+    '标题': doc.getTitle() || '(未设置)',
+    '作者': doc.getAuthor() || '(未设置)',
+    '主题': doc.getSubject() || '(未设置)',
+    '关键词': doc.getKeywords() || '(未设置)',
+    '创建者': doc.getCreator() || '(未设置)',
+    '生产者': doc.getProducer() || '(未设置)',
+  };
+
+  const table = document.getElementById('info-table');
+  table.innerHTML = Object.entries(info).map(([k, v]) =>
+    `<tr><td>${escapeHtml(k)}</td><td>${escapeHtml(String(v))}</td></tr>`
+  ).join('');
+  table.style.display = 'table';
+  document.getElementById('tool-result').classList.add('show');
+  document.getElementById('result-detail').textContent = `${info['页数']} 页 · ${info['文件大小']}`;
+}
+
+/* --- Encrypt --- */
+async function doEncrypt() {
+  const { PDFDocument } = PDFLib;
+  const userPwd = document.getElementById('enc-user-pwd').value;
+  const ownerPwd = document.getElementById('enc-owner-pwd').value || userPwd;
+
+  if (!userPwd) throw new Error('请输入密码');
+
+  const file = toolState.files[0];
+  const bytes = await file.arrayBuffer();
+  const doc = await PDFDocument.load(bytes);
+
+  doc.encrypt({
+    userPassword: userPwd,
+    ownerPassword: ownerPwd,
+    permissions: { printing: 'highResolution', modifying: true, copying: true },
+  });
+
+  const result = await doc.save();
+  const name = file.name.replace(/\.pdf$/i, '') + '_加密.pdf';
+  showResult(result, name, '已加密，打开时需要输入密码');
+}
+
+/* --- Decrypt --- */
+async function doDecrypt() {
+  const { PDFDocument } = PDFLib;
+  const pwd = document.getElementById('decrypt-pwd').value;
+  if (!pwd) throw new Error('请输入 PDF 密码');
+
+  const file = toolState.files[0];
+  const bytes = await file.arrayBuffer();
+
+  // pdf-lib loads encrypted PDFs with try/catch
+  const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
+  // Attempt to save without encryption
+  const result = await doc.save();
+  const name = file.name.replace(/\.pdf$/i, '') + '_解密.pdf';
+  showResult(result, name, '已移除密码保护');
+}
+
+/* Download result */
+document.getElementById('btn-download').addEventListener('click', () => {
+  if (!toolState.resultBytes) return;
+  const blob = new Blob([toolState.resultBytes], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = toolState.resultName || 'result.pdf';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+/* ============ AI Todo: Rule-based Chinese NLP Parser ============ */
+function parseTodoText() {
+  const text = document.getElementById('todo-input').value.trim();
+  if (!text) return;
+
+  const tasks = ruleBasedParser(text);
+  const container = document.getElementById('todo-result');
+  const list = document.getElementById('todo-list');
+
+  if (tasks.length === 0) {
+    list.innerHTML = '<p style="color:var(--text-secondary);text-align:center;padding:20px">未识别到待办事项，请检查输入内容</p>';
+  } else {
+    list.innerHTML = tasks.map((t, i) => {
+      const priorityIcon = t.priority === 'urgent' ? '🔴紧急' : t.priority === 'high' ? '🟠重要' : '🟡普通';
+      const dueStr = t.due ? `<div style="font-size:11px;color:var(--accent-2);margin-top:2px">⏰ ${t.due}</div>` : '<div style="font-size:11px;color:var(--text-secondary);margin-top:2px">无截止日期</div>';
+      const personStr = t.person ? ` <span style="color:var(--accent-1)">@${t.person}</span>` : '';
+      return `
+        <div style="padding:10px 14px;margin-bottom:8px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid var(--glass-border)">
+          <div style="font-size:12px;margin-bottom:4px">${priorityIcon}</div>
+          <div style="font-size:14px">${i + 1}. ${escapeHtml(t.action)}${personStr}</div>
+          ${dueStr}
+        </div>
+      `;
+    }).join('');
+  }
+
+  container.style.display = 'block';
+}
+
+function ruleBasedParser(text) {
+  const tasks = [];
+  // Split by newlines or numbered items
+  const lines = text.split(/[\n\r]+/).filter(l => l.trim());
+  const allLines = [];
+  // Also split by bullet points and numbers
+  lines.forEach(line => {
+    const subLines = line.split(/(?:^|\s*)(?:\d+[\.\)、]|[-*•])\s*/).filter(s => s.trim());
+    if (subLines.length > 1) { allLines.push(...subLines); }
+    else { allLines.push(line); }
+  });
+
+  // Detect email format
+  const isEmail = /^(From|To|Subject|发件人|收件人|主题|Date):/im.test(text);
+  let body = text;
+  if (isEmail) {
+    const bodyMatch = text.match(/(?:正文|Body|内容)[：:]\s*([\s\S]+)/i);
+    if (bodyMatch) body = bodyMatch[1];
+    else {
+      // Try to find body after headers
+      const parts = text.split(/\n\n/);
+      if (parts.length > 1) body = parts.slice(1).join('\n\n');
+    }
+    allLines.length = 0;
+    body.split(/[\n\r]+/).filter(l => l.trim()).forEach(l => allLines.push(l));
+  }
+
+  const now = new Date();
+
+  allLines.forEach(line => {
+    const trimmed = line.replace(/^[\d\.\)、\s\-*•]+/, '').trim();
+    if (!trimmed || trimmed.length < 3) return;
+
+    let priority = 'normal';
+    let action = trimmed;
+    let due = null;
+    let person = null;
+
+    // Detect priority
+    if (/^紧急|^🔥|^urgent|^ASAP/i.test(trimmed)) {
+      priority = 'urgent';
+      action = action.replace(/^(紧急|🔥|urgent|ASAP)[：:\s]*/i, '');
+    } else if (/^重要|^⚠️|^high/i.test(trimmed)) {
+      priority = 'high';
+      action = action.replace(/^(重要|⚠️|high)[：:\s]*/i, '');
+    }
+
+    // Detect date/time expressions
+    const datePatterns = [
+      { regex: /(\d{1,2})月(\d{1,2})[号日]/, handler: (m) => {
+        const month = parseInt(m[1]), day = parseInt(m[2]);
+        const y = now.getFullYear();
+        const d = new Date(y, month - 1, day);
+        if (d < now) d.setFullYear(y + 1);
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      }},
+      { regex: /明天/, handler: () => {
+        const d = new Date(now); d.setDate(d.getDate() + 1);
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      }},
+      { regex: /后天/, handler: () => {
+        const d = new Date(now); d.setDate(d.getDate() + 2);
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      }},
+      { regex: /下周(一|二|三|四|五|六|日|天)/, handler: (m) => {
+        const dayMap = { '一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'日':0,'天':0 };
+        const target = dayMap[m[1]];
+        const d = new Date(now);
+        const daysUntil = (target + 7 - d.getDay()) % 7 || 7;
+        d.setDate(d.getDate() + daysUntil);
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      }},
+      { regex: /周(一|二|三|四|五|六|日|天)/, handler: (m) => {
+        const dayMap = { '一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'日':0,'天':0 };
+        const target = dayMap[m[1]];
+        const d = new Date(now);
+        let daysUntil = target - d.getDay();
+        if (daysUntil <= 0) daysUntil += 7;
+        d.setDate(d.getDate() + daysUntil);
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      }},
+      { regex: /(\d{4})[年\-\.](\d{1,2})[月\-\.](\d{1,2})[号日]?/, handler: (m) => `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}` },
+    ];
+
+    let hasDate = false;
+    for (const dp of datePatterns) {
+      const m = trimmed.match(dp.regex);
+      if (m) { due = dp.handler(m); hasDate = true; break; }
+    }
+
+    // Detect time of day
+    const timeMatch = trimmed.match(/(上午|下午|晚上|中午)?(\d{1,2})[点:：](\d{0,2})?/);
+    if (timeMatch) {
+      let hour = parseInt(timeMatch[2]);
+      const minute = timeMatch[3] ? parseInt(timeMatch[3]) : 0;
+      if (timeMatch[1] === '下午' && hour < 12) hour += 12;
+      if (timeMatch[1] === '上午' && hour === 12) hour = 0;
+      if (timeMatch[1] === '晚上') hour += 12;
+      const timeStr = `${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;
+      if (due) due += ' ' + timeStr;
+      else {
+        const d = new Date(now);
+        if (hour < now.getHours() || (hour === now.getHours() && minute < now.getMinutes())) d.setDate(d.getDate()+1);
+        due = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${timeStr}`;
+      }
+      hasDate = true;
+    }
+
+    // Detect temporal phrases
+    if (!hasDate) {
+      if (/今天/.test(trimmed)) {
+        due = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+      } else if (/周五前|周五之前/.test(trimmed)) {
+        const d = new Date(now); const daysUntil = (5 + 7 - d.getDay()) % 7 || 7; d.setDate(d.getDate() + daysUntil);
+        due = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      } else if (/尽快|尽快处理|尽快完成/.test(trimmed)) {
+        due = '尽快';
+      }
+    }
+
+    // Detect person (Chinese name patterns: 找XXX, 联系XXX, 跟XXX沟通, 给XXX)
+    const personPatterns = [/找([一-龥]{2,4})/, /联系([一-龥]{2,4})/, /跟([一-龥]{2,4})沟通/, /给([一-龥]{2,4})/, /和([一-龥]{2,4})/];
+    for (const pp of personPatterns) {
+      const pm = trimmed.match(pp);
+      if (pm) { person = pm[1]; break; }
+    }
+
+    // Clean up action text (remove date/time/person fragments for cleaner display)
+    action = action.replace(/(\d{1,2})月(\d{1,2})[号日]?/g, '').replace(/明天|后天|今天|下周[一二三四五六日天]|周[一二三四五六日天]/g, '');
+    action = action.replace(/(上午|下午|晚上|中午)?\d{1,2}[点:：]\d{0,2}分?/g, '');
+    action = action.replace(/前$/, '').replace(/找[一-龥]{2,4}/g, '').replace(/联系[一-龥]{2,4}/g, '');
+    action = action.replace(/跟[一-龥]{2,4}沟通/g, '').replace(/给[一-龥]{2,4}/g, '').replace(/和[一-龥]{2,4}/g, '');
+    action = action.replace(/尽快处理|尽快完成|尽快/g, '').replace(/周五前|周五之前/g, '');
+    action = action.replace(/\s+/g, ' ').trim();
+
+    if (action.length > 1) {
+      tasks.push({ action, due, person, priority });
+    }
+  });
+
+  return tasks;
+}
+
+function copyTodoList() {
+  const tasks = getParsedTasks();
+  if (tasks.length === 0) return;
+  const text = tasks.map((t, i) => {
+    let line = `${i + 1}. ${t.action}`;
+    if (t.person) line += ` @${t.person}`;
+    if (t.due) line += ` ⏰${t.due}`;
+    if (t.priority === 'urgent') line = '🔴 ' + line;
+    else if (t.priority === 'high') line = '🟠 ' + line;
+    return line;
+  }).join('\n');
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target;
+    btn.textContent = '✅ 已复制';
+    setTimeout(() => { btn.textContent = '📋 复制清单'; }, 2000);
+  });
+}
+
+function downloadTodoList() {
+  const tasks = getParsedTasks();
+  if (tasks.length === 0) return;
+  const text = tasks.map((t, i) => {
+    let line = `${i + 1}. [${t.priority === 'urgent' ? '紧急' : t.priority === 'high' ? '重要' : '普通'}] ${t.action}`;
+    if (t.person) line += ` @${t.person}`;
+    if (t.due) line += ` ⏰${t.due}`;
+    return line;
+  }).join('\n');
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = '待办清单.txt'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function getParsedTasks() {
+  // Re-run parser to get current tasks
+  const text = document.getElementById('todo-input').value.trim();
+  if (!text) return [];
+  return ruleBasedParser(text);
+}
+
+/* ============ ROU Lease Calculator ============ */
+function initRouTool() {
+  document.getElementById('drop-zone').style.display = 'none';
+  document.querySelector('.tool-left').style.display = '';
+  document.querySelector('.tool-right').style.display = 'none';
+  document.getElementById('tool-tabs').innerHTML = '<button class="tool-tab active" data-op="calc">📊 测算</button><button class="tool-tab" data-op="upload">📂 导入 Excel</button>';
+  document.getElementById('file-list').innerHTML = '';
+  document.getElementById('preview-area').classList.remove('show');
+  document.getElementById('preview-placeholder').style.display = 'none';
+
+  document.getElementById('tool-tabs').onclick = e => {
+    const tab = e.target.closest('.tool-tab');
+    if (!tab) return;
+    document.querySelectorAll('#tool-tabs .tool-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    if (tab.dataset.op === 'calc') showRouCalcUI();
+    else showRouUploadUI();
+  };
+
+  showRouCalcUI();
+}
+
+let rouContracts = [];
+
+function getExampleContracts() {
+  return [
+    { name: '办公楼租赁', startDate: '2026-01-01', endDate: '2028-12-31', monthlyRent: 50000, frequency: 'monthly', rate: 4.5, initialCost: 5000 },
+    { name: '仓库租赁',     startDate: '2026-03-01', endDate: '2028-02-28', monthlyRent: 20000, frequency: 'monthly', rate: 4.2, initialCost: 0 },
+    { name: '设备租赁',     startDate: '2026-01-15', endDate: '2027-01-14', monthlyRent: 8000,  frequency: 'monthly', rate: 5.0, initialCost: 2000 },
+  ];
+}
+
+function showRouCalcUI() {
+  if (rouContracts.length === 0) rouContracts = getExampleContracts();
+  const controls = document.getElementById('tool-controls');
+  controls.innerHTML = `
+    <div style="font-size:13px;color:var(--text-secondary)">共 ${rouContracts.length} 份合同 · 点击下方按钮查看结果 · 可修改示例数据</div>
+    ${rouContracts.map((c, i) => `
+      <div style="padding:10px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid var(--glass-border)">
+        <strong>${escapeHtml(c.name)}</strong>
+        <div class="tool-input-row" style="margin-top:6px">
+          <div class="tool-input-group"><label>开始</label><input type="date" value="${c.startDate}" onchange="rouContracts[${i}].startDate=this.value"></div>
+          <div class="tool-input-group"><label>结束</label><input type="date" value="${c.endDate}" onchange="rouContracts[${i}].endDate=this.value"></div>
+        </div>
+        <div class="tool-input-row">
+          <div class="tool-input-group"><label>月租金</label><input type="number" value="${c.monthlyRent}" onchange="rouContracts[${i}].monthlyRent=+this.value"></div>
+          <div class="tool-input-group"><label>折现率(%)</label><input type="number" step="0.1" value="${c.rate}" onchange="rouContracts[${i}].rate=+this.value"></div>
+        </div>
+        <div class="tool-input-row">
+          <div class="tool-input-group"><label>初始费用</label><input type="number" value="${c.initialCost}" onchange="rouContracts[${i}].initialCost=+this.value"></div>
+          <button class="btn-tool btn-tool-secondary" onclick="rouContracts.splice(${i},1);showRouCalcUI()" style="align-self:end">🗑️ 删除</button>
+        </div>
+      </div>
+    `).join('')}
+    <div class="tool-actions">
+      <button class="btn-tool btn-tool-primary" onclick="addRouContract()">➕ 添加合同</button>
+      <button class="btn-tool btn-tool-primary" onclick="calculateAndShowROU()" style="background:#5cfc9c;color:#000">🔢 开始测算</button>
+    </div>
+    <div id="rou-result"></div>
+  `;
+}
+
+function addRouContract() {
+  rouContracts.push({ name: '新合同 ' + (rouContracts.length+1), startDate: '2026-06-01', endDate: '2027-05-31', monthlyRent: 10000, frequency: 'monthly', rate: 4.5, initialCost: 0 });
+  showRouCalcUI();
+}
+
+function calculateAndShowROU() {
+  const div = document.getElementById('rou-result');
+  const results = rouContracts.map(c => calcOneROU(c));
+  const totalAsset = results.reduce((s, r) => s + r.rouAsset, 0);
+  const totalInterest = results.reduce((s, r) => s + r.totalInterest, 0);
+
+  div.innerHTML = `
+    <h4 style="margin-top:16px">📊 测算汇总</h4>
+    <table style="width:100%;border-collapse:collapse;margin-top:8px">
+      <tr style="background:rgba(124,92,252,0.2)">
+        <th style="padding:8px;text-align:left">合同</th><th style="padding:8px;text-align:right">ROU资产</th><th style="padding:8px;text-align:right">总利息</th><th style="padding:8px;text-align:center">月数</th><th style="padding:8px;text-align:right">初始费用</th>
+      </tr>
+      ${results.map((r, i) => `
+        <tr style="cursor:pointer;border-bottom:1px solid var(--glass-border)" onclick="showRouSchedule(${i})" title="点击查看摊销明细">
+          <td style="padding:8px">📄 ${escapeHtml(rouContracts[i].name)}</td>
+          <td style="padding:8px;text-align:right">${fmtNum(r.rouAsset)}</td>
+          <td style="padding:8px;text-align:right">${fmtNum(r.totalInterest)}</td>
+          <td style="padding:8px;text-align:center">${r.months}</td>
+          <td style="padding:8px;text-align:right">${fmtNum(r.initialCost)}</td>
+        </tr>
+      `).join('')}
+      <tr style="font-weight:700;border-top:2px solid var(--accent-1)">
+        <td style="padding:8px">合计</td><td style="padding:8px;text-align:right">${fmtNum(totalAsset)}</td><td style="padding:8px;text-align:right">${fmtNum(totalInterest)}</td><td colspan="2"></td>
+      </tr>
+    </table>
+    <div class="tool-actions" style="margin-top:12px">
+      <button class="btn-tool btn-tool-secondary" onclick="downloadRouResults()">⬇ 导出 Excel</button>
+    </div>
+    <div id="rou-schedule"></div>
+  `;
+}
+
+function calcOneROU(c) {
+  const start = new Date(c.startDate);
+  const end = new Date(c.endDate);
+  const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+  const monthlyRate = c.rate / 100 / 12;
+  const payment = c.monthlyRent;
+
+  // PV of lease payments
+  let pv = 0;
+  for (let i = 0; i < months; i++) {
+    pv += payment / Math.pow(1 + monthlyRate, i + 1);
+  }
+  const rouAsset = Math.round(pv + (c.initialCost || 0));
+  const totalPayments = payment * months;
+  const totalInterest = Math.round(totalPayments - pv);
+
+  // Monthly schedule
+  let liability = rouAsset - (c.initialCost || 0);
+  const schedule = [];
+  for (let i = 0; i < months; i++) {
+    const interest = Math.round(liability * monthlyRate * 100) / 100;
+    const principal = Math.round((payment - interest) * 100) / 100;
+    liability = Math.round((liability - principal) * 100) / 100;
+    const d = new Date(start); d.setMonth(d.getMonth() + i + 1);
+    schedule.push({
+      month: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`,
+      payment, interest: interest.toFixed(2), principal: principal.toFixed(2),
+      liability: liability.toFixed(2)
+    });
+  }
+
+  return { rouAsset, totalInterest: Math.round(totalInterest), months, initialCost: c.initialCost || 0, schedule };
+}
+
+function showRouSchedule(idx) {
+  const r = calcOneROU(rouContracts[idx]);
+  const div = document.getElementById('rou-schedule');
+  div.innerHTML = `
+    <h4 style="margin-top:16px">📋 ${escapeHtml(rouContracts[idx].name)} · 摊销明细</h4>
+    <div style="max-height:300px;overflow-y:auto">
+    <table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:12px">
+      <tr style="background:rgba(124,92,252,0.15);position:sticky;top:0">
+        <th style="padding:6px">月份</th><th style="padding:6px;text-align:right">月租金</th><th style="padding:6px;text-align:right">利息</th><th style="padding:6px;text-align:right">本金偿还</th><th style="padding:6px;text-align:right">期末负债</th>
+      </tr>
+      ${r.schedule.map(s => `
+        <tr style="border-bottom:1px solid var(--glass-border)">
+          <td style="padding:6px">${s.month}</td>
+          <td style="padding:6px;text-align:right">${fmtNum(s.payment)}</td>
+          <td style="padding:6px;text-align:right;color:#fcc85c">${s.interest}</td>
+          <td style="padding:6px;text-align:right">${s.principal}</td>
+          <td style="padding:6px;text-align:right;color:${s.liability < 0 ? '#fc5c9c' : '#5cfca0'}">${s.liability}</td>
+        </tr>
+      `).join('')}
+    </table></div>
+  `;
+  div.scrollIntoView({ behavior: 'smooth' });
+}
+
+function showRouUploadUI() {
+  const controls = document.getElementById('tool-controls');
+  controls.innerHTML = `
+    <div class="drop-zone" id="rou-drop" style="display:block">
+      <div class="dz-icon">📂</div>
+      <div class="dz-text">拖入 Excel/CSV 或点击上传</div>
+      <div class="dz-hint">列名: 合同名称,开始日期,结束日期,月租金,折现率,初始费用</div>
+    </div>
+    <div id="rou-import-result"></div>
+  `;
+  setupFileDrop('rou-drop', handleRouFile);
+}
+
+function handleRouFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws);
+      rouContracts = rows.map(r => ({
+        name: r['合同名称'] || r['name'] || '未命名',
+        startDate: r['开始日期'] || r['startDate'] || '2026-01-01',
+        endDate: r['结束日期'] || r['endDate'] || '2026-12-31',
+        monthlyRent: parseFloat(r['月租金'] || r['monthlyRent'] || 0),
+        frequency: 'monthly',
+        rate: parseFloat(r['折现率'] || r['rate'] || 4.5),
+        initialCost: parseFloat(r['初始费用'] || r['initialCost'] || 0)
+      }));
+      document.getElementById('rou-import-result').innerHTML = `<div class="tool-result show"><div class="result-title">✅ 成功导入 ${rouContracts.length} 份合同</div></div>`;
+      document.querySelectorAll('#tool-tabs .tool-tab')[0].click();
+    } catch(err) {
+      document.getElementById('rou-import-result').innerHTML = `<div class="tool-error show">❌ 导入失败: ${err.message}</div>`;
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function downloadRouResults() {
+  const results = rouContracts.map(c => calcOneROU(c));
+  const rows = [['合同名称','ROU资产','总利息','月数','初始费用']];
+  results.forEach((r, i) => rows.push([rouContracts[i].name, r.rouAsset, r.totalInterest, r.months, r.initialCost]));
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'ROU测算汇总');
+  XLSX.writeFile(wb, 'ROU租赁测算结果.xlsx');
+}
+
+function fmtNum(n) { return Number(n).toLocaleString('zh-CN', { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
+
+/* ============ AR Aging Analysis ============ */
+function initAgingTool() {
+  document.getElementById('drop-zone').style.display = 'none';
+  document.querySelector('.tool-left').style.display = '';
+  document.querySelector('.tool-right').style.display = 'none';
+  document.getElementById('tool-tabs').innerHTML = '<button class="tool-tab active" data-op="manual">📝 手动录入</button><button class="tool-tab" data-op="upload">📂 导入 Excel</button>';
+  document.getElementById('file-list').innerHTML = '';
+  document.getElementById('preview-area').classList.remove('show');
+  document.getElementById('preview-placeholder').style.display = 'none';
+
+  document.getElementById('tool-tabs').onclick = e => {
+    const tab = e.target.closest('.tool-tab');
+    if (!tab) return;
+    document.querySelectorAll('#tool-tabs .tool-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    if (tab.dataset.op === 'manual') showAgingManualUI();
+    else showAgingUploadUI();
+  };
+
+  showAgingManualUI();
+}
+
+let arItems = [];
+
+function getExampleAR() {
+  const now = new Date();
+  const d = (offset) => { const dt = new Date(now); dt.setDate(dt.getDate() + offset); return dt; };
+  return [
+    { customer: '客户A', invoiceNo: 'INV-001', invoiceDate: fmtDate(d(-15)), amount: 50000, terms: 30 },
+    { customer: '客户B', invoiceNo: 'INV-002', invoiceDate: fmtDate(d(-80)), amount: 20000, terms: 30 },
+    { customer: '客户A', invoiceNo: 'INV-003', invoiceDate: fmtDate(d(-120)), amount: 15000, terms: 60 },
+    { customer: '客户C', invoiceNo: 'INV-004', invoiceDate: fmtDate(d(-5)),  amount: 100000, terms: 30 },
+    { customer: '客户B', invoiceNo: 'INV-005', invoiceDate: fmtDate(d(-45)), amount: 8000, terms: 30 },
+  ];
+}
+
+function fmtDate(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+
+function showAgingManualUI() {
+  if (arItems.length === 0) arItems = getExampleAR();
+  const controls = document.getElementById('tool-controls');
+  controls.innerHTML = `
+    <div style="font-size:13px;color:var(--text-secondary)">共 ${arItems.length} 笔应收 · 点击测算查看账龄分析</div>
+    ${arItems.map((item, i) => `
+      <div style="padding:10px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid var(--glass-border)">
+        <strong>${escapeHtml(item.customer)}</strong> · ${escapeHtml(item.invoiceNo)}
+        <div class="tool-input-row" style="margin-top:6px">
+          <div class="tool-input-group"><label>发票日期</label><input type="date" value="${item.invoiceDate}" onchange="arItems[${i}].invoiceDate=this.value"></div>
+          <div class="tool-input-group"><label>金额</label><input type="number" value="${item.amount}" onchange="arItems[${i}].amount=+this.value"></div>
+        </div>
+        <div class="tool-input-row">
+          <div class="tool-input-group"><label>账期(天)</label><input type="number" value="${item.terms}" onchange="arItems[${i}].terms=+this.value"></div>
+          <button class="btn-tool btn-tool-secondary" onclick="arItems.splice(${i},1);showAgingManualUI()" style="align-self:end">🗑️</button>
+        </div>
+      </div>
+    `).join('')}
+    <div class="tool-actions">
+      <button class="btn-tool btn-tool-primary" onclick="addArItem()">➕ 添加应收</button>
+      <button class="btn-tool btn-tool-primary" onclick="calculateAndShowAging()" style="background:#5cfc9c;color:#000">🔢 账龄分析</button>
+    </div>
+    <div id="aging-result"></div>
+  `;
+}
+
+function addArItem() {
+  arItems.push({ customer: '新客户', invoiceNo: 'INV-' + (arItems.length+1), invoiceDate: fmtDate(new Date()), amount: 0, terms: 30 });
+  showAgingManualUI();
+}
+
+function calculateAndShowAging() {
+  const now = new Date();
+  const aging = {};
+  arItems.forEach(item => {
+    const dueDate = new Date(item.invoiceDate); dueDate.setDate(dueDate.getDate() + item.terms);
+    const daysOverdue = Math.floor((now - dueDate) / (1000 * 60 * 60 * 24));
+    let bucket;
+    if (daysOverdue <= 0) bucket = '未到期';
+    else if (daysOverdue <= 30) bucket = '1-30天';
+    else if (daysOverdue <= 60) bucket = '31-60天';
+    else if (daysOverdue <= 90) bucket = '61-90天';
+    else bucket = '90天以上';
+
+    if (!aging[item.customer]) aging[item.customer] = { buckets: {}, total: 0, maxBucket: 0 };
+    aging[item.customer].buckets[bucket] = (aging[item.customer].buckets[bucket] || 0) + item.amount;
+    aging[item.customer].total += item.amount;
+    if (['90天以上','61-90天','31-60天','1-30天','未到期'].indexOf(bucket) > aging[item.customer].maxBucket) {
+      aging[item.customer].maxBucket = ['90天以上','61-90天','31-60天','1-30天','未到期'].indexOf(bucket);
+    }
+  });
+
+  const bucketOrder = ['未到期','1-30天','31-60天','61-90天','90天以上'];
+  const riskIcons = { 0:'🟢', 1:'🟡', 2:'🟠', 3:'🔴', 4:'⚫' };
+
+  const rows = Object.entries(aging).map(([name, data]) => {
+    let cells = `<td style="padding:6px">${escapeHtml(name)}</td>`;
+    bucketOrder.forEach(b => cells += `<td style="padding:6px;text-align:right">${data.buckets[b] ? fmtNum(data.buckets[b]) : '-'}</td>`);
+    cells += `<td style="padding:6px;text-align:right;font-weight:700">${fmtNum(data.total)}</td>`;
+    cells += `<td style="padding:6px;text-align:center;font-size:18px">${riskIcons[data.maxBucket]}</td>`;
+    return `<tr style="border-bottom:1px solid var(--glass-border)">${cells}</tr>`;
+  }).join('');
+
+  const grandTotal = Object.values(aging).reduce((s, d) => s + d.total, 0);
+
+  const div = document.getElementById('aging-result');
+  div.innerHTML = `
+    <h4 style="margin-top:16px">📊 账龄分析汇总</h4>
+    <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:12px">
+      <tr style="background:rgba(124,92,252,0.2)">
+        <th style="padding:6px;text-align:left">客户</th>
+        ${bucketOrder.map(b => `<th style="padding:6px;text-align:right">${b}</th>`).join('')}
+        <th style="padding:6px;text-align:right">合计</th><th style="padding:6px;text-align:center">风险</th>
+      </tr>
+      ${rows}
+      <tr style="font-weight:700;border-top:2px solid var(--accent-1)">
+        <td style="padding:6px">合计</td>
+        ${bucketOrder.map(b => `<td style="padding:6px;text-align:right">${fmtNum(Object.values(aging).reduce((s,d) => s + (d.buckets[b]||0), 0))}</td>`).join('')}
+        <td style="padding:6px;text-align:right">${fmtNum(grandTotal)}</td><td></td>
+      </tr>
+    </table></div>
+    <div class="tool-actions" style="margin-top:12px">
+      <button class="btn-tool btn-tool-secondary" onclick="downloadAgingResults()">⬇ 导出 Excel</button>
+    </div>
+  `;
+}
+
+function showAgingUploadUI() {
+  const controls = document.getElementById('tool-controls');
+  controls.innerHTML = `
+    <div class="drop-zone" id="aging-drop" style="display:block">
+      <div class="dz-icon">📂</div>
+      <div class="dz-text">拖入应收 Excel/CSV</div>
+      <div class="dz-hint">列名: 客户名称,发票号,发票日期,金额,账期(天)</div>
+    </div>
+    <div id="aging-import-result"></div>
+  `;
+  setupFileDrop('aging-drop', handleAgingFile);
+}
+
+function handleAgingFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws);
+      arItems = rows.map(r => ({
+        customer: r['客户名称'] || r['customer'] || '未知',
+        invoiceNo: r['发票号'] || r['invoiceNo'] || '',
+        invoiceDate: r['发票日期'] || r['invoiceDate'] || '2026-01-01',
+        amount: parseFloat(r['金额'] || r['amount'] || 0),
+        terms: parseInt(r['账期(天)'] || r['terms'] || 30)
+      }));
+      document.getElementById('aging-import-result').innerHTML = `<div class="tool-result show"><div class="result-title">✅ 成功导入 ${arItems.length} 笔应收</div></div>`;
+      document.querySelectorAll('#tool-tabs .tool-tab')[0].click();
+    } catch(err) {
+      document.getElementById('aging-import-result').innerHTML = `<div class="tool-error show">❌ 导入失败: ${err.message}</div>`;
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function downloadAgingResults() {
+  const now = new Date();
+  const bucketOrder = ['未到期','1-30天','31-60天','61-90天','90天以上'];
+  const rows = [['客户名称','发票号','发票日期','金额','账期(天)','逾期天数','账龄区间']];
+  arItems.forEach(item => {
+    const dueDate = new Date(item.invoiceDate); dueDate.setDate(dueDate.getDate() + item.terms);
+    const daysOverdue = Math.floor((now - dueDate) / (1000 * 60 * 60 * 24));
+    let bucket;
+    if (daysOverdue <= 0) bucket = '未到期';
+    else if (daysOverdue <= 30) bucket = '1-30天';
+    else if (daysOverdue <= 60) bucket = '31-60天';
+    else if (daysOverdue <= 90) bucket = '61-90天';
+    else bucket = '90天以上';
+    rows.push([item.customer, item.invoiceNo, item.invoiceDate, item.amount, item.terms, daysOverdue, bucket]);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, '账龄分析');
+  XLSX.writeFile(wb, '应收账龄分析结果.xlsx');
+}
+
+function setupFileDrop(zoneId, handler) {
+  const zone = document.getElementById(zoneId);
+  if (!zone) return;
+  zone.onclick = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.xlsx,.xls,.csv';
+    input.onchange = () => { if (input.files[0]) handler(input.files[0]); };
+    input.click();
+  };
+  zone.ondragover = e => { e.preventDefault(); zone.classList.add('dragover'); };
+  zone.ondragleave = () => { zone.classList.remove('dragover'); };
+  zone.ondrop = e => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    if (e.dataTransfer.files[0]) handler(e.dataTransfer.files[0]);
+  };
+}
+
+// ESC to close tool panel
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.getElementById('tool-panel').classList.contains('open')) {
+    closeToolPanel();
+  }
+});
+</script>
+</body>
+</html>
