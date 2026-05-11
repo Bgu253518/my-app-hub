@@ -1215,7 +1215,8 @@ function downloadFullAmortExcel() {
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 1000);
 
-    showExportMsg(`✅ 导出成功！包含 ${usedNames.size - 1} 份合同的摊销明细`, 'success');
+    const count = sheetNameMap.filter(Boolean).length;
+    showExportMsg(`✅ 导出成功！含 ${count} 份合同摊销明细，汇总表公式关联明细`, 'success');
   } catch (err) {
     showExportMsg('❌ 导出失败: ' + err.message, 'error');
     console.error('导出全部摊销明细错误:', err);
