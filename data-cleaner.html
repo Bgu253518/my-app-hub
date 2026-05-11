@@ -324,9 +324,22 @@ table.data-table td.col-removed { background: rgba(252,92,92,0.08); opacity: 0.5
       </label>
     </div>
     <div class="clean-option">
-      <label><input type="checkbox" id="optNullFill">
-        <div class="co-text"><div class="co-name">⬜ 填充空值</div><div class="co-desc">用上一行的值填充空单元格（适用于连续数据）</div></div>
-      </label>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="checkbox" id="optNullFill" onchange="toggleNullFillMode()">
+            <span style="font-size:13px;font-weight:600">⬜ 填充空值</span>
+          </label>
+          <select id="nullFillMode" disabled style="background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);color:var(--text-primary);padding:4px 8px;border-radius:6px;font-size:12px;outline:none;">
+            <option value="zero">填充为 0（金额列推荐）</option>
+            <option value="prev" selected>用上一行值填充</option>
+            <option value="next">用下一行值填充</option>
+            <option value="custom">自定义值</option>
+          </select>
+          <input type="text" id="nullFillCustom" placeholder="输入自定义值" disabled style="width:100px;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);color:var(--text-primary);padding:4px 8px;border-radius:6px;font-size:12px;outline:none;display:none;">
+        </div>
+        <div class="co-desc" style="margin-top:6px;margin-left:26px">空单元格根据策略自动填充：0 / 上下行 / 自定义</div>
+      </div>
     </div>
     <div class="clean-option">
       <label><input type="checkbox" id="optColTrim">
@@ -706,18 +719,50 @@ function cleanData() {
         }
       }
 
-      // --- Step 5: Fill nulls with previous row ---
+      // --- Step 5: Fill nulls ---
       if (doNullFill) {
+        const fillMode = document.getElementById('nullFillMode').value;
+        const customVal = document.getElementById('nullFillCustom').value.trim();
         for (let c = 0; c < totalCols; c++) {
-          let lastVal = '';
-          for (let r = 0; r < data.length; r++) {
-            if (data[r][c] === '') {
-              if (lastVal !== '') {
-                data[r][c] = lastVal;
-                chgs.push({ row: r, col: c, type: 'fill', old: '', newVal: lastVal, display: `行${r+2} 列"${headers[c]}" 填充空值` });
+          if (fillMode === 'prev') {
+            let lastVal = '';
+            for (let r = 0; r < data.length; r++) {
+              if (data[r][c] === '') {
+                const fill = lastVal !== '' ? lastVal : '0';
+                data[r][c] = fill;
+                chgs.push({ row: r, col: c, type: 'fill', old: '', newVal: fill, display: `行${r+2} 列"${headers[c]}" 用上一行值填充` });
+              } else {
+                lastVal = data[r][c];
               }
-            } else {
-              lastVal = data[r][c];
+            }
+          } else if (fillMode === 'next') {
+            let nextVal = '';
+            // First pass: find next non-empty from bottom
+            const fillValues = [];
+            for (let r = data.length - 1; r >= 0; r--) {
+              if (data[r][c] !== '') nextVal = data[r][c];
+              fillValues[r] = nextVal;
+            }
+            for (let r = 0; r < data.length; r++) {
+              if (data[r][c] === '') {
+                const fill = fillValues[r] || '0';
+                data[r][c] = fill;
+                chgs.push({ row: r, col: c, type: 'fill', old: '', newVal: fill, display: `行${r+2} 列"${headers[c]}" 用下一行值填充` });
+              }
+            }
+          } else if (fillMode === 'zero') {
+            for (let r = 0; r < data.length; r++) {
+              if (data[r][c] === '') {
+                data[r][c] = '0';
+                chgs.push({ row: r, col: c, type: 'fill', old: '', newVal: '0', display: `行${r+2} 列"${headers[c]}" 空值填充为 0` });
+              }
+            }
+          } else if (fillMode === 'custom' && customVal) {
+            for (let r = 0; r < data.length; r++) {
+              if (data[r][c] === '') {
+                data[r][c] = customVal;
+                chgs.push({ row: r, col: c, type: 'fill', old: '', newVal: customVal, display: `行${r+2} 列"${headers[c]}" 空值填充为"${customVal}"` });
+              }
             }
           }
         }
@@ -1012,10 +1057,30 @@ function downloadBlob(blob, name) {
 // Button handlers
 // ============================================================
 btnClean.addEventListener('click', cleanData);
+function toggleNullFillMode() {
+  const enabled = document.getElementById('optNullFill').checked;
+  document.getElementById('nullFillMode').disabled = !enabled;
+  document.getElementById('nullFillCustom').disabled = !enabled || document.getElementById('nullFillMode').value !== 'custom';
+  if (!enabled) document.getElementById('nullFillCustom').style.display = 'none';
+  else if (document.getElementById('nullFillMode').value === 'custom') document.getElementById('nullFillCustom').style.display = 'inline-block';
+}
+
+document.getElementById('nullFillMode').addEventListener('change', function() {
+  const customInput = document.getElementById('nullFillCustom');
+  if (this.value === 'custom') {
+    customInput.style.display = 'inline-block';
+    customInput.disabled = false;
+  } else {
+    customInput.style.display = 'none';
+    customInput.disabled = true;
+  }
+});
+
 btnResetOpt.addEventListener('click', () => {
   document.querySelectorAll('#cleanOptions input[type=checkbox]').forEach(cb => cb.checked = true);
   document.getElementById('optNullFill').checked = false;
   document.getElementById('optColTrim').checked = false;
+  toggleNullFillMode();
 });
 btnBackEdit.addEventListener('click', () => {
   stepResult.classList.add('hidden');
