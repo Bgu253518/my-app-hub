@@ -1013,6 +1013,7 @@ function downloadResultsExcel() {
       }
     });
     const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!ref'] = XLSX.utils.encode_range({ s: {r:0,c:0}, e: {r:rows.length-1, c:rows[0].length-1} });
     ws['!cols'] = rows[0].map(() => ({ wch: 16 }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'ROU测算汇总');
@@ -1035,25 +1036,9 @@ function downloadFullAmortExcel() {
   try {
     const wb = XLSX.utils.book_new();
     const usedNames = new Set();
+    const sheetNameMap = []; // idx -> sheet name (for cross-sheet refs)
 
-    // Summary sheet
-    const summaryRows = [['合同名称','租赁期(月)','每期租金','付款总额','租赁负债(PV)','ROU资产','总利息','折旧月数','月折旧额']];
-    lastResults.forEach(r => {
-      if (r.exempted) return;
-      const c = r.contract;
-      const m = (new Date(c.endDate).getFullYear() - new Date(c.startDate).getFullYear()) * 12
-        + (new Date(c.endDate).getMonth() - new Date(c.startDate).getMonth());
-      const deprPerMonth = r.amort.deprMonths > 0 ? +(r.amort.rouAsset / r.amort.deprMonths).toFixed(2) : 0;
-      summaryRows.push([c.name, m, c.paymentAmount, +r.amort.totalPayments.toFixed(2),
-        +r.amort.leaseLiabilityPV.toFixed(2), +r.amort.rouAsset.toFixed(2),
-        +r.amort.totalInterest.toFixed(2), r.amort.deprMonths, deprPerMonth]);
-    });
-    const ws1 = XLSX.utils.aoa_to_sheet(summaryRows);
-    ws1['!cols'] = summaryRows[0].map(() => ({ wch: 16 }));
-    XLSX.utils.book_append_sheet(wb, ws1, '汇总');
-    usedNames.add('汇总');
-
-    // Detail sheet per contract - with Excel formulas
+    // === Step 1: Build detail sheets first, record names ===
     lastResults.forEach((r, idx) => {
       if (r.exempted || r.amort.schedule.length === 0) return;
       const c = r.contract;
@@ -1068,15 +1053,12 @@ function downloadFullAmortExcel() {
       // Build sheet manually with formulas
       const ws = {};
 
-      // --- Parameter area at Q1:R4 ---
-      const paramRow = (row, label, value) => {
-        ws['P' + row] = { t: 's', v: label };
-        ws['Q' + row] = { t: 'n', v: value };
-      };
-      paramRow(1, '每期租金', payment);
-      paramRow(2, '期折现率', +periodRate.toFixed(8));
-      paramRow(3, 'ROU资产原值', +rouAsset.toFixed(2));
-      paramRow(4, '每期折旧额', +deprPerPeriod.toFixed(2));
+      // --- Parameter area at P1:Q5 (right side) ---
+      ws['P1'] = { t: 's', v: '每期租金' };     ws['Q1'] = { t: 'n', v: payment };
+      ws['P2'] = { t: 's', v: '期折现率' };      ws['Q2'] = { t: 'n', v: +periodRate.toFixed(8) };
+      ws['P3'] = { t: 's', v: 'ROU资产原值' };   ws['Q3'] = { t: 'n', v: +rouAsset.toFixed(2) };
+      ws['P4'] = { t: 's', v: '每期折旧额' };     ws['Q4'] = { t: 'n', v: +deprPerPeriod.toFixed(2) };
+      ws['P5'] = { t: 's', v: '租赁负债(PV)' };  ws['Q5'] = { t: 'n', v: +openingPV.toFixed(2) };
 
       // --- Headers (Row 1) ---
       const headers = ['期数','日期','期初负债','本期付款','利息费用','偿还本金','期末负债','本期折旧','累计折旧','ROU净值'];
@@ -1096,55 +1078,61 @@ function downloadFullAmortExcel() {
         // B: 日期 (static)
         ws[XLSX.utils.encode_cell({ r: row, c: 1 })] = { t: 's', v: s.date };
 
+        // C: 期初负债
         if (t === 0) {
-          // First period: opening liability is hardcoded PV
           ws[XLSX.utils.encode_cell({ r: row, c: 2 })] = { t: 'n', v: +openingPV.toFixed(2) };
         } else {
-          // C(t) = G(t-1) — opening = previous closing
-          const prevClosing = XLSX.utils.encode_cell({ r: row - 1, c: 6 });
-          ws[XLSX.utils.encode_cell({ r: row, c: 2 })] = { t: 'n', f: prevClosing };
+          const prevG = XLSX.utils.encode_cell({ r: row - 1, c: 6 });
+          ws[XLSX.utils.encode_cell({ r: row, c: 2 })] = { t: 'n', f: prevG, v: +s.openingLiability.toFixed(2) };
         }
 
-        // D: 本期付款 = $Q$1 (reference to parameter)
+        // D: 本期付款 = $Q$1
         ws[XLSX.utils.encode_cell({ r: row, c: 3 })] = { t: 'n', f: '$Q$1', v: payment };
 
+        // E & F: 利息 & 本金
         if (isBeginning && t === 0) {
-          // First payment at beginning: interest = 0, principal = full payment
           ws[XLSX.utils.encode_cell({ r: row, c: 4 })] = { t: 'n', v: 0 };
-          ws[XLSX.utils.encode_cell({ r: row, c: 5 })] = { t: 'n', v: payment };
+          ws[XLSX.utils.encode_cell({ r: row, c: 5 })] = { t: 'n', f: '$Q$1', v: payment };
         } else {
-          // E: 利息 = 期初负债 × 折现率
-          const openingCell = XLSX.utils.encode_cell({ r: row, c: 2 });
-          ws[XLSX.utils.encode_cell({ r: row, c: 4 })] = { t: 'n', f: openingCell + '*$Q$2' };
-          // F: 偿还本金 = 本期付款 - 利息
-          const payCell = XLSX.utils.encode_cell({ r: row, c: 3 });
-          const intCell = XLSX.utils.encode_cell({ r: row, c: 4 });
-          ws[XLSX.utils.encode_cell({ r: row, c: 5 })] = { t: 'n', f: payCell + '-' + intCell };
+          const cellC = XLSX.utils.encode_cell({ r: row, c: 2 });
+          const cellD = XLSX.utils.encode_cell({ r: row, c: 3 });
+          const cellE = XLSX.utils.encode_cell({ r: row, c: 4 });
+          ws[XLSX.utils.encode_cell({ r: row, c: 4 })] = { t: 'n', f: cellC + '*$Q$2', v: +s.interest.toFixed(2) };
+          ws[XLSX.utils.encode_cell({ r: row, c: 5 })] = { t: 'n', f: cellD + '-' + cellE, v: +s.principal.toFixed(2) };
         }
 
-        // G: 期末负债 = 期初负债 - 偿还本金
-        const cCell = XLSX.utils.encode_cell({ r: row, c: 2 });
-        const fCell = XLSX.utils.encode_cell({ r: row, c: 5 });
-        ws[XLSX.utils.encode_cell({ r: row, c: 6 })] = { t: 'n', f: cCell + '-' + fCell };
+        // G: 期末负债 = C - F
+        {
+          const cellC = XLSX.utils.encode_cell({ r: row, c: 2 });
+          const cellF = XLSX.utils.encode_cell({ r: row, c: 5 });
+          ws[XLSX.utils.encode_cell({ r: row, c: 6 })] = { t: 'n', f: cellC + '-' + cellF, v: +s.closingLiability.toFixed(2) };
+        }
 
-        // H: 本期折旧 = $Q$4 (reference to parameter)
-        ws[XLSX.utils.encode_cell({ r: row, c: 7 })] = { t: 'n', f: '$Q$4' };
+        // H: 本期折旧 = $Q$4
+        ws[XLSX.utils.encode_cell({ r: row, c: 7 })] = { t: 'n', f: '$Q$4', v: +s.depr.toFixed(2) };
 
+        // I: 累计折旧
         if (t === 0) {
-          // I: 累计折旧 = 本期折旧
-          ws[XLSX.utils.encode_cell({ r: row, c: 8 })] = { t: 'n', f: '$Q$4' };
+          const cellH = XLSX.utils.encode_cell({ r: row, c: 7 });
+          ws[XLSX.utils.encode_cell({ r: row, c: 8 })] = { t: 'n', f: cellH, v: +s.accumulatedDepr.toFixed(2) };
         } else {
-          // I: 累计折旧 = 前期累计 + 本期折旧
-          const prevAccDepr = XLSX.utils.encode_cell({ r: row - 1, c: 8 });
-          const thisDepr = XLSX.utils.encode_cell({ r: row, c: 7 });
-          ws[XLSX.utils.encode_cell({ r: row, c: 8 })] = { t: 'n', f: prevAccDepr + '+' + thisDepr };
+          const prevI = XLSX.utils.encode_cell({ r: row - 1, c: 8 });
+          const cellH = XLSX.utils.encode_cell({ r: row, c: 7 });
+          ws[XLSX.utils.encode_cell({ r: row, c: 8 })] = { t: 'n', f: prevI + '+' + cellH, v: +s.accumulatedDepr.toFixed(2) };
         }
 
         // J: ROU净值 = ROU资产 - 累计折旧
-        const accDepr = XLSX.utils.encode_cell({ r: row, c: 8 });
-        ws[XLSX.utils.encode_cell({ r: row, c: 9 })] = { t: 'n', f: '$Q$3-' + accDepr };
+        {
+          const cellI = XLSX.utils.encode_cell({ r: row, c: 8 });
+          ws[XLSX.utils.encode_cell({ r: row, c: 9 })] = { t: 'n', f: '$Q$3-' + cellI, v: +s.rouNet.toFixed(2) };
+        }
       }
 
+      // Define sheet range
+      ws['!ref'] = XLSX.utils.encode_range({
+        s: { r: 0, c: 0 },
+        e: { r: schedule.length, c: headers.length - 1 }
+      });
       ws['!cols'] = headers.map(() => ({ wch: 14 }));
 
       // Generate unique sheet name (Excel max 31 chars)
@@ -1157,10 +1145,65 @@ function downloadFullAmortExcel() {
         counter++;
       }
       usedNames.add(sheetName);
+      sheetNameMap.push(sheetName);
       XLSX.utils.book_append_sheet(wb, ws, sheetName);
     });
 
-    // Use manual download (more reliable than writeFile)
+    // === Step 2: Build summary sheet with cross-sheet formulas ===
+    {
+      const sh = ['合同名称','租赁期(月)','每期租金','付款总额','租赁负债(PV)','ROU资产','总利息','月折旧额'];
+      const wsS = {};
+
+      // Header row
+      sh.forEach((h, ci) => {
+        wsS[XLSX.utils.encode_cell({ r: 0, c: ci })] = { t: 's', v: h };
+      });
+
+      let row = 1;
+      lastResults.forEach((r, idx) => {
+        const sn = sheetNameMap[idx];
+        const c = r.contract;
+        const m = (new Date(c.endDate).getFullYear() - new Date(c.startDate).getFullYear()) * 12
+          + (new Date(c.endDate).getMonth() - new Date(c.startDate).getMonth());
+
+        // A: 合同名称
+        wsS[XLSX.utils.encode_cell({ r: row, c: 0 })] = { t: 's', v: c.name || '合同' + (idx + 1) };
+        // B: 租赁期(月)
+        wsS[XLSX.utils.encode_cell({ r: row, c: 1 })] = { t: 'n', v: m };
+
+        if (!r.exempted && sn) {
+          const ref = (cell) => "'" + sn + "'!" + cell;
+          const deprPerMonth = r.amort.deprMonths > 0 ? +(r.amort.rouAsset / r.amort.deprMonths).toFixed(2) : 0;
+          // C: 每期租金 → detail!$Q$1
+          wsS[XLSX.utils.encode_cell({ r: row, c: 2 })] = { t: 'n', f: ref('$Q$1'), v: c.paymentAmount };
+          // D: 付款总额 → 每期租金×期数
+          wsS[XLSX.utils.encode_cell({ r: row, c: 3 })] = { t: 'n', f: XLSX.utils.encode_cell({ r: row, c: 2 }) + '*' + r.amort.n, v: +r.amort.totalPayments.toFixed(2) };
+          // E: 租赁负债(PV) → detail!$Q$5
+          wsS[XLSX.utils.encode_cell({ r: row, c: 4 })] = { t: 'n', f: ref('$Q$5'), v: +r.amort.leaseLiabilityPV.toFixed(2) };
+          // F: ROU资产 → detail!$Q$3
+          wsS[XLSX.utils.encode_cell({ r: row, c: 5 })] = { t: 'n', f: ref('$Q$3'), v: +r.amort.rouAsset.toFixed(2) };
+          // G: 总利息 → D - E (付款总额 - PV)
+          wsS[XLSX.utils.encode_cell({ r: row, c: 6 })] = { t: 'n', f: XLSX.utils.encode_cell({ r: row, c: 3 }) + '-' + XLSX.utils.encode_cell({ r: row, c: 4 }), v: +r.amort.totalInterest.toFixed(2) };
+          // H: 月折旧额 → detail!$Q$4
+          wsS[XLSX.utils.encode_cell({ r: row, c: 7 })] = { t: 'n', f: ref('$Q$4'), v: deprPerMonth };
+        } else {
+          // Exempted
+          wsS[XLSX.utils.encode_cell({ r: row, c: 2 })] = { t: 'n', v: c.paymentAmount };
+          wsS[XLSX.utils.encode_cell({ r: row, c: 3 })] = { t: 'n', v: r.totalPayments };
+          wsS[XLSX.utils.encode_cell({ r: row, c: 4 })] = { t: 's', v: '豁免' };
+          wsS[XLSX.utils.encode_cell({ r: row, c: 5 })] = { t: 's', v: '豁免' };
+          wsS[XLSX.utils.encode_cell({ r: row, c: 6 })] = { t: 's', v: '' };
+          wsS[XLSX.utils.encode_cell({ r: row, c: 7 })] = { t: 's', v: '' };
+        }
+        row++;
+      });
+
+      wsS['!ref'] = XLSX.utils.encode_range({ s: {r:0,c:0}, e: {r:row-1, c:sh.length-1} });
+      wsS['!cols'] = sh.map(() => ({ wch: 17 }));
+      XLSX.utils.book_append_sheet(wb, wsS, '汇总');
+    }
+
+    // === Step 3: Download ===
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     const blob = new Blob([wbout], { type: 'application/octet-stream' });
     const url = URL.createObjectURL(blob);

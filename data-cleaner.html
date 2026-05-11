@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSV 数据清洗器 · 小白也能用</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-deep: #0a0a14;
+  --bg-card: rgba(22, 22, 44, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --text-primary: #e8e8f0;
+  --text-secondary: #9999b0;
+  --accent-1: #7c5cfc;
+  --accent-2: #5cfca0;
+  --accent-3: #fc5c9c;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --transition: 0.2s ease;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: linear-gradient(160deg, #0a0a14 0%, #12122a 30%, #16163a 60%, #0d0d24 100%);
+  color: var(--text-primary); min-height: 100vh; line-height: 1.6;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 20% 20%, rgba(124, 92, 252, 0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 60%, rgba(252, 92, 156, 0.04) 0%, transparent 50%);
+  pointer-events: none; z-index: 0;
+}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(124, 92, 252, 0.25); border-radius: 3px; }
+
+/* Header */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10, 10, 20, 0.8); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 0 24px; height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header .brand { font-size: 17px; font-weight: 700; }
+.header a { color: var(--text-secondary); text-decoration: none; font-size: 13px; }
+.header a:hover { color: var(--text-primary); }
+
+/* Main */
+.main { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+/* Section */
+.section {
+  background: var(--bg-card); border: 1px solid var(--glass-border);
+  border-radius: var(--radius); padding: 24px; margin-bottom: 20px;
+  backdrop-filter: blur(10px);
+}
+.section-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.section-hint { font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; }
+
+/* Drop Zone */
+.drop-zone {
+  border: 2px dashed rgba(124,92,252,0.3); border-radius: var(--radius);
+  padding: 40px 24px; text-align: center; cursor: pointer; transition: var(--transition);
+}
+.drop-zone:hover, .drop-zone.dragover { border-color: var(--accent-1); background: rgba(124,92,252,0.05); }
+.drop-zone .dz-icon { font-size: 36px; margin-bottom: 8px; }
+.drop-zone .dz-text { font-size: 15px; font-weight: 600; }
+.drop-zone .dz-hint { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+.drop-zone .dz-formats { font-size: 11px; color: var(--text-secondary); margin-top: 8px; }
+
+/* File Info */
+.file-info {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; background: rgba(124,92,252,0.08);
+  border: 1px solid rgba(124,92,252,0.2); border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+}
+.file-info .fi-icon { font-size: 24px; }
+.file-info .fi-name { font-size: 14px; font-weight: 600; flex: 1; }
+.file-info .fi-size { font-size: 12px; color: var(--text-secondary); }
+.file-info .fi-rows { font-size: 12px; color: var(--accent-2); }
+.file-info .fi-remove { background: none; border: none; color: var(--accent-3); cursor: pointer; font-size: 18px; padding: 4px; }
+
+/* Data Overview */
+.overview-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px;
+}
+.overview-card {
+  text-align: center; padding: 16px; border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+}
+.overview-card .oc-value { font-size: 24px; font-weight: 700; }
+.overview-card .oc-label { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+.overview-card.issue .oc-value { color: var(--accent-3); }
+.overview-card.good .oc-value { color: var(--accent-2); }
+
+/* Issues Table */
+.issues-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.issue-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border);
+  cursor: pointer; transition: var(--transition);
+}
+.issue-item:hover { background: rgba(255,255,255,0.05); }
+.issue-item .ii-severity { font-size: 14px; }
+.issue-item .ii-text { flex: 1; font-size: 13px; }
+.issue-item .ii-count { font-size: 12px; color: var(--text-secondary); background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 10px; }
+
+/* Table */
+.table-wrap {
+  overflow-x: auto; border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+  max-height: 400px; overflow-y: auto; margin-bottom: 16px;
+}
+table.data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+table.data-table th, table.data-table td {
+  padding: 6px 10px; border: 1px solid rgba(255,255,255,0.06);
+  text-align: left; white-space: nowrap; min-width: 80px;
+}
+table.data-table th {
+  position: sticky; top: 0; background: rgba(30,30,60,0.95);
+  font-weight: 600; font-size: 11px; color: var(--accent-2); z-index: 2;
+}
+table.data-table td.cell-empty { background: rgba(252,92,92,0.08); color: var(--accent-3); }
+table.data-table td.cell-trimmed { background: rgba(252,202,92,0.08); }
+table.data-table td.cell-fixed { background: rgba(92,202,252,0.08); }
+table.data-table tr.row-dup td { background: rgba(252,92,156,0.05); }
+table.data-table th.col-removed { background: rgba(252,92,92,0.15); }
+table.data-table td.col-removed { background: rgba(252,92,92,0.08); opacity: 0.5; }
+
+/* Tabs */
+.table-tabs {
+  display: flex; gap: 4px; margin-bottom: 12px;
+}
+.table-tab {
+  padding: 8px 16px; border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+  background: transparent; color: var(--text-secondary); font-size: 13px; cursor: pointer;
+  transition: var(--transition);
+}
+.table-tab:hover { color: var(--text-primary); background: rgba(255,255,255,0.03); }
+.table-tab.active { color: #fff; background: rgba(124,92,252,0.15); border-color: rgba(124,92,252,0.25); }
+.table-tab .badge {
+  display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 8px;
+  font-size: 10px; background: rgba(255,255,255,0.05);
+}
+.table-tab.active .badge { background: rgba(124,92,252,0.3); }
+
+/* Cleaning Controls */
+.clean-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.clean-option {
+  padding: 12px 14px; border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border);
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.clean-option label { display: flex; align-items: flex-start; gap: 10px; flex: 1; cursor: pointer; }
+.clean-option input[type="checkbox"] { margin-top: 3px; accent-color: var(--accent-1); }
+.clean-option .co-text { flex: 1; }
+.clean-option .co-name { font-size: 13px; font-weight: 600; }
+.clean-option .co-desc { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+.clean-option select {
+  background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+  color: var(--text-primary); padding: 4px 8px; border-radius: 6px; font-size: 12px; outline: none;
+}
+
+/* Buttons */
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 20px; border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 600; border: none; cursor: pointer;
+  transition: var(--transition); text-decoration: none;
+}
+.btn-primary { background: linear-gradient(135deg, var(--accent-1), #6a4ad9); color: #fff; }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(124,92,252,0.3); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-secondary { background: rgba(255,255,255,0.06); color: var(--text-primary); border: 1px solid var(--glass-border); }
+.btn-secondary:hover { background: rgba(255,255,255,0.1); }
+.btn-success { background: linear-gradient(135deg, var(--accent-2), #3da87a); color: #0a0a14; }
+.btn-success:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(92,252,160,0.3); }
+.btn-danger { background: linear-gradient(135deg, var(--accent-3), #d04a7a); color: #fff; }
+.btn-sm { padding: 6px 14px; font-size: 12px; }
+
+/* Report */
+.report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.report-card {
+  display: flex; align-items: center; gap: 12px; padding: 14px;
+  border-radius: var(--radius-sm); border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.02);
+}
+.report-card .rc-icon { font-size: 24px; }
+.report-card .rc-label { font-size: 11px; color: var(--text-secondary); }
+.report-card .rc-value { font-size: 18px; font-weight: 700; }
+.report-card.fixed .rc-value { color: var(--accent-2); }
+.report-card.removed .rc-value { color: var(--accent-3); }
+.report-card.warning .rc-value { color: #fce45c; }
+
+/* Export options */
+.export-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+
+/* Loading */
+.loading {
+  display: none; text-align: center; padding: 40px;
+}
+.loading.show { display: block; }
+.loading .spin {
+  display: inline-block; width: 32px; height: 32px;
+  border: 3px solid var(--glass-border); border-top-color: var(--accent-1);
+  border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading .lt { font-size: 14px; margin-top: 12px; color: var(--text-secondary); }
+
+/* Filter columns */
+.col-filter {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px;
+}
+.col-filter-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 6px; font-size: 11px;
+  background: rgba(124,92,252,0.1); border: 1px solid rgba(124,92,252,0.2);
+  cursor: pointer; transition: var(--transition); user-select: none;
+}
+.col-filter-tag:hover { background: rgba(124,92,252,0.2); }
+.col-filter-tag.excluded { opacity: 0.4; text-decoration: line-through; background: rgba(252,92,92,0.1); border-color: rgba(252,92,92,0.2); }
+
+/* Responsive */
+@media (max-width: 640px) {
+  .main { padding: 12px; }
+  .section { padding: 16px; }
+  .clean-options { grid-template-columns: 1fr; }
+  .overview-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Hidden */
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">🧹 CSV 数据清洗器</div>
+  <a href="index.html">← 返回首页</a>
+</div>
+
+<div class="main">
+
+<!-- Step 1: Upload -->
+<div class="section" id="step-upload">
+  <div class="section-title">📤 第一步：上传数据文件</div>
+  <div class="section-hint">支持 CSV / XLS / XLSX 格式，所有数据只在你的浏览器中处理，不会上传到任何服务器</div>
+  <div class="drop-zone" id="dropZone">
+    <div class="dz-icon">📁</div>
+    <div class="dz-text">点击选择文件，或将文件拖拽到此处</div>
+    <div class="dz-hint">支持任意表格文件</div>
+    <div class="dz-formats">支持的格式：CSV · XLS · XLSX</div>
+  </div>
+  <input type="file" id="fileInput" accept=".csv,.xls,.xlsx" hidden>
+</div>
+
+<!-- Step 2: File Info + Overview -->
+<div class="section hidden" id="step-overview">
+  <div class="section-title">📊 第二步：数据预览</div>
+
+  <div class="file-info" id="fileInfo">
+    <span class="fi-icon">📄</span>
+    <span class="fi-name" id="fiName">文件名</span>
+    <span class="fi-size" id="fiSize">0 KB</span>
+    <span class="fi-rows" id="fiRows">0 行 × 0 列</span>
+    <button class="fi-remove" id="removeFile" title="移除文件">✕</button>
+  </div>
+
+  <!-- Overview Cards -->
+  <div class="overview-grid" id="overviewGrid"></div>
+
+  <!-- Sheet Select -->
+  <div class="section-hint" id="sheetSelectorWrap">
+    选择工作表：
+    <select id="sheetSelect" style="background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);color:var(--text-primary);padding:4px 8px;border-radius:6px;font-size:12px;outline:none;"></select>
+  </div>
+
+  <!-- Data Quality Issues -->
+  <div class="section-title" style="margin-top:16px;">⚠️ 发现的数据问题</div>
+  <div class="issues-list" id="issuesList">
+    <div class="issue-item"><span class="ii-severity">📋</span><span class="ii-text" style="color:var(--text-secondary);">正在扫描数据...</span></div>
+  </div>
+
+  <!-- Cleaning Options -->
+  <div class="section-title" style="margin-top:16px;">🛠️ 清洗选项</div>
+  <div class="section-hint">以下选项默认全部开启，小白直接点「开始清洗」即可</div>
+  <div class="clean-options" id="cleanOptions">
+    <div class="clean-option">
+      <label><input type="checkbox" id="optTrim" checked>
+        <div class="co-text"><div class="co-name">✂️ 去除首尾空格</div><div class="co-desc">自动去掉每个单元格前后多余的空格</div></div>
+      </label>
+    </div>
+    <div class="clean-option">
+      <label><input type="checkbox" id="optEmpty" checked>
+        <div class="co-text"><div class="co-name">🗑️ 删除完全空行</div><div class="co-desc">删除所有单元格都为空的行</div></div>
+      </label>
+    </div>
+    <div class="clean-option">
+      <label><input type="checkbox" id="optDup" checked>
+        <div class="co-text"><div class="co-name">🔁 去重</div><div class="co-desc">删除完全重复的行</div></div>
+      </label>
+    </div>
+    <div class="clean-option">
+      <label><input type="checkbox" id="optDate" checked>
+        <div class="co-text"><div class="co-name">📅 标准化日期格式</div><div class="co-desc">统一日期显示为 YYYY-MM-DD</div></div>
+      </label>
+    </div>
+    <div class="clean-option">
+      <label><input type="checkbox" id="optNum" checked>
+        <div class="co-text"><div class="co-name">🔢 标准化数字格式</div><div class="co-desc">去除千分位逗号、货币符号，统一数字格式</div></div>
+      </label>
+    </div>
+    <div class="clean-option">
+      <label><input type="checkbox" id="optChars" checked>
+        <div class="co-text"><div class="co-name">🧼 清理不可见字符</div><div class="co-desc">移除换行符、制表符等非打印字符</div></div>
+      </label>
+    </div>
+    <div class="clean-option">
+      <label><input type="checkbox" id="optNullFill">
+        <div class="co-text"><div class="co-name">⬜ 填充空值</div><div class="co-desc">用上一行的值填充空单元格（适用于连续数据）</div></div>
+      </label>
+    </div>
+    <div class="clean-option">
+      <label><input type="checkbox" id="optColTrim">
+        <div class="co-text"><div class="co-name">📑 删除全空列</div><div class="co-desc">删除所有行都为空的数据列</div></div>
+      </label>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" id="btnClean">🧹 开始清洗</button>
+    <button class="btn btn-secondary" id="btnResetOpt">↺ 恢复默认</button>
+  </div>
+</div>
+
+<!-- Step 3: Results -->
+<div class="section hidden" id="step-result">
+  <div class="section-title">✅ 第三步：清洗报告</div>
+
+  <div class="report-grid" id="reportGrid"></div>
+
+  <div class="table-tabs" id="resultTabs">
+    <button class="table-tab active" data-view="after"><span>✅ 清洗后</span><span class="badge" id="afterBadge">0</span></button>
+    <button class="table-tab" data-view="before"><span>📋 清洗前</span><span class="badge" id="beforeBadge">0</span></button>
+    <button class="table-tab" data-view="changes"><span>🔍 变更详情</span><span class="badge" id="changesBadge">0</span></button>
+  </div>
+
+  <!-- Column filter -->
+  <div class="col-filter" id="colFilterResult"></div>
+
+  <div class="table-wrap">
+    <div class="table-wrap-inner" id="resultTableWrap"></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-success" id="btnExportCsv">📥 导出 CSV</button>
+    <button class="btn btn-success" id="btnExportXlsx">📥 导出 Excel (.xlsx)</button>
+    <button class="btn btn-secondary" id="btnBackEdit">↩ 返回调整选项</button>
+    <button class="btn btn-secondary" id="btnUploadNew">📂 清洗新文件</button>
+  </div>
+</div>
+
+<!-- Loading -->
+<div class="loading" id="loadingOverlay">
+  <div class="spin"></div>
+  <div class="lt">处理中，请稍候...</div>
+</div>
+
+</div>
+
+<script>
+// ============================================================
+// State
+// ============================================================
+let rawData = [];       // original parsed rows (array of arrays)
+let headers = [];       // column names
+let cleanedData = [];   // after cleaning
+let changes = [];       // array of change records
+let issues = [];         // detected issues
+let fileName = '';
+let fileSize = 0;
+let currentView = 'after';
+
+// ============================================================
+// DOM refs
+// ============================================================
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const removeFileBtn = document.getElementById('removeFile');
+
+const stepUpload = document.getElementById('step-upload');
+const stepOverview = document.getElementById('step-overview');
+const stepResult = document.getElementById('step-result');
+
+const fiName = document.getElementById('fiName');
+const fiSize = document.getElementById('fiSize');
+const fiRows = document.getElementById('fiRows');
+const sheetSelect = document.getElementById('sheetSelect');
+const sheetSelectorWrap = document.getElementById('sheetSelectorWrap');
+
+const overviewGrid = document.getElementById('overviewGrid');
+const issuesList = document.getElementById('issuesList');
+const cleanOptions = document.getElementById('cleanOptions');
+
+const btnClean = document.getElementById('btnClean');
+const btnResetOpt = document.getElementById('btnResetOpt');
+const btnExportCsv = document.getElementById('btnExportCsv');
+const btnExportXlsx = document.getElementById('btnExportXlsx');
+const btnBackEdit = document.getElementById('btnBackEdit');
+const btnUploadNew = document.getElementById('btnUploadNew');
+
+const loadingOverlay = document.getElementById('loadingOverlay');
+const resultTableWrap = document.getElementById('resultTableWrap');
+const reportGrid = document.getElementById('reportGrid');
+const colFilterResult = document.getElementById('colFilterResult');
+
+const resultTabs = document.getElementById('resultTabs');
+const beforeBadge = document.getElementById('beforeBadge');
+const afterBadge = document.getElementById('afterBadge');
+const changesBadge = document.getElementById('changesBadge');
+
+// ============================================================
+// File handling
+// ============================================================
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('dragover'); handleFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
+removeFileBtn.addEventListener('click', resetToUpload);
+
+function resetToUpload() {
+  stepUpload.classList.remove('hidden');
+  stepOverview.classList.add('hidden');
+  stepResult.classList.add('hidden');
+  rawData = []; headers = []; cleanedData = []; changes = []; issues = [];
+  fileInput.value = '';
+}
+
+function handleFile(file) {
+  fileName = file.name;
+  fileSize = file.size;
+  loadingOverlay.classList.add('show');
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array', cellDates: true, codepage: 65001 });
+
+      // Populate sheet selector
+      sheetSelect.innerHTML = '';
+      workbook.SheetNames.forEach((name, i) => {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = name;
+        sheetSelect.appendChild(opt);
+      });
+      sheetSelectorWrap.classList.remove('hidden');
+
+      loadSheet(workbook, 0);
+      sheetSelect.onchange = () => loadSheet(workbook, parseInt(sheetSelect.value));
+
+    } catch (err) {
+      alert('解析文件失败：' + err.message);
+      loadingOverlay.classList.remove('show');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function loadSheet(workbook, idx) {
+  const sheetName = workbook.SheetNames[idx];
+  const ws = workbook.Sheets[sheetName];
+
+  // Parse to array of arrays
+  const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+  if (aoa.length === 0) { alert('工作表为空'); loadingOverlay.classList.remove('show'); return; }
+
+  headers = aoa[0].map(h => String(h).trim() || `列${aoa[0].indexOf(h) + 1}`);
+  rawData = aoa.slice(1).filter(row => row.some(cell => String(cell).trim() !== ''));
+  // Normalize row lengths
+  const maxCols = headers.length;
+  rawData = rawData.map(row => {
+    const r = row.map(c => c == null ? '' : String(c));
+    while (r.length < maxCols) r.push('');
+    return r.slice(0, maxCols);
+  });
+
+  // File info
+  fiName.textContent = fileName;
+  fiSize.textContent = (fileSize / 1024).toFixed(1) + ' KB';
+  fiRows.textContent = rawData.length + ' 行 × ' + headers.length + ' 列';
+
+  // Detect issues
+  detectIssues();
+
+  // Show overview
+  stepUpload.classList.add('hidden');
+  stepOverview.classList.remove('hidden');
+  stepResult.classList.add('hidden');
+  loadingOverlay.classList.remove('show');
+}
+
+// ============================================================
+// Issue Detection (headless + thorough)
+// ============================================================
+function detectIssues() {
+  issues = [];
+  const totalRows = rawData.length;
+  const totalCols = headers.length;
+
+  // 1. Empty cells
+  let emptyCount = 0;
+  const emptyByCol = new Array(totalCols).fill(0);
+  for (const row of rawData) {
+    for (let c = 0; c < totalCols; c++) {
+      if (row[c] === '') { emptyCount++; emptyByCol[c]++; }
+    }
+  }
+  if (emptyCount > 0) issues.push({ severity: '⚠️', text: `发现 ${emptyCount} 个空单元格`, count: emptyCount, detail: emptyByCol, type: 'empty' });
+
+  // 2. Fully empty rows
+  let emptyRows = 0;
+  for (const row of rawData) { if (row.every(c => c === '')) emptyRows++; }
+  if (emptyRows > 0) issues.push({ severity: '⚠️', text: `发现 ${emptyRows} 行完全为空`, count: emptyRows, type: 'empty-row' });
+
+  // 3. Duplicate rows
+  const seen = new Set();
+  let dupRows = 0;
+  for (const row of rawData) {
+    const key = row.join('|');
+    if (seen.has(key)) dupRows++;
+    seen.add(key);
+  }
+  if (dupRows > 0) issues.push({ severity: '🔁', text: `发现 ${dupRows} 行重复数据`, count: dupRows, type: 'dup' });
+
+  // 4. Whitespace issues
+  let wsCount = 0;
+  for (const row of rawData) {
+    for (let c = 0; c < totalCols; c++) {
+      const v = row[c];
+      if (v !== '' && (v !== v.trim() || /\n|\t|\r/.test(v))) wsCount++;
+    }
+  }
+  if (wsCount > 0) issues.push({ severity: '✂️', text: `发现 ${wsCount} 个单元格含多余空格或换行符`, count: wsCount, type: 'whitespace' });
+
+  // 5. Date format detection
+  let dateIssues = 0;
+  for (const row of rawData) {
+    for (let c = 0; c < totalCols; c++) {
+      const v = row[c].trim();
+      if (!v) continue;
+      // Detect mixed date formats (Chinese, slash, dot)
+      if (/^\d{4}[\-\/\.年]\d{1,2}[\-\/\.月]\d{1,2}[日号]?$/.test(v) ||
+          /^\d{1,2}[\-\/\.月]\d{1,2}[\-\/\.日]\d{4}年?$/.test(v) ||
+          /^\d{4}年\d{1,2}月\d{1,2}[日号]?$/.test(v) ||
+          /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(v) ||
+          /^\d{4}\.\d{1,2}\.\d{1,2}$/.test(v) ||
+          /^\d{4}-\d{1,2}-\d{1,2}$/.test(v) ||
+          /^\d{1,2}-\d{1,2}-\d{4}$/.test(v) ||
+          /^\d{8}$/.test(v) || // 20240315
+          /^[A-Za-z]{3}[- ]\d{1,2}[- ,]\d{4}$/.test(v)) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) dateIssues++;
+      }
+    }
+  }
+  if (dateIssues > 0) issues.push({ severity: '📅', text: `发现 ${dateIssues} 个非标准日期格式`, count: dateIssues, type: 'date' });
+
+  // 6. Number format issues
+  let numIssues = 0;
+  for (const row of rawData) {
+    for (let c = 0; c < totalCols; c++) {
+      const v = row[c].trim();
+      if (!v) continue;
+      // Contains currency symbols, thousand separators, or percentage
+      if (/^[¥$€£]/.test(v) || /,[0-9]{3}/.test(v) || /%$/.test(v) || /^\([\d.,]+\)$/.test(v)) numIssues++;
+    }
+  }
+  if (numIssues > 0) issues.push({ severity: '🔢', text: `发现 ${numIssues} 个含货币符号/千分位的数字`, count: numIssues, type: 'number' });
+
+  // Overview cards
+  let colsWithEmpty = emptyByCol.filter(c => c > 0).length;
+  overviewGrid.innerHTML = `
+    <div class="overview-card"><div class="oc-value">${totalRows.toLocaleString()}</div><div class="oc-label">📊 总行数</div></div>
+    <div class="overview-card"><div class="oc-value">${totalCols}</div><div class="oc-label">📋 总列数</div></div>
+    <div class="overview-card ${emptyCount > 0 ? 'issue' : 'good'}"><div class="oc-value">${emptyCount > 0 ? emptyCount.toLocaleString() : '0'}</div><div class="oc-label">⬜ 空单元格</div></div>
+    <div class="overview-card ${dupRows > 0 ? 'issue' : 'good'}"><div class="oc-value">${dupRows > 0 ? dupRows : '0'}</div><div class="oc-label">🔁 重复行</div></div>
+    <div class="overview-card ${dateIssues > 0 || numIssues > 0 ? 'issue' : 'good'}"><div class="oc-value">${(dateIssues + numIssues) > 0 ? (dateIssues + numIssues) : '0'}</div><div class="oc-label">📐 格式问题</div></div>
+  `;
+
+  // Render issues
+  if (issues.length === 0) {
+    issuesList.innerHTML = '<div class="issue-item"><span class="ii-severity">✅</span><span class="ii-text" style="color:var(--accent-2);">未发现问题，数据看起来不错！</span></div>';
+  } else {
+    issuesList.innerHTML = issues.map((iss, i) =>
+      `<div class="issue-item" onclick="scrollToOption(${i})">
+        <span class="ii-severity">${iss.severity}</span>
+        <span class="ii-text">${iss.text}</span>
+        <span class="ii-count">${iss.count} 处</span>
+      </div>`
+    ).join('');
+  }
+}
+
+function scrollToOption(i) {
+  // Just visual feedback
+}
+
+// ============================================================
+// Data Cleaning Engine
+// ============================================================
+function cleanData() {
+  loadingOverlay.classList.add('show');
+
+  setTimeout(() => {
+    try {
+      const doTrim = document.getElementById('optTrim').checked;
+      const doEmpty = document.getElementById('optEmpty').checked;
+      const doDup = document.getElementById('optDup').checked;
+      const doDate = document.getElementById('optDate').checked;
+      const doNum = document.getElementById('optNum').checked;
+      const doChars = document.getElementById('optChars').checked;
+      const doNullFill = document.getElementById('optNullFill').checked;
+      const doColTrim = document.getElementById('optColTrim').checked;
+
+      // Clone raw data
+      let data = rawData.map(row => [...row]);
+      let chgs = [];
+      const totalCols = headers.length;
+
+      // --- Step 1: Trim whitespace ---
+      if (doTrim) {
+        for (let r = 0; r < data.length; r++) {
+          for (let c = 0; c < totalCols; c++) {
+            const old = data[r][c];
+            const trimmed = old.trim();
+            if (old !== trimmed) {
+              data[r][c] = trimmed;
+              chgs.push({ row: r, col: c, type: 'trim', old: old, newVal: trimmed, display: `行${r+2} 列"${headers[c]}" 去除首尾空格` });
+            }
+          }
+        }
+      }
+
+      // --- Step 2: Clean invisible characters ---
+      if (doChars) {
+        for (let r = 0; r < data.length; r++) {
+          for (let c = 0; c < totalCols; c++) {
+            const old = data[r][c];
+            const cleaned = old.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, ' ').replace(/\r?\n|\r/g, ' ').replace(/\t/g, ' ').replace(/\s+/g, ' ').trim();
+            if (old !== cleaned) {
+              data[r][c] = cleaned;
+              chgs.push({ row: r, col: c, type: 'chars', old: old, newVal: cleaned, display: `行${r+2} 列"${headers[c]}" 清理不可见字符` });
+            }
+          }
+        }
+      }
+
+      // --- Step 3: Standardize numbers ---
+      if (doNum) {
+        for (let r = 0; r < data.length; r++) {
+          for (let c = 0; c < totalCols; c++) {
+            const old = data[r][c];
+            let v = old;
+            // Remove currency symbols
+            v = v.replace(/^[¥$€£￥]/, '');
+            // Remove thousand separators
+            v = v.replace(/,/g, '');
+            // Convert percentage
+            if (/%$/.test(v)) {
+              const num = parseFloat(v);
+              if (!isNaN(num)) v = (num / 100).toFixed(4);
+            }
+            // Remove parentheses for negative numbers: (123.45) -> -123.45
+            v = v.replace(/^\(([\d.\-,]+)\)$/, '-$1');
+            // Try to parse as number
+            const num = parseFloat(v);
+            if (v !== old && !isNaN(num)) {
+              data[r][c] = v;
+              chgs.push({ row: r, col: c, type: 'number', old: old, newVal: v, display: `行${r+2} 列"${headers[c]}" 标准化数字格式` });
+            }
+          }
+        }
+      }
+
+      // --- Step 4: Standardize dates ---
+      if (doDate) {
+        for (let r = 0; r < data.length; r++) {
+          for (let c = 0; c < totalCols; c++) {
+            const old = data[r][c];
+            const parsed = parseDate(old);
+            if (parsed && old !== parsed) {
+              data[r][c] = parsed;
+              chgs.push({ row: r, col: c, type: 'date', old: old, newVal: parsed, display: `行${r+2} 列"${headers[c]}" 标准化日期` });
+            }
+          }
+        }
+      }
+
+      // --- Step 5: Fill nulls with previous row ---
+      if (doNullFill) {
+        for (let c = 0; c < totalCols; c++) {
+          let lastVal = '';
+          for (let r = 0; r < data.length; r++) {
+            if (data[r][c] === '') {
+              if (lastVal !== '') {
+                data[r][c] = lastVal;
+                chgs.push({ row: r, col: c, type: 'fill', old: '', newVal: lastVal, display: `行${r+2} 列"${headers[c]}" 填充空值` });
+              }
+            } else {
+              lastVal = data[r][c];
+            }
+          }
+        }
+      }
+
+      // --- Step 6: Remove fully empty columns ---
+      let removedCols = [];
+      if (doColTrim) {
+        for (let c = totalCols - 1; c >= 0; c--) {
+          if (data.every(row => row[c] === '')) {
+            removedCols.push(c);
+          }
+        }
+        if (removedCols.length > 0) {
+          for (let r = 0; r < data.length; r++) {
+            removedCols.forEach(c => data[r][c] = '__REMOVED__');
+          }
+          chgs.push({ row: -1, col: -1, type: 'col-remove', old: '', newVal: '', display: `删除 ${removedCols.length} 个全空列: ${removedCols.map(c => headers[c]).join(', ')}` });
+        }
+      }
+
+      // --- Step 7: Remove fully empty rows ---
+      let removedEmptyRows = 0;
+      if (doEmpty) {
+        data = data.filter((row, idx) => {
+          const empty = row.every(c => c === '' || c === '__REMOVED__');
+          if (empty) { removedEmptyRows++; chgs.push({ row: idx, col: -1, type: 'row-empty', old: '', newVal: '', display: `删除行${idx+2}（完全为空）` }); }
+          return !empty;
+        });
+      }
+      if (removedEmptyRows > 0) {
+        chgs.push({ row: -1, col: -1, type: 'row-empty-summary', old: '', newVal: '', display: `共删除 ${removedEmptyRows} 个空行` });
+      }
+
+      // Filter out REMOVED columns
+      if (removedCols.length > 0) {
+        const keepCols = [];
+        for (let c = 0; c < totalCols; c++) {
+          if (!removedCols.includes(c)) keepCols.push(c);
+        }
+        data = data.map(row => keepCols.map(c => row[c]));
+        // Remove REMOVED marker columns from headers for display
+      }
+
+      // --- Step 8: Remove duplicates ---
+      let removedDups = 0;
+      if (doDup) {
+        const seenKeys = new Set();
+        data = data.filter((row, idx) => {
+          const key = row.join('|');
+          if (seenKeys.has(key)) { removedDups++; chgs.push({ row: idx, col: -1, type: 'dup', old: '', newVal: '', display: `删除重复行 ${idx+2}` }); return false; }
+          seenKeys.add(key);
+          return true;
+        });
+      }
+      if (removedDups > 0) {
+        chgs.push({ row: -1, col: -1, type: 'dup-summary', old: '', newVal: '', display: `共删除 ${removedDups} 个重复行` });
+      }
+
+      cleanedData = data;
+      changes = chgs;
+
+      // Show results
+      showResults();
+
+    } catch (err) {
+      alert('清洗出错：' + err.message);
+    }
+    loadingOverlay.classList.remove('show');
+  }, 50);
+}
+
+// Date parser: recognizes many formats, outputs YYYY-MM-DD
+function parseDate(str) {
+  if (!str) return null;
+  const s = String(str).trim();
+  if (!s) return null;
+  // Already standard
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
+
+  // YYYYMMDD
+  if (/^\d{8}$/.test(s)) {
+    const y = s.slice(0,4), m = s.slice(4,6), d = s.slice(6,8);
+    if (y >= 1900 && y <= 2100 && m >= 1 && m <= 12 && d >= 1 && d <= 31)
+      return `${y}-${m}-${d}`;
+  }
+
+  // YYYY年MM月DD日 / YYYY年M月D日
+  let m = s.match(/(\d{4})[年\-\.\/](\d{1,2})[月\-\.\/](\d{1,2})[日号]?$/);
+  if (m) return padDate(m[1], m[2], m[3]);
+
+  // DD/MM/YYYY or DD-MM-YYYY (non-standard western)
+  m = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+  if (m) return padDate(m[3], m[2], m[1]);
+
+  // MM/DD/YYYY (common in CSV exports)
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m && m[1] >= 1 && m[1] <= 12 && m[2] >= 1 && m[2] <= 31)
+    return padDate(m[3], m[1], m[2]);
+
+  // YYYY.M.D
+  m = s.match(/^(\d{4})\.(\d{1,2})\.(\d{1,2})$/);
+  if (m) return padDate(m[1], m[2], m[3]);
+
+  // Mon DD, YYYY / DD Mon YYYY
+  const months = {jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'};
+  m = s.match(/^([A-Za-z]{3})[- ](\d{1,2})[- ,]+(\d{4})$/);
+  if (m) return padDate(m[3], months[m[1].toLowerCase()] || '01', m[2]);
+
+  return null;
+}
+
+function padDate(y, m, d) {
+  const yy = String(y).padStart(4, '0');
+  const mm = String(m).padStart(2, '0');
+  const dd = String(d).padStart(2, '0');
+  const date = new Date(`${yy}-${mm}-${dd}`);
+  if (isNaN(date.getTime())) return null;
+  return `${yy}-${mm}-${dd}`;
+}
+
+// ============================================================
+// Results Display
+// ============================================================
+function showResults() {
+  stepOverview.classList.add('hidden');
+  stepResult.classList.remove('hidden');
+
+  // Report cards
+  const cleanCount = changes.filter(c => ['trim','chars','number','date','fill'].includes(c.type)).length;
+  const removeEmptyCount = changes.filter(c => c.type === 'row-empty' || c.type === 'row-empty-summary').length;
+  const dupCount = changes.filter(c => c.type === 'dup' || c.type === 'dup-summary').length;
+  const colRemovedCount = changes.filter(c => c.type === 'col-remove').length;
+
+  reportGrid.innerHTML = `
+    <div class="report-card good">
+      <div class="rc-icon">✅</div>
+      <div><div class="rc-label">总行数</div><div class="rc-value">${rawData.length.toLocaleString()} → ${cleanedData.length.toLocaleString()}</div></div>
+    </div>
+    <div class="report-card fixed">
+      <div class="rc-icon">✂️</div>
+      <div><div class="rc-label">格式修正</div><div class="rc-value">${cleanCount}</div></div>
+    </div>
+    <div class="report-card removed">
+      <div class="rc-icon">🗑️</div>
+      <div><div class="rc-label">删除行</div><div class="rc-value">${(rawData.length - cleanedData.length).toLocaleString()}</div></div>
+    </div>
+    <div class="report-card warning">
+      <div class="rc-icon">📋</div>
+      <div><div class="rc-label">总变更数</div><div class="rc-value">${changes.length}</div></div>
+    </div>
+  `;
+
+  // Build column filter
+  buildColFilter(cleanedData[0] ? headers.slice(0, cleanedData[0].length) : headers);
+
+  // Update badges
+  beforeBadge.textContent = rawData.length;
+  afterBadge.textContent = cleanedData.length;
+  changesBadge.textContent = changes.length;
+
+  // Render current view
+  renderTableView('after');
+}
+
+function buildColFilter(cols) {
+  let stored = JSON.parse(sessionStorage.getItem('dc_hiddenCols') || '[]');
+  colFilterResult.innerHTML = cols.map((h, i) =>
+    `<span class="col-filter-tag ${stored.includes(i) ? 'excluded' : ''}" data-col="${i}" onclick="toggleCol(${i})">${h}</span>`
+  ).join('');
+}
+
+function toggleCol(i) {
+  let stored = JSON.parse(sessionStorage.getItem('dc_hiddenCols') || '[]');
+  if (stored.includes(i)) stored = stored.filter(c => c !== i);
+  else stored.push(i);
+  sessionStorage.setItem('dc_hiddenCols', JSON.stringify(stored));
+  buildColFilter(headers);
+  renderTableView(currentView);
+}
+
+function getHiddenCols() {
+  return new Set(JSON.parse(sessionStorage.getItem('dc_hiddenCols') || '[]'));
+}
+
+// ============================================================
+// Table Rendering (Before / After / Changes)
+// ============================================================
+resultTabs.addEventListener('click', e => {
+  const tab = e.target.closest('.table-tab');
+  if (!tab) return;
+  resultTabs.querySelectorAll('.table-tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  currentView = tab.dataset.view;
+  renderTableView(currentView);
+});
+
+function renderTableView(view) {
+  const hiddenCols = getHiddenCols();
+  const effectiveHeaders = view === 'before'
+    ? (rawData[0] ? headers.slice(0, rawData[0].length) : headers)
+    : (cleanedData[0] ? headers.slice(0, cleanedData[0].length) : headers);
+
+  const visibleCols = effectiveHeaders.map((_, i) => i).filter(i => !hiddenCols.has(i));
+
+  if (view === 'changes') {
+    renderChangesView(visibleCols);
+    return;
+  }
+
+  const data = view === 'before' ? rawData : cleanedData;
+  const maxRows = 500;
+
+  let html = '<table class="data-table"><thead><tr>';
+  for (const ci of visibleCols) {
+    html += `<th>${escHtml(effectiveHeaders[ci])}</th>`;
+  }
+  html += '</tr></thead><tbody>';
+
+  const limit = Math.min(data.length, maxRows);
+  for (let r = 0; r < limit; r++) {
+    html += '<tr>';
+    for (const ci of visibleCols) {
+      const val = data[r][ci] || '';
+      const cls = val === '' ? 'cell-empty' : '';
+      html += `<td class="${cls}">${escHtml(val || '(空)')}</td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  if (data.length > maxRows) {
+    html += `<div style="padding:8px;text-align:center;color:var(--text-secondary);font-size:12px;">仅显示前 ${maxRows} 行，共 ${data.length} 行</div>`;
+  }
+
+  resultTableWrap.innerHTML = html;
+}
+
+function renderChangesView(visibleCols) {
+  const limit = Math.min(changes.length, 500);
+  let html = '<table class="data-table"><thead><tr><th>#</th><th>操作</th><th>说明</th></tr></thead><tbody>';
+  for (let i = 0; i < limit; i++) {
+    const ch = changes[i];
+    const icons = { trim: '✂️', chars: '🧼', number: '🔢', date: '📅', fill: '⬆️', 'row-empty': '🗑️', 'row-empty-summary': '🗑️', dup: '🔁', 'dup-summary': '🔁', 'col-remove': '📑' };
+    const icon = icons[ch.type] || '🔄';
+    html += `<tr><td>${i+1}</td><td>${icon}</td><td>${escHtml(ch.display)}</td></tr>`;
+  }
+  html += '</tbody></table>';
+  if (changes.length > limit) {
+    html += `<div style="padding:8px;text-align:center;color:var(--text-secondary);font-size:12px;">仅显示前 ${limit} 条，共 ${changes.length} 条变更</div>`;
+  }
+  resultTableWrap.innerHTML = html;
+}
+
+function escHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ============================================================
+// Export
+// ============================================================
+btnExportCsv.addEventListener('click', () => {
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([headers.slice(0, cleanedData[0]?.length || headers.length), ...cleanedData]);
+  XLSX.utils.book_append_sheet(wb, ws, '清洗后数据');
+  const csv = XLSX.utils.sheet_to_csv(ws);
+  downloadBlob(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }), fileName.replace(/\.\w+$/, '') + '_已清洗.csv');
+});
+
+btnExportXlsx.addEventListener('click', () => {
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([headers.slice(0, cleanedData[0]?.length || headers.length), ...cleanedData]);
+  XLSX.utils.book_append_sheet(wb, ws, '清洗后数据');
+  // Also add report sheet
+  const reportRows = [['操作', '说明'], ...changes.map(c => [c.type, c.display])];
+  const ws2 = XLSX.utils.aoa_to_sheet(reportRows);
+  XLSX.utils.book_append_sheet(wb, ws2, '清洗报告');
+  const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  downloadBlob(new Blob([wbout]), fileName.replace(/\.\w+$/, '') + '_已清洗.xlsx');
+});
+
+function downloadBlob(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 200);
+}
+
+// ============================================================
+// Button handlers
+// ============================================================
+btnClean.addEventListener('click', cleanData);
+btnResetOpt.addEventListener('click', () => {
+  document.querySelectorAll('#cleanOptions input[type=checkbox]').forEach(cb => cb.checked = true);
+  document.getElementById('optNullFill').checked = false;
+  document.getElementById('optColTrim').checked = false;
+});
+btnBackEdit.addEventListener('click', () => {
+  stepResult.classList.add('hidden');
+  stepOverview.classList.remove('hidden');
+});
+btnUploadNew.addEventListener('click', resetToUpload);
+
+// ============================================================
+// Init
+// ============================================================
+console.log('🧹 CSV 数据清洗器已就绪');
+console.log('💡 所有数据在浏览器本地处理，不会上传到任何服务器');
+</script>
+</body>
+</html>

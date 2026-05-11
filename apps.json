@@ -14,13 +14,14 @@
   {
     "id": "data-cleaner",
     "name": "CSV 数据清洗器",
-    "shortDesc": "自动检测并清洗 CSV 数据中的空值、重复、异常值",
-    "fullDesc": "命令行数据清洗工具，用于预处理数据分析前的 CSV 文件。支持自动检测编码、缺失值统计与填充（均值/中位数/众数/自定义值）、重复行去重、异常值检测（IQR/Z-score）、数据类型自动推断与转换、清洗报告生成。适合数据分析和机器学习前的数据准备。",
-    "category": "cli",
-    "status": "wip",
-    "version": "v1.5.0",
+    "shortDesc": "上传表格自动清洗：去空格、去重、标准化日期/数字、填充空值，一键导出Power BI就绪数据",
+    "fullDesc": "纯浏览器端运行的 CSV/Excel 数据清洗工具，无需安装任何软件。上传 CSV/XLS/XLSX 文件后自动扫描数据问题（空值、重复行、日期格式混用、数字格式异常、不可见字符等），一键执行清洗。支持去除首尾空格、删除空行、去重、标准化日期为 YYYY-MM-DD、标准化数字格式、清理不可见字符、填充空值、删除全空列。清洗前后可对比预览，清洗报告详细记录每项操作。支持导出清洗后的 CSV 或带清洗报告的 Excel 文件。专为 Power BI 导入场景优化，所有数据在本地浏览器处理，不上传任何服务器。",
+    "category": "data",
+    "status": "done",
+    "version": "v1.0.0",
     "icon": "🧹",
-    "github": "",
+    "onlineTool": true,
+    "github": "https://github.com/Bgu253518/my-app-hub",
     "download": ""
   },
   {
