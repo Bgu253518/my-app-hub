@@ -1299,6 +1299,7 @@ function openToolPanel(appId) {
   document.getElementById('tool-title').textContent = app.icon + ' ' + app.name;
   panel.classList.add('open');
   document.body.style.overflow = 'hidden';
+  if (appId === 'rou-calc') { window.open('rou-calculator.html', '_self'); return; }
   currentToolType = appId === 'pdf-tool' ? 'pdf' : appId === 'ai-todo' ? 'todo' : appId === 'rou-calc' ? 'rou' : 'aging';
 
   // Reset state
