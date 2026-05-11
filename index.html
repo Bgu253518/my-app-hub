@@ -1159,10 +1159,6 @@ function openModal(app) {
     ? `<a class="btn btn-dl" href="${escapeHtml(app.download)}" download>⬇ 下载</a>`
     : '';
 
-  const ghBtn = app.github
-    ? `<a class="btn btn-gh" href="${escapeHtml(app.github)}" target="_blank" rel="noopener">🔗 GitHub</a>`
-    : '';
-
   const onlineBtn = (app.onlineTool)
     ? `<button class="btn btn-dl" onclick="event.stopPropagation(); closeModal(); openToolPanel('${escapeHtml(app.id)}')" style="background: linear-gradient(135deg, #7c5cfc, #5ccafc);">🛠️ 在线使用</button>`
     : '';
@@ -1175,7 +1171,7 @@ function openModal(app) {
     <div class="modal-body">
       ${app.version ? `<div class="modal-section"><span class="tag tag-status ${app.status === 'wip' ? 'wip' : ''}">${escapeHtml(app.version)} · ${STATUS_MAP[app.status] || app.status}</span></div>` : ''}
       ${app.fullDesc ? `<div class="modal-section"><h4>📝 功能说明</h4><p>${escapeHtml(app.fullDesc)}</p></div>` : ''}
-      ${(app.github || app.download || app.onlineTool) ? `<div class="modal-section"><h4>🔗 链接</h4><div class="modal-links">${ghBtn}${downloadBtn}${onlineBtn}</div></div>` : ''}
+      ${(app.download || app.onlineTool) ? `<div class="modal-section"><h4>🔗 链接</h4><div class="modal-links">${downloadBtn}${onlineBtn}</div></div>` : ''}
     </div>
   `;
 
