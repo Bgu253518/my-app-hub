@@ -1,5 +1,18 @@
 [
   {
+    "id": "audit-sampling",
+    "name": "审计抽凭助手",
+    "shortDesc": "MUS/随机抽样、单家+批量双模式、Seeded PRNG可复现、导出日志与清单",
+    "fullDesc": "纯浏览器端审计抽凭工具，支持单家公司和多家公司批量抽样双模式。内置 Mulberry32 Seeded PRNG 保证给定种子可复现随机序列，风险系数映射表可编辑并存 localStorage。MUS 货币单位抽样：累计金额数轴投射、高价值项目强制选取、重复命中备注、超 PM 项目可选；设定规模随机抽样：Fisher-Yates 洗牌；未设定规模随机抽样：自动计算样本量 N=项目数×比例/RF。批量模式支持多 Tab 自动解析、可编辑参数配置表、向下填充、实时进度条、每公司独立日志+清单。导出含抽样日志与清单 Sheet + 抽样参数 Sheet（批量模式额外含抽样汇总 Sheet 和全局参数 Sheet）。演示数据内置。",
+    "category": "data",
+    "status": "done",
+    "version": "v1.0.0",
+    "icon": "🎯",
+    "onlineTool": true,
+    "github": "https://github.com/Bgu253518/my-app-hub",
+    "download": ""
+  },
+  {
     "id": "tb-autofill",
     "name": "TB 自动上数器",
     "shortDesc": "科目映射模板匹配、客户余额表自动填入TB、公式保护、借贷校验",
