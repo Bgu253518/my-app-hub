@@ -114,19 +114,6 @@
     "download": ""
   },
   {
-    "id": "pdf-splitter",
-    "name": "PDF 拆图工具",
-    "shortDesc": "PDF 逐页导出为高清图片，支持 PNG/JPEG/灰度，一键打包 ZIP 下载",
-    "fullDesc": "纯浏览器端运行，PDF 逐页拆分为高清图片。拖拽上传后网格展示所有页面缩略图，可全选/取消全选/按页码范围筛选。支持 PNG/JPEG 格式、分辨率 1x~3x 或自定义缩放、JPEG 质量调节、彩色/灰度模式。逐页 Canvas 渲染后 JSZip 打包下载，命名格式：原文件名_页码。所有处理在本地浏览器完成，加密 PDF 支持密码解锁。",
-    "category": "gui",
-    "status": "done",
-    "version": "v1.0.0",
-    "icon": "🖼️",
-    "onlineTool": true,
-    "github": "https://github.com/Bgu253518/my-app-hub",
-    "download": ""
-  },
-  {
     "id": "ai-todo",
     "name": "智能待办解析器",
     "shortDesc": "粘贴自然语言或邮件，自动解析为结构化待办事项清单",
