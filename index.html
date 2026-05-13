@@ -1305,6 +1305,7 @@ function openToolPanel(appId) {
   if (appId === 'file-renamer') { window.open('file-renamer.html', '_self'); return; }
   if (appId === 'pdf-splitter') { window.open('pdf-splitter.html', '_self'); return; }
   if (appId === 'claude-config') { window.open('claude-config.html', '_self'); return; }
+  if (appId === 'audit-hub') { window.open('audit-hub.html', '_self'); return; }
   currentToolType = appId === 'pdf-tool' ? 'pdf' : appId === 'ai-todo' ? 'todo' : appId === 'rou-calc' ? 'rou' : 'aging';
 
   // Reset state
