@@ -1,5 +1,18 @@
 [
   {
+    "id": "bkd-rollforward",
+    "name": "BKD 底稿滚存与上数助手",
+    "shortDesc": "BKD底稿日期列自动识别、期末数→期初数滚存、科目映射上数、借贷校验",
+    "fullDesc": "纯浏览器端 BKD 底稿滚存与上数工具。支持上传多Sheet底稿Excel，自动正则扫描表头识别日期列（24.12.31/2024-12-31等格式）并提取年份，用户指定源列→目标列滚存规则。执行滚存：将期末数硬拷贝为目标列期初数（死数），清空源列数据区（公式保留结构/死数直接清空），更新列标题至新年份。然后导入本期科目余额表，根据自定义客户科目映射模板（支持增删改查+导入导出、存localStorage）自动匹配标准科目，在底稿中定位行并填入数值（跳过公式单元格、根据借贷方向处理）。上数完成后自动校验借贷平衡和年初年末一致性。最终下载完整底稿Excel（公式保留）和校验报告。",
+    "category": "data",
+    "status": "done",
+    "version": "v1.0.0",
+    "icon": "📋",
+    "onlineTool": true,
+    "github": "https://github.com/Bgu253518/my-app-hub",
+    "download": ""
+  },
+  {
     "id": "word-checkbench",
     "name": "Word 报告上数与校验工作台",
     "shortDesc": "Word 附注表格自动上数、科目映射匹配、合计加总校验、导出 .docx/.xlsx",
