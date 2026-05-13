@@ -122,15 +122,8 @@ body::before {
       <div class="lock-title">Claude API Key Vault</div>
       <div class="lock-sub">AES-256-GCM Encrypted · 100% Local Storage</div>
 
-      <div id="setupForm">
-        <input type="password" class="lock-input" id="newPass" placeholder="Create a master password (6+ chars)" autocomplete="off">
-        <input type="password" class="lock-input" id="confirmPass" placeholder="Confirm master password" autocomplete="off">
-        <button class="btn btn-primary" onclick="doSetup()">Create Vault & Enter</button>
-        <p class="msg" id="setupMsg"></p>
-      </div>
-
-      <div id="unlockForm" class="hidden">
-        <input type="password" class="lock-input" id="masterPass" placeholder="Enter master password" autocomplete="off" autofocus>
+      <div id="unlockForm">
+        <input type="password" class="lock-input" id="masterPass" placeholder="Enter your personal password" autocomplete="off" autofocus>
         <button class="btn btn-primary" onclick="doUnlock()">Unlock Vault</button>
         <p class="msg" id="unlockMsg"></p>
       </div>
@@ -265,46 +258,33 @@ const $ = id => document.getElementById(id);
 let masterPass = '';
 let keys = { anthropic: '', openai: '' };
 
+// ==================== FIXED PASSWORD ====================
+// Only the SHA-256 hash is stored here. The password itself is never in source code.
+// SHA-256 is one-way — you cannot reverse the hash to get the password.
+const FIXED_HASH = '9228edf1e1859270c1cc4939937f40d6d61a805f9989d0c5d1f7ad88d25dc7ad';
+
 // ==================== Init ====================
 (function init() {
-  const hash = localStorage.getItem(SK.HASH);
-  if (hash) {
-    $('setupForm').classList.add('hidden');
-    $('unlockForm').classList.remove('hidden');
-  }
   document.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-      if (!$('unlockForm').classList.contains('hidden')) doUnlock();
-      else if (!$('setupForm').classList.contains('hidden')) doSetup();
-    }
+    if (e.key === 'Enter') doUnlock();
   });
 })();
-
-// ==================== Setup ====================
-async function doSetup() {
-  const pw = $('newPass').value;
-  const cf = $('confirmPass').value;
-  const msg = $('setupMsg');
-  if (pw.length < 6) { msg.textContent = 'Password must be at least 6 characters'; msg.className = 'msg error'; return; }
-  if (pw !== cf) { msg.textContent = 'Passwords do not match'; msg.className = 'msg error'; return; }
-  const hash = await sha256(pw);
-  localStorage.setItem(SK.HASH, hash);
-  masterPass = pw;
-  await persistData();
-  msg.textContent = 'Vault created! Unlocking...'; msg.className = 'msg success';
-  setTimeout(showVault, 400);
-}
 
 // ==================== Unlock ====================
 async function doUnlock() {
   const pw = $('masterPass').value;
   const msg = $('unlockMsg');
   if (!pw) return;
-  const hash = localStorage.getItem(SK.HASH);
-  if (await sha256(pw) !== hash) {
+
+  const inputHash = await sha256(pw);
+  if (inputHash !== FIXED_HASH) {
     msg.textContent = 'Wrong password'; msg.className = 'msg error';
     return;
   }
+
+  // Store hash for data encryption key derivation
+  localStorage.setItem(SK.HASH, FIXED_HASH);
+
   masterPass = pw;
   await loadData();
   showVault();
@@ -316,7 +296,7 @@ function showVault() {
   $('anthropicKey').value = keys.anthropic;
   $('openaiKey').value = keys.openai;
   updateStatus();
-  $('newPass').value = $('confirmPass').value = $('masterPass').value = '';
+  $('masterPass').value = '';
 }
 
 // ==================== Lock ====================
@@ -325,8 +305,6 @@ function lockVault() {
   keys = { anthropic: '', openai: '' };
   $('vaultScreen').classList.add('hidden');
   $('lockScreen').classList.remove('hidden');
-  $('unlockForm').classList.remove('hidden');
-  $('setupForm').classList.add('hidden');
   $('unlockMsg').textContent = '';
   toast('Vault locked');
 }
