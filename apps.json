@@ -1,5 +1,18 @@
 [
   {
+    "id": "claude-config",
+    "name": "Claude Code 个人配置",
+    "shortDesc": "加密存储 Anthropic / OpenAI API 密钥，配置默认模型参数",
+    "fullDesc": "本地加密存储你的 Claude API 密钥和模型配置。使用 AES-256-GCM 加密，密钥由你设置的本地密码派生，所有数据仅存储在浏览器 localStorage，不会上传到任何服务器。支持保存 Anthropic API Key、OpenAI API Key（可选）、默认模型选择和最大输出 Token 配置。每次打开需要输入本地密码解密，确保即使他人使用你的电脑也无法读取密钥。",
+    "category": "gui",
+    "status": "done",
+    "version": "v1.0.0",
+    "icon": "⚙️",
+    "onlineTool": true,
+    "github": "https://github.com/Bgu253518/my-app-hub",
+    "download": ""
+  },
+  {
     "id": "file-renamer",
     "name": "批量文件重命名工具",
     "shortDesc": "浏览器中一键批量重命名文件：查找替换/序号前缀/自定义模板，支持预览和撤销",
@@ -148,19 +161,6 @@
     "status": "wip",
     "version": "v1.0.0",
     "icon": "📑",
-    "github": "",
-    "download": ""
-  },
-  {
-    "id": "img-to-pdf",
-    "name": "图片转PDF工具",
-    "shortDesc": "多图合并为PDF，支持HEIC，图片名标注右上角加粗红线下划线",
-    "fullDesc": "纯浏览器端图片转PDF工具，合并于图片工具箱。支持 JPG/PNG/HEIC 等常见格式，拖拽调整图片顺序，每页右上角显示文件名（加粗+红色下划线），图片居中放置。支持 A4/Letter/自动三种页面尺寸、图片缩放比例调节、字体大小设置。HEIC 照片自动转换后合并。所有文件本地处理，保护隐私安全。",
-    "category": "gui",
-    "status": "done",
-    "version": "v2.0.0",
-    "icon": "🖨️",
-    "onlineTool": true,
     "github": "",
     "download": ""
   },

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code 个人配置 — 顾力菡·应用工坊</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-deep: #0a0a14;
+  --bg-card: rgba(22, 22, 44, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --text-primary: #e8e8f0;
+  --text-secondary: #9999b0;
+  --accent-1: #7c5cfc;
+  --accent-2: #5cfca0;
+  --accent-3: #fc5c9c;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --transition: 0.2s ease;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: linear-gradient(160deg, #0a0a14 0%, #12122a 30%, #16163a 60%, #0d0d24 100%);
+  color: var(--text-primary); min-height: 100vh; line-height: 1.6;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 20% 20%, rgba(124, 92, 252, 0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 60%, rgba(252, 92, 156, 0.04) 0%, transparent 50%);
+  pointer-events: none; z-index: 0;
+}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(124, 92, 252, 0.25); border-radius: 3px; }
+
+/* Header */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10, 10, 20, 0.8); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 0 24px; height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header .brand { font-size: 17px; font-weight: 700; }
+.header a { color: var(--text-secondary); text-decoration: none; font-size: 13px; transition: var(--transition); }
+.header a:hover { color: var(--text-primary); }
+
+/* Main */
+.main { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 24px; }
+
+/* Section */
+.section {
+  background: var(--bg-card); border: 1px solid var(--glass-border);
+  border-radius: var(--radius); padding: 24px; margin-bottom: 20px;
+  backdrop-filter: blur(10px);
+}
+.section-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.section-hint { font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; }
+
+/* Form */
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text-primary); }
+.form-group .desc { font-size: 11px; color: var(--text-secondary); margin-bottom: 6px; }
+.form-group input, .form-group select {
+  width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+  border-radius: 6px; padding: 10px 14px; color: var(--text-primary);
+  font-size: 13px; outline: none; transition: var(--transition);
+}
+.form-group input:focus, .form-group select:focus { border-color: var(--accent-1); }
+.form-row { display: flex; gap: 10px; }
+.form-row input { flex: 1; }
+
+/* Toggle */
+.input-toggle { position: relative; display: inline-flex; align-items: center; gap: 8px; }
+.input-toggle input { width: auto; }
+.input-toggle .toggle-btn {
+  background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+  border-radius: 4px; padding: 4px 12px; color: var(--text-secondary);
+  font-size: 12px; cursor: pointer; transition: var(--transition);
+}
+.input-toggle .toggle-btn:hover { color: var(--text-primary); border-color: var(--text-secondary); }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: var(--radius-sm); font-size: 13px;
+  font-weight: 600; cursor: pointer; border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.05); color: var(--text-primary);
+  transition: var(--transition); white-space: nowrap;
+}
+.btn:hover { background: rgba(255,255,255,0.1); }
+.btn-primary { background: linear-gradient(135deg, #7c5cfc, #5ccafc); border: none; color: #fff; }
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(124,92,252,0.3); }
+.btn-danger { border-color: rgba(252,92,156,0.3); color: var(--accent-3); }
+.btn-danger:hover { background: rgba(252,92,156,0.1); border-color: var(--accent-3); }
+.btn-sm { padding: 4px 10px; font-size: 11px; }
+
+/* Status Badge */
+.badge {
+  display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 20px;
+  font-weight: 600;
+}
+.badge-ok { background: rgba(92,252,160,0.1); color: var(--accent-2); border: 1px solid rgba(92,252,160,0.3); }
+.badge-no { background: rgba(252,92,156,0.1); color: var(--accent-3); border: 1px solid rgba(252,92,156,0.3); }
+
+/* Info Card */
+.info-card {
+  background: rgba(124,92,252,0.05); border: 1px solid rgba(124,92,252,0.15);
+  border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 12px;
+}
+.info-card .info-label { font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.info-card .info-value { font-size: 14px; font-weight: 600; word-break: break-all; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 1000;
+  background: rgba(22,22,44,0.95); border: 1px solid var(--glass-border);
+  color: var(--text-primary); padding: 12px 20px; border-radius: var(--radius-sm);
+  font-size: 13px; backdrop-filter: blur(12px);
+  transform: translateY(100px); opacity: 0; transition: all 0.35s ease;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.error { border-color: rgba(252,92,156,0.4); }
+.toast.success { border-color: rgba(92,252,160,0.4); }
+
+.hidden { display: none !important; }
+
+@media (max-width: 600px) {
+  .main { padding: 16px; }
+  .form-row { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="brand">⚙️ Claude Code 个人配置</span>
+  <a href="index.html">← 返回应用工坊</a>
+</div>
+
+<div class="main">
+
+  <!-- Lock Screen -->
+  <div class="section" id="lockSection">
+    <div class="section-title">🔐 设置本地密码</div>
+    <p class="section-hint">此密码用于加密保护你的 API 密钥。每次打开此页面需要输入密码解密。</p>
+    <div id="setupForm">
+      <div class="form-group">
+        <label>创建本地密码（至少6位）</label>
+        <input type="password" id="newPass" placeholder="设置密码" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>确认密码</label>
+        <input type="password" id="confirmPass" placeholder="再次输入密码" autocomplete="off">
+      </div>
+      <button class="btn btn-primary" onclick="doSetup()">🔑 创建并进入</button>
+      <p id="setupMsg" style="margin-top:8px;font-size:12px;min-height:18px"></p>
+    </div>
+    <div id="unlockForm" class="hidden">
+      <div class="form-group">
+        <label>输入密码解锁</label>
+        <div class="form-row">
+          <input type="password" id="masterPass" placeholder="输入本地密码" autocomplete="off" autofocus>
+          <button class="btn btn-primary" onclick="doUnlock()">解锁</button>
+        </div>
+      </div>
+      <p id="unlockMsg" style="font-size:12px;min-height:18px"></p>
+    </div>
+  </div>
+
+  <!-- Config Section (hidden until unlocked) -->
+  <div id="configSection" class="hidden">
+
+    <!-- Status -->
+    <div class="section">
+      <div class="section-title">📊 配置状态</div>
+      <div class="info-card">
+        <div class="info-label">Anthropic API Key</div>
+        <div class="info-value" id="keyStatus">—</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">默认模型</div>
+        <div class="info-value" id="modelStatus">—</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">存储加密</div>
+        <div class="info-value">AES-256-GCM | 本地浏览器 | 不上传服务器</div>
+      </div>
+    </div>
+
+    <!-- API Key Config -->
+    <div class="section">
+      <div class="section-title">🔑 API 密钥</div>
+      <p class="section-hint">密钥使用你的本地密码加密存储在浏览器中，不会上传到任何服务器。</p>
+      <div class="form-group">
+        <label>Anthropic API Key (Claude)</label>
+        <div class="desc">从 <a href="https://console.anthropic.com/" target="_blank" style="color:var(--accent-1)">console.anthropic.com</a> 获取</div>
+        <div class="form-row">
+          <input type="password" id="anthropicKey" placeholder="sk-ant-api03-..." autocomplete="off">
+          <button class="btn btn-sm toggle-btn" onclick="toggleVis('anthropicKey')">👁 显示</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>OpenAI API Key（可选）</label>
+        <div class="form-row">
+          <input type="password" id="openaiKey" placeholder="sk-..." autocomplete="off">
+          <button class="btn btn-sm toggle-btn" onclick="toggleVis('openaiKey')">👁 显示</button>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="saveKeys()">💾 加密保存密钥</button>
+    </div>
+
+    <!-- Model Config -->
+    <div class="section">
+      <div class="section-title">🤖 默认模型设置</div>
+      <div class="form-group">
+        <label>Claude 模型</label>
+        <select id="claudeModel">
+          <option value="claude-sonnet-4-6">Claude Sonnet 4.6（推荐）</option>
+          <option value="claude-opus-4-7">Claude Opus 4.7（最强）</option>
+          <option value="claude-haiku-4-5">Claude Haiku 4.5（最快）</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>最大输出 Token</label>
+        <input type="number" id="maxTokens" value="4096" min="256" max="32768" step="256">
+      </div>
+      <button class="btn btn-primary" onclick="saveModelConfig()">💾 保存模型设置</button>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="section" style="border-color:rgba(252,92,156,0.2)">
+      <div class="section-title" style="color:var(--accent-3)">⚠️ 危险区域</div>
+      <p class="section-hint">清除所有本地存储的配置数据，包括密码和 API 密钥。</p>
+      <button class="btn btn-danger" onclick="clearAll()">🗑 清除所有配置数据</button>
+      <button class="btn btn-sm" style="margin-left:8px" onclick="lockScreen()">🔒 锁定屏幕</button>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============ Crypto Helpers ============
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+
+async function sha256(text) {
+  const hash = await crypto.subtle.digest('SHA-256', encoder.encode(text));
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function deriveKey(password, salt) {
+  const km = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name:'PBKDF2', salt, iterations:200000, hash:'SHA-256' }, km, { name:'AES-GCM', length:256 }, false, ['encrypt','decrypt']);
+}
+
+async function encrypt(plaintext, password) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveKey(password, salt);
+  const ct = await crypto.subtle.encrypt({ name:'AES-GCM', iv }, key, encoder.encode(plaintext));
+  const combined = new Uint8Array(salt.length + iv.length + new Uint8Array(ct).length);
+  combined.set(salt, 0); combined.set(iv, 16); combined.set(new Uint8Array(ct), 28);
+  return btoa(String.fromCharCode(...combined));
+}
+
+async function decrypt(encB64, password) {
+  try {
+    const combined = Uint8Array.from(atob(encB64), c => c.charCodeAt(0));
+    const key = await deriveKey(password, combined.slice(0,16));
+    const plain = await crypto.subtle.decrypt({ name:'AES-GCM', iv: combined.slice(16,28) }, key, combined.slice(28));
+    return decoder.decode(plain);
+  } catch { return null; }
+}
+
+// ============ Storage Keys ============
+const SK = {
+  PASS_HASH: '_ccfg_ph',
+  KEYS: '_ccfg_keys',
+  MODEL: '_ccfg_model'
+};
+
+// ============ State ============
+let masterPass = '';
+let apiKeys = { anthropic: '', openai: '' };
+let modelConfig = { claudeModel: 'claude-sonnet-4-6', maxTokens: 4096 };
+
+// ============ DOM ============
+const $ = id => document.getElementById(id);
+
+// ============ Init ============
+function init() {
+  const hash = localStorage.getItem(SK.PASS_HASH);
+  if (hash) {
+    $('setupForm').classList.add('hidden');
+    $('unlockForm').classList.remove('hidden');
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      if (!$('unlockForm').classList.contains('hidden')) doUnlock();
+      else if (!$('setupForm').classList.contains('hidden')) doSetup();
+    }
+  });
+}
+
+// ============ Setup ============
+async function doSetup() {
+  const pw = $('newPass').value;
+  const cf = $('confirmPass').value;
+  if (pw.length < 6) { $('setupMsg').textContent = '密码至少需要6位'; $('setupMsg').style.color = 'var(--accent-3)'; return; }
+  if (pw !== cf) { $('setupMsg').textContent = '两次输入密码不一致'; $('setupMsg').style.color = 'var(--accent-3)'; return; }
+  const hash = await sha256(pw);
+  localStorage.setItem(SK.PASS_HASH, hash);
+  masterPass = pw;
+  await saveAll();
+  $('setupMsg').textContent = '密码创建成功！'; $('setupMsg').style.color = 'var(--accent-2)';
+  setTimeout(showConfig, 500);
+}
+
+// ============ Unlock ============
+async function doUnlock() {
+  const pw = $('masterPass').value;
+  if (!pw) return;
+  const hash = localStorage.getItem(SK.PASS_HASH);
+  if (await sha256(pw) !== hash) {
+    $('unlockMsg').textContent = '密码错误'; $('unlockMsg').style.color = 'var(--accent-3)'; return;
+  }
+  masterPass = pw;
+  await loadAll();
+  showConfig();
+}
+
+function showConfig() {
+  $('lockSection').classList.add('hidden');
+  $('configSection').classList.remove('hidden');
+  renderConfig();
+  $('masterPass').value = $('newPass').value = $('confirmPass').value = '';
+}
+
+function lockScreen() {
+  masterPass = '';
+  $('configSection').classList.add('hidden');
+  $('lockSection').classList.remove('hidden');
+  const hash = localStorage.getItem(SK.PASS_HASH);
+  if (hash) { $('setupForm').classList.add('hidden'); $('unlockForm').classList.remove('hidden'); }
+  else { $('setupForm').classList.remove('hidden'); $('unlockForm').classList.add('hidden'); }
+}
+
+// ============ Save / Load ============
+async function saveKeys() {
+  apiKeys.anthropic = $('anthropicKey').value.trim();
+  apiKeys.openai = $('openaiKey').value.trim();
+  await persistKeys();
+  renderConfig();
+  toast('✓ API 密钥已加密保存', 'success');
+}
+
+async function saveModelConfig() {
+  modelConfig.claudeModel = $('claudeModel').value;
+  modelConfig.maxTokens = parseInt($('maxTokens').value) || 4096;
+  const json = JSON.stringify(modelConfig);
+  const enc = await encrypt(json, masterPass);
+  localStorage.setItem(SK.MODEL, enc);
+  renderConfig();
+  toast('✓ 模型设置已保存', 'success');
+}
+
+async function persistKeys() {
+  const enc = await encrypt(JSON.stringify(apiKeys), masterPass);
+  localStorage.setItem(SK.KEYS, enc);
+}
+
+async function saveAll() {
+  await persistKeys();
+  const enc = await encrypt(JSON.stringify(modelConfig), masterPass);
+  localStorage.setItem(SK.MODEL, enc);
+}
+
+async function loadAll() {
+  const encKeys = localStorage.getItem(SK.KEYS);
+  if (encKeys) {
+    const json = await decrypt(encKeys, masterPass);
+    if (json) try { apiKeys = JSON.parse(json); } catch(e) {}
+  }
+  const encModel = localStorage.getItem(SK.MODEL);
+  if (encModel) {
+    const json = await decrypt(encModel, masterPass);
+    if (json) try { modelConfig = JSON.parse(json); } catch(e) {}
+  }
+  $('anthropicKey').value = apiKeys.anthropic || '';
+  $('openaiKey').value = apiKeys.openai || '';
+  $('claudeModel').value = modelConfig.claudeModel || 'claude-sonnet-4-6';
+  $('maxTokens').value = modelConfig.maxTokens || 4096;
+}
+
+function renderConfig() {
+  $('keyStatus').innerHTML = apiKeys.anthropic
+    ? '<span class="badge badge-ok">已配置</span> ' + apiKeys.anthropic.slice(0, 12) + '...'
+    : '<span class="badge badge-no">未配置</span>';
+  $('modelStatus').textContent = modelConfig.claudeModel + ' · max_tokens=' + modelConfig.maxTokens;
+}
+
+// ============ Helpers ============
+function toggleVis(id) {
+  const el = $(id);
+  el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+function clearAll() {
+  if (!confirm('确定要清除所有本地配置数据吗？包括密码和 API 密钥。此操作不可撤销。')) return;
+  Object.values(SK).forEach(k => localStorage.removeItem(k));
+  masterPass = ''; apiKeys = { anthropic: '', openai: '' };
+  location.reload();
+}
+
+// ============ Toast ============
+let toastTimer;
+function toast(msg, type) {
+  const el = $('toast');
+  el.textContent = msg; el.className = 'toast ' + (type || '') + ' show';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+init();
+</script>
+</body>
+</html>
