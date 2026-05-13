@@ -1,5 +1,18 @@
 [
   {
+    "id": "tb-autofill",
+    "name": "TB 自动上数器",
+    "shortDesc": "科目映射模板匹配、客户余额表自动填入TB、公式保护、借贷校验",
+    "fullDesc": "纯浏览器端 TB 自动上数工具。维护多客户科目映射模板（支持增删改查+导入导出Excel+模糊匹配建议，存localStorage），上传客户科目余额表自动识别列头，支持上传已有TB底稿或自动生成极简TB表，严格保留TB原有公式和格式。根据映射模板按科目代码自动匹配，资产/负债/权益类填入期末余额，收入/费用类填入本期发生额，自动处理借贷方向正负号转换，公式单元格跳过保护。未匹配科目红色展示并提供模糊匹配Top3推荐，一键添加映射后重新上数。自动校验借贷平衡，下载填好的TB（公式+格式完整保留）及未匹配清单和校验报告。",
+    "category": "data",
+    "status": "done",
+    "version": "v1.0.0",
+    "icon": "📊",
+    "onlineTool": true,
+    "github": "https://github.com/Bgu253518/my-app-hub",
+    "download": ""
+  },
+  {
     "id": "bkd-rollforward",
     "name": "BKD 底稿滚存与上数助手",
     "shortDesc": "BKD底稿日期列自动识别、期末数→期初数滚存、科目映射上数、借贷校验",
