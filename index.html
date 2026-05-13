@@ -80,32 +80,41 @@
     <section class="panel">
       <h2>应用列表</h2>
       <div class="apps-grid">
-        <div class="app-card">
+        <div class="app-card" data-app="ai-chat">
           <div class="app-icon">🤖</div>
           <h3>AI 聊天助手</h3>
           <p>基于 Claude / GPT 的智能对话</p>
-          <span class="status-dot on"></span>
+          <span class="tag tag-ready">就绪</span>
         </div>
-        <div class="app-card">
+        <div class="app-card" data-app="translator">
           <div class="app-icon">🌐</div>
           <h3>智能翻译</h3>
           <p>多语言即时翻译</p>
-          <span class="status-dot on"></span>
+          <span class="tag tag-soon">即将推出</span>
         </div>
-        <div class="app-card">
-          <div class="app-icon">📝</div>
-          <h3>文本摘要</h3>
-          <p>长文本一键智能摘要</p>
-          <span class="status-dot on"></span>
+        <div class="app-card" data-app="pdf-splitter" data-action="launch" data-src="apps/pdf-splitter.html">
+          <div class="app-icon">📄</div>
+          <h3>PDF 拆图工具</h3>
+          <p>PDF 逐页导出为图片，一键打包下载</p>
+          <span class="tag tag-ready">可用</span>
         </div>
-        <div class="app-card">
+        <div class="app-card" data-app="codegen">
           <div class="app-icon">💻</div>
           <h3>代码生成</h3>
           <p>自然语言生成代码</p>
-          <span class="status-dot on"></span>
+          <span class="tag tag-soon">即将推出</span>
         </div>
       </div>
     </section>
+
+    <!-- App 运行区域 -->
+    <div class="app-runner hidden" id="appRunner">
+      <div class="app-runner-header">
+        <span id="appRunnerTitle">PDF 拆图工具</span>
+        <button id="appRunnerClose" class="btn btn-sm">✕ 关闭</button>
+      </div>
+      <iframe id="appFrame" src="" class="app-frame" allow="clipboard-write"></iframe>
+    </div>
 
     <footer>
       <p>私有应用中心 v1.0 — 数据仅存储于本机浏览器</p>

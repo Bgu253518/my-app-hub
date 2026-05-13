@@ -54,6 +54,8 @@ const App = (() => {
     $lockBtn.addEventListener('click', lock);
     $logoutBtn.addEventListener('click', logout);
     setupApiKeyUI();
+    setupAppLauncher();
+    document.getElementById('appRunnerClose').addEventListener('click', closeApp);
     resetAutoLock();
   }
 
@@ -224,6 +226,45 @@ const App = (() => {
     toast.style.opacity = '1';
     clearTimeout(toast._tid);
     toast._tid = setTimeout(() => toast.style.opacity = '0', 2000);
+  }
+
+  // ========== App Launcher ==========
+  function setupAppLauncher() {
+    document.querySelector('.apps-grid').addEventListener('click', e => {
+      const card = e.target.closest('.app-card');
+      if (!card) return;
+      const action = card.dataset.action;
+      const src = card.dataset.src;
+      const appName = card.dataset.app;
+      if (action === 'launch' && src) {
+        launchApp(appName, src, card.querySelector('h3')?.textContent || appName);
+      } else if (!action) {
+        showToast('📢 ' + (card.querySelector('h3')?.textContent || '此应用') + ' 即将推出');
+      }
+    });
+  }
+
+  function launchApp(appId, src, title) {
+    const runner = document.getElementById('appRunner');
+    const frame = document.getElementById('appFrame');
+    const titleEl = document.getElementById('appRunnerTitle');
+    document.getElementById('apiPanel').classList.add('hidden');
+    document.getElementById('appRunner').previousElementSibling?.classList.add('hidden');
+    // Hide the apps panel
+    document.querySelector('.apps-grid').parentElement.classList.add('hidden');
+    titleEl.textContent = title;
+    frame.src = src;
+    runner.classList.remove('hidden');
+    runner.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function closeApp() {
+    const runner = document.getElementById('appRunner');
+    const frame = document.getElementById('appFrame');
+    frame.src = '';
+    runner.classList.add('hidden');
+    document.getElementById('apiPanel').classList.remove('hidden');
+    document.querySelector('.apps-grid').parentElement.classList.remove('hidden');
   }
 
   // ========== Public API ==========

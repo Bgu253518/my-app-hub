@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF 拆图工具</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    .thumbnail-checkbox:checked + label .thumb-overlay { display: flex; }
+    .thumb-overlay { display: none; }
+    [x-cloak] { display: none !important; }
+    .progress-bar { transition: width 0.15s ease; }
+  </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+  <div id="app" class="max-w-6xl mx-auto px-4 py-6">
+
+    <!-- Header -->
+    <header class="text-center mb-8">
+      <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
+        PDF 拆图工具
+      </h1>
+      <p class="text-gray-500 mt-1 text-sm">上传 PDF，逐页导出为图片，一键打包下载</p>
+    </header>
+
+    <!-- Upload Zone -->
+    <div id="uploadZone"
+         class="border-2 border-dashed border-gray-700 rounded-2xl p-12 text-center cursor-pointer
+                hover:border-indigo-500 hover:bg-gray-900/50 transition-all duration-200"
+         ondragover="event.preventDefault(); this.classList.add('border-indigo-400','bg-gray-900/50')"
+         ondragleave="this.classList.remove('border-indigo-400','bg-gray-900/50')"
+         ondrop="handleDrop(event)">
+      <input type="file" id="fileInput" accept=".pdf" class="hidden" onchange="handleFile(this.files[0])">
+      <div class="text-5xl mb-4">📄</div>
+      <p class="text-lg font-medium mb-1">拖拽 PDF 到此处，或<span class="text-indigo-400 underline ml-1 cursor-pointer" onclick="document.getElementById('fileInput').click()">点击上传</span></p>
+      <p class="text-gray-600 text-sm">支持任意大小 PDF，所有处理均在本地完成</p>
+    </div>
+
+    <!-- File Info Bar -->
+    <div id="infoBar" class="hidden mt-6 bg-gray-900 border border-gray-800 rounded-xl px-6 py-4 flex flex-wrap items-center gap-4">
+      <span class="text-lg">📑</span>
+      <div class="flex-1 min-w-0">
+        <p id="fileName" class="font-semibold truncate text-gray-200"></p>
+        <p class="text-gray-500 text-sm">共 <span id="pageCount">0</span> 页</p>
+      </div>
+      <button onclick="resetApp()" class="text-gray-500 hover:text-red-400 transition-colors text-sm border border-gray-700 rounded-lg px-3 py-1.5 hover:border-red-500/50">
+        重新上传
+      </button>
+    </div>
+
+    <!-- Selection Toolbar -->
+    <div id="toolbar" class="hidden mt-4 bg-gray-900 border border-gray-800 rounded-xl px-6 py-3 flex flex-wrap items-center gap-3 text-sm">
+      <button onclick="selectAll()" class="text-gray-300 hover:text-white border border-gray-700 rounded-lg px-3 py-1.5 hover:border-gray-500 transition-colors">全选</button>
+      <button onclick="deselectAll()" class="text-gray-300 hover:text-white border border-gray-700 rounded-lg px-3 py-1.5 hover:border-gray-500 transition-colors">取消全选</button>
+      <span class="text-gray-600">|</span>
+      <label class="text-gray-400">页码范围:</label>
+      <input type="text" id="pageRange" placeholder="例: 1,3,5-10"
+             class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-gray-200 w-36 outline-none focus:border-indigo-500 transition-colors">
+      <button onclick="applyPageRange()" class="text-indigo-400 hover:text-indigo-300 border border-indigo-500/30 rounded-lg px-3 py-1.5 hover:border-indigo-400 transition-colors">应用</button>
+      <span class="text-gray-600 ml-auto">已选 <span id="selectedCount" class="text-indigo-400 font-semibold">0</span> 页</span>
+    </div>
+
+    <!-- Settings -->
+    <div id="settingsPanel" class="hidden mt-4 bg-gray-900 border border-gray-800 rounded-xl px-6 py-4">
+      <h3 class="text-sm font-semibold text-gray-300 mb-3">输出设置</h3>
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+        <!-- Format -->
+        <div>
+          <label class="block text-gray-500 mb-1">图片格式</label>
+          <select id="format" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-gray-200 outline-none focus:border-indigo-500">
+            <option value="png">PNG</option>
+            <option value="jpeg">JPEG</option>
+          </select>
+        </div>
+        <!-- JPEG Quality -->
+        <div id="qualityGroup">
+          <label class="block text-gray-500 mb-1">JPEG 质量: <span id="qualityVal">85</span>%</label>
+          <input type="range" id="quality" min="10" max="100" value="85" oninput="document.getElementById('qualityVal').textContent=this.value"
+                 class="w-full accent-indigo-500">
+        </div>
+        <!-- Scale -->
+        <div>
+          <label class="block text-gray-500 mb-1">分辨率缩放</label>
+          <select id="scale" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-gray-200 outline-none focus:border-indigo-500">
+            <option value="1">1x</option>
+            <option value="1.5">1.5x</option>
+            <option value="2" selected>2x</option>
+            <option value="3">3x</option>
+            <option value="custom">自定义</option>
+          </select>
+        </div>
+        <!-- Custom Scale -->
+        <div id="customScaleGroup" class="hidden">
+          <label class="block text-gray-500 mb-1">自定义倍数</label>
+          <input type="number" id="customScale" value="2" min="0.5" max="10" step="0.1"
+                 class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-gray-200 outline-none focus:border-indigo-500">
+        </div>
+        <!-- Color Mode -->
+        <div>
+          <label class="block text-gray-500 mb-1">色彩模式</label>
+          <select id="colorMode" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-gray-200 outline-none focus:border-indigo-500">
+            <option value="color">彩色</option>
+            <option value="grayscale">灰度</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Button -->
+    <div id="actionBar" class="hidden mt-4 flex gap-3">
+      <button id="startBtn" onclick="startSplit()"
+              class="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold py-3.5 rounded-xl transition-all duration-200 text-lg shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/40">
+        开始拆分
+      </button>
+      <button id="cancelBtn" onclick="cancelSplit()"
+              class="hidden bg-red-600/20 hover:bg-red-600/40 text-red-400 font-semibold py-3.5 px-6 rounded-xl transition-all duration-200 border border-red-500/30">
+        取消
+      </button>
+    </div>
+
+    <!-- Progress -->
+    <div id="progressCard" class="hidden mt-4 bg-gray-900 border border-gray-800 rounded-xl px-6 py-4">
+      <div class="flex items-center justify-between mb-2 text-sm">
+        <span class="text-gray-300" id="progressText">处理中...</span>
+        <span class="text-indigo-400 font-mono" id="progressPercent">0%</span>
+      </div>
+      <div class="bg-gray-800 rounded-full h-3 overflow-hidden">
+        <div id="progressFill" class="progress-bar bg-gradient-to-r from-indigo-500 to-cyan-500 h-full rounded-full" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- Thumbnail Grid -->
+    <div id="thumbGrid" class="hidden mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
+
+    <!-- Lightbox -->
+    <div id="lightbox" class="hidden fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-8"
+         onclick="closeLightbox()">
+      <button class="absolute top-4 right-4 text-white/60 hover:text-white text-2xl transition-colors cursor-pointer bg-transparent border-0">✕</button>
+      <span id="lightboxPage" class="absolute top-4 left-4 text-white/60 text-sm"></span>
+      <img id="lightboxImg" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl" onclick="event.stopPropagation()">
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-gray-800 border border-gray-700 text-gray-200 px-5 py-3 rounded-xl shadow-2xl text-sm transition-all duration-300 translate-y-4 opacity-0 pointer-events-none z-50"></div>
+
+    <!-- Download iframe (for triggering downloads) -->
+    <iframe id="dlFrame" class="hidden"></iframe>
+  </div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+// ==================== State ====================
+let pdfDoc = null;
+let filename = '';
+let totalPages = 0;
+let abortController = null;
+const SETTINGS_KEY = '_pdfsplitter_settings';
+
+// ==================== Settings Persistence ====================
+function loadSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+    if (s) {
+      document.getElementById('format').value = s.format || 'png';
+      document.getElementById('quality').value = s.quality || 85;
+      document.getElementById('qualityVal').textContent = s.quality || 85;
+      document.getElementById('scale').value = s.scale || '2';
+      document.getElementById('customScale').value = s.customScale || 2;
+      document.getElementById('colorMode').value = s.colorMode || 'color';
+      onFormatChange();
+      onScaleChange();
+    }
+  } catch(e) {}
+}
+function saveSettings() {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+    format: document.getElementById('format').value,
+    quality: document.getElementById('quality').value,
+    scale: document.getElementById('scale').value,
+    customScale: document.getElementById('customScale').value,
+    colorMode: document.getElementById('colorMode').value
+  }));
+}
+
+// ==================== Format Change ====================
+function onFormatChange() {
+  const fmt = document.getElementById('format').value;
+  document.getElementById('qualityGroup').style.display = fmt === 'jpeg' ? '' : 'none';
+  saveSettings();
+}
+document.getElementById('format').addEventListener('change', onFormatChange);
+
+// ==================== Scale Change ====================
+function onScaleChange() {
+  const v = document.getElementById('scale').value;
+  document.getElementById('customScaleGroup').classList.toggle('hidden', v !== 'custom');
+  saveSettings();
+}
+document.getElementById('scale').addEventListener('change', onScaleChange);
+document.getElementById('customScale').addEventListener('input', saveSettings);
+document.getElementById('quality').addEventListener('input', saveSettings);
+document.getElementById('colorMode').addEventListener('change', saveSettings);
+
+// ==================== File Handling ====================
+function handleDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('border-indigo-400','bg-gray-900/50');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+}
+
+async function handleFile(file) {
+  if (!file || file.type !== 'application/pdf') {
+    showToast('请上传 PDF 文件', 'error');
+    return;
+  }
+  filename = file.name.replace(/\.pdf$/i, '');
+  const buffer = await file.arrayBuffer();
+
+  try {
+    pdfDoc = await pdfjsLib.getDocument({ data: buffer }).promise;
+  } catch (err) {
+    if (err.name === 'PasswordException') {
+      showToast('此 PDF 已加密，请输入密码解锁', 'error');
+      const pw = prompt('请输入 PDF 密码：');
+      if (!pw) return;
+      try {
+        pdfDoc = await pdfjsLib.getDocument({ data: buffer, password: pw }).promise;
+      } catch (e) {
+        showToast('密码错误或文件已损坏，无法打开', 'error');
+        return;
+      }
+    } else {
+      showToast('文件已损坏或无法解析: ' + err.message, 'error');
+      return;
+    }
+  }
+
+  totalPages = pdfDoc.numPages;
+  if (totalPages === 0) { showToast('PDF 无页面', 'error'); return; }
+
+  document.getElementById('uploadZone').classList.add('hidden');
+  document.getElementById('infoBar').classList.remove('hidden');
+  document.getElementById('toolbar').classList.remove('hidden');
+  document.getElementById('settingsPanel').classList.remove('hidden');
+  document.getElementById('actionBar').classList.remove('hidden');
+  document.getElementById('fileName').textContent = file.name;
+  document.getElementById('pageCount').textContent = totalPages;
+
+  renderThumbnails();
+  selectAll();
+}
+
+// ==================== Thumbnails ====================
+async function renderThumbnails() {
+  const grid = document.getElementById('thumbGrid');
+  grid.classList.remove('hidden');
+  grid.innerHTML = '';
+
+  // Render first few thumbnails quickly, then the rest
+  const batch1 = Math.min(8, totalPages);
+  for (let i = 1; i <= batch1; i++) await renderThumb(i, grid);
+  for (let i = batch1 + 1; i <= totalPages; i++) await renderThumb(i, grid);
+
+  updateSelectedCount();
+}
+
+async function renderThumb(pageNum, grid) {
+  const page = await pdfDoc.getPage(pageNum);
+  const viewport = page.getViewport({ scale: 0.3 });
+  const canvas = document.createElement('canvas');
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  const ctx = canvas.getContext('2d');
+  await page.render({ canvasContext: ctx, viewport }).promise;
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'relative group cursor-pointer bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-indigo-500/50 transition-all';
+
+  const id = 'page_' + pageNum;
+
+  // Checkbox
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.id = id;
+  checkbox.className = 'thumbnail-checkbox absolute top-2 right-2 z-10 w-5 h-5 accent-indigo-500 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity';
+  checkbox.checked = true;
+  checkbox.setAttribute('data-page', pageNum);
+  checkbox.onchange = updateSelectedCount;
+
+  // Label + overlay
+  const label = document.createElement('label');
+  label.htmlFor = id;
+  label.className = 'block cursor-pointer';
+
+  const overlay = document.createElement('div');
+  overlay.className = 'thumb-overlay absolute inset-0 bg-indigo-600/30 items-center justify-center pointer-events-none';
+  const check = document.createElement('span');
+  check.className = 'text-white text-2xl font-bold';
+  check.textContent = '✓';
+  overlay.appendChild(check);
+  label.appendChild(overlay);
+
+  const img = document.createElement('img');
+  img.src = canvas.toDataURL();
+  img.className = 'w-full block';
+  img.alt = '第 ' + pageNum + ' 页';
+  img.onclick = (e) => { e.preventDefault(); openLightbox(pageNum); };
+
+  label.appendChild(img);
+  wrapper.appendChild(checkbox);
+  wrapper.appendChild(label);
+
+  // Page number badge
+  const badge = document.createElement('div');
+  badge.className = 'absolute bottom-2 left-2 bg-black/60 text-gray-300 text-xs px-2 py-0.5 rounded pointer-events-none';
+  badge.textContent = pageNum;
+  wrapper.appendChild(badge);
+
+  grid.appendChild(wrapper);
+}
+
+// ==================== Selection ====================
+function selectAll() {
+  document.querySelectorAll('.thumbnail-checkbox').forEach(cb => { cb.checked = true; });
+  updateSelectedCount();
+}
+function deselectAll() {
+  document.querySelectorAll('.thumbnail-checkbox').forEach(cb => { cb.checked = false; });
+  updateSelectedCount();
+}
+function applyPageRange() {
+  const raw = document.getElementById('pageRange').value.trim();
+  if (!raw) return;
+  const selected = new Set();
+  const parts = raw.split(',');
+  for (const p of parts) {
+    const range = p.trim().split('-');
+    if (range.length === 2) {
+      const start = parseInt(range[0]), end = parseInt(range[1]);
+      if (!isNaN(start) && !isNaN(end)) {
+        for (let i = Math.max(1, start); i <= Math.min(totalPages, end); i++) selected.add(i);
+      }
+    } else {
+      const n = parseInt(range[0]);
+      if (!isNaN(n) && n >= 1 && n <= totalPages) selected.add(n);
+    }
+  }
+  document.querySelectorAll('.thumbnail-checkbox').forEach(cb => {
+    cb.checked = selected.has(parseInt(cb.getAttribute('data-page')));
+  });
+  updateSelectedCount();
+}
+function updateSelectedCount() {
+  const count = document.querySelectorAll('.thumbnail-checkbox:checked').length;
+  document.getElementById('selectedCount').textContent = count;
+  document.getElementById('startBtn').disabled = count === 0;
+}
+
+// ==================== Lightbox ====================
+async function openLightbox(pageNum) {
+  const lb = document.getElementById('lightbox');
+  const img = document.getElementById('lightboxImg');
+  document.getElementById('lightboxPage').textContent = '第 ' + pageNum + ' / ' + totalPages + ' 页';
+
+  const page = await pdfDoc.getPage(pageNum);
+  const vp = page.getViewport({ scale: 2 });
+  const canvas = document.createElement('canvas');
+  canvas.width = vp.width;
+  canvas.height = vp.height;
+  await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+  img.src = canvas.toDataURL();
+
+  lb.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+// ==================== Split & Download ====================
+function getScaleFactor() {
+  const sel = document.getElementById('scale').value;
+  if (sel === 'custom') return parseFloat(document.getElementById('customScale').value) || 2;
+  return parseFloat(sel);
+}
+
+async function startSplit() {
+  const checkboxes = document.querySelectorAll('.thumbnail-checkbox:checked');
+  if (checkboxes.length === 0) { showToast('请至少选择一页', 'error'); return; }
+
+  const pages = Array.from(checkboxes).map(cb => parseInt(cb.getAttribute('data-page'))).sort((a,b) => a-b);
+  const format = document.getElementById('format').value;
+  const quality = parseInt(document.getElementById('quality').value) / 100;
+  const scale = getScaleFactor();
+  const grayscale = document.getElementById('colorMode').value === 'grayscale';
+
+  abortController = new AbortController();
+  const signal = abortController.signal;
+
+  // UI state
+  document.getElementById('startBtn').classList.add('hidden');
+  document.getElementById('cancelBtn').classList.remove('hidden');
+  const progressCard = document.getElementById('progressCard');
+  progressCard.classList.remove('hidden');
+  const progressFill = document.getElementById('progressFill');
+  const progressText = document.getElementById('progressText');
+  const progressPercent = document.getElementById('progressPercent');
+
+  const zip = new JSZip();
+  const mime = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+  const ext = format === 'jpeg' ? 'jpg' : 'png';
+
+  for (let i = 0; i < pages.length; i++) {
+    if (signal.aborted) break;
+
+    const p = pages[i];
+    progressText.textContent = `正在处理第 ${p} / ${totalPages} 页...`;
+    const pct = Math.round((i / pages.length) * 100);
+    progressPercent.textContent = pct + '%';
+    progressFill.style.width = pct + '%';
+
+    try {
+      const page = await pdfDoc.getPage(p);
+      const viewport = page.getViewport({ scale });
+
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const ctx = canvas.getContext('2d');
+
+      // Gray background for transparent PDFs
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      await page.render({ canvasContext: ctx, viewport }).promise;
+
+      // Grayscale
+      if (grayscale) {
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const d = imgData.data;
+        for (let j = 0; j < d.length; j += 4) {
+          const gray = d[j] * 0.299 + d[j+1] * 0.587 + d[j+2] * 0.114;
+          d[j] = d[j+1] = d[j+2] = gray;
+        }
+        ctx.putImageData(imgData, 0, 0);
+      }
+
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, mime, quality));
+      const pad = String(p).padStart(3, '0');
+      zip.file(`${filename}_${pad}.${ext}`, blob);
+    } catch (e) {
+      console.error('Page render error:', e);
+    }
+  }
+
+  // Done
+  progressText.textContent = signal.aborted ? '已取消' : '正在打包 ZIP...';
+  progressPercent.textContent = '100%';
+  progressFill.style.width = '100%';
+
+  if (!signal.aborted) {
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(zipBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename + '_图片包.zip';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showToast(`✓ 导出完成！${pages.length} 张图片已打包下载`);
+  }
+
+  // Reset UI
+  document.getElementById('startBtn').classList.remove('hidden');
+  document.getElementById('cancelBtn').classList.add('hidden');
+  // Keep progress visible briefly
+  setTimeout(() => {
+    if (progressCard === document.getElementById('progressCard')) {
+      progressCard.classList.add('hidden');
+    }
+  }, 2000);
+  abortController = null;
+}
+
+function cancelSplit() {
+  if (abortController) abortController.abort();
+}
+
+// ==================== Reset ====================
+function resetApp() {
+  pdfDoc = null;
+  filename = '';
+  totalPages = 0;
+  document.getElementById('uploadZone').classList.remove('hidden');
+  document.getElementById('infoBar').classList.add('hidden');
+  document.getElementById('toolbar').classList.add('hidden');
+  document.getElementById('settingsPanel').classList.add('hidden');
+  document.getElementById('actionBar').classList.add('hidden');
+  document.getElementById('progressCard').classList.add('hidden');
+  document.getElementById('thumbGrid').classList.add('hidden');
+  document.getElementById('thumbGrid').innerHTML = '';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('startBtn').classList.remove('hidden');
+  document.getElementById('cancelBtn').classList.add('hidden');
+  document.getElementById('lightbox').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+// ==================== Toast ====================
+function showToast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.remove('translate-y-4', 'opacity-0');
+  el.classList.add('translate-y-0', 'opacity-100');
+  if (type === 'error') {
+    el.classList.add('border-red-500/50', 'text-red-300');
+  } else {
+    el.classList.remove('border-red-500/50', 'text-red-300');
+    el.classList.add('border-green-500/50');
+  }
+  clearTimeout(el._tid);
+  el._tid = setTimeout(() => {
+    el.classList.remove('translate-y-0', 'opacity-100');
+    el.classList.add('translate-y-4', 'opacity-0');
+  }, 3000);
+}
+
+// ==================== Init ====================
+loadSettings();
+</script>
+</body>
+</html>

@@ -69,7 +69,7 @@ body {
 .btn-sm:hover { border-color: #6c5ce7; color: #fff; }
 
 /* ===== Main App ===== */
-.main-app { max-width: 900px; width: 100%; padding: 20px; }
+.main-app { max-width: 1200px; width: 100%; padding: 20px; }
 header {
   display: flex;
   align-items: center;
@@ -127,7 +127,7 @@ header {
 .key-status { font-size: 12px; color: #888; }
 
 /* ===== App Grid ===== */
-.apps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-top: 12px; }
+.apps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-top: 12px; }
 .app-card {
   background: #12121a;
   border: 1px solid #2a2a3a;
@@ -142,13 +142,45 @@ header {
 .app-icon { font-size: 32px; margin-bottom: 12px; }
 .app-card h3 { font-size: 15px; color: #fff; margin-bottom: 6px; }
 .app-card p { font-size: 12px; color: #777; line-height: 1.5; }
-.status-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: #51cf66;
-  position: absolute;
-  top: 12px;
-  right: 12px;
+.tag {
+  display: inline-block;
+  font-size: 10px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  margin-top: 6px;
+}
+.tag-ready { background: #1a3a1a; color: #51cf66; border: 1px solid #2a4a2a; }
+.tag-soon { background: #2a2a1a; color: #f0c040; border: 1px solid #3a3a2a; }
+
+/* ===== App Runner (iframe) ===== */
+.app-runner {
+  background: #1a1a24;
+  border: 1px solid #2a2a3a;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.app-runner-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: #12121a;
+  border-bottom: 1px solid #2a2a3a;
+  font-size: 14px;
+  color: #ccc;
+}
+.app-runner-header .btn-sm {
+  border-color: #c44;
+  color: #c66;
+}
+.app-runner-header .btn-sm:hover { border-color: #f66; color: #f66; }
+.app-frame {
+  width: 100%;
+  min-height: 85vh;
+  border: none;
+  display: block;
+  background: #0f0f14;
 }
 
 /* ===== Footer ===== */
@@ -161,4 +193,5 @@ footer { text-align: center; padding: 20px; color: #444; font-size: 12px; }
   .key-row label { flex: none; }
   .key-input-group { width: 100%; }
   .apps-grid { grid-template-columns: repeat(2, 1fr); }
+  .app-frame { min-height: 70vh; }
 }
