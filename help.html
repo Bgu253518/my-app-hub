@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>使用说明 — 顾力菡·应用工坊</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root {
+  --bg-deep: #0a0a14; --bg-card: rgba(22,22,44,0.6); --glass-border: rgba(255,255,255,0.08);
+  --text-primary: #e8e8f0; --text-secondary: #9999b0;
+  --accent-1: #7c5cfc; --accent-2: #5cfca0; --accent-3: #fc5c9c; --radius: 14px; --radius-sm: 8px;
+}
+body {
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background: linear-gradient(160deg,#0a0a14 0%,#12122a 30%,#16163a 60%,#0d0d24 100%);
+  color: var(--text-primary); min-height:100vh; line-height:1.8;
+}
+body::before {
+  content:''; position:fixed; inset:0;
+  background: radial-gradient(ellipse at 20% 20%, rgba(124,92,252,0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 60%, rgba(252,92,156,0.04) 0%, transparent 50%);
+  pointer-events:none; z-index:0;
+}
+::-webkit-scrollbar { width:5px; } ::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(124,92,252,0.25); border-radius:3px; }
+
+.header {
+  position:sticky; top:0; z-index:50; background:rgba(10,10,20,0.85); backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--glass-border); padding:0 20px; height:56px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.header .brand { font-size:16px; font-weight:700; color:var(--text-primary); }
+.header a { color:var(--text-secondary); text-decoration:none; font-size:13px; }
+.header a:hover { color:var(--text-primary); }
+.main { position:relative; z-index:1; max-width:1100px; margin:0 auto; padding:20px; }
+
+.card {
+  background:var(--bg-card); border:1px solid var(--glass-border);
+  border-radius:var(--radius); padding:24px; margin-bottom:20px; backdrop-filter:blur(10px);
+}
+.card h2 { font-size:18px; font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.card h3 { font-size:15px; font-weight:600; margin:16px 0 8px; color:var(--accent-1); }
+.card p { font-size:13px; color:var(--text-secondary); margin-bottom:6px; }
+
+.steps { counter-reset:step; margin:8px 0 12px 16px; }
+.steps li { font-size:13px; color:var(--text-secondary); margin-bottom:4px; position:relative; padding-left:4px; }
+.steps li::marker { color:var(--accent-1); font-weight:600; }
+
+.tag {
+  display:inline-block; font-size:10px; padding:2px 8px; border-radius:10px; margin-left:6px;
+  font-weight:600;
+}
+.tag-done { background:rgba(92,252,160,0.1); color:var(--accent-2); border:1px solid rgba(92,252,160,0.2); }
+
+.tool-card {
+  border-left:3px solid var(--accent-1); padding-left:16px; margin-bottom:32px;
+}
+.tool-card h2 { font-size:17px; }
+.tool-card .desc { font-size:13px; color:var(--text-secondary); margin-bottom:12px; }
+
+.toc { columns:2; gap:16px; }
+.toc a { display:block; color:var(--accent-1); text-decoration:none; font-size:13px; padding:3px 0; }
+.toc a:hover { color:var(--text-primary); }
+
+table { border-collapse:collapse; font-size:12px; width:100%; margin:8px 0; }
+th, td { border:1px solid rgba(255,255,255,0.1); padding:6px 10px; text-align:left; }
+th { background:rgba(124,92,252,0.15); font-weight:600; }
+td { background:rgba(0,0,0,0.15); }
+
+.note { background:rgba(124,92,252,0.06); border:1px solid rgba(124,92,252,0.12); border-radius:6px; padding:10px 14px; margin:8px 0; font-size:12px; color:var(--text-secondary); }
+.note strong { color:var(--accent-1); }
+
+@media (max-width:768px) { .main { padding:12px; } .toc { columns:1; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="brand">📖 使用说明</span>
+  <a href="index.html">← 返回应用工坊</a>
+</div>
+
+<div class="main">
+
+<div class="card">
+  <h2>📖 顾力菡·应用工坊 — 完整使用手册</h2>
+  <p>本手册涵盖所有已完成的在线工具（共 11 个）。所有工具均在浏览器本地运行，无需安装任何软件，数据不上传服务器。</p>
+
+  <h3>目录</h3>
+  <div class="toc" id="toc"></div>
+</div>
+
+<!-- ====== 1 ====== -->
+<div class="card tool-card" id="tool-pdf">
+  <h2>📄 PDF 多功能工具箱 <span class="tag tag-done">已上线</span></h2>
+  <p class="desc">一站式 PDF 处理：合并、拆分、拆图为图片、提取文字、读取信息、加密、解密，全部在浏览器本地完成。支持加密 PDF 密码解锁。</p>
+
+  <h3>功能标签</h3>
+  <table>
+    <tr><th>标签</th><th>功能</th><th>使用说明</th></tr>
+    <tr><td>🔗 合并 PDF</td><td>多个 PDF 按顺序合并为一个</td><td>拖入 2 个以上 PDF → 点击"开始合并" → 下载</td></tr>
+    <tr><td>✂️ 拆分 PDF</td><td>按页码范围提取部分页面</td><td>拖入 1 个 PDF → 输入页码如 1-3,5,7-9 → 拆分下载</td></tr>
+    <tr><td>🖼️ 拆分为图片</td><td>PDF 每页导出为高清图片打包 ZIP</td><td>拖入 PDF → 选择 PNG/JPEG、分辨率（1x~3x）、彩色/灰度 → 可选页码范围 → 拆图打包下载</td></tr>
+    <tr><td>📝 提取文字</td><td>提取所有页面文字内容</td><td>拖入 PDF → 提取 → 预览 + 下载 .txt</td></tr>
+    <tr><td>📄 读取信息</td><td>查看 PDF 元数据和页面信息</td><td>拖入 PDF → 显示标题、作者、页数等</td></tr>
+    <tr><td>🔒 加密 PDF</td><td>设置打开密码保护</td><td>拖入 PDF → 输入密码 → 下载加密文件</td></tr>
+    <tr><td>🔓 解密 PDF</td><td>移除 PDF 密码保护</td><td>拖入加密 PDF → 输入密码 → 下载解密文件</td></tr>
+  </table>
+</div>
+
+<!-- ====== 2 ====== -->
+<div class="card tool-card" id="tool-renamer">
+  <h2>📝 批量文件重命名工具 <span class="tag tag-done">已上线</span></h2>
+  <p class="desc">纯浏览器端批量文件重命名，无需安装任何软件。三种重命名模式，支持预览和撤销。</p>
+
+  <h3>操作步骤</h3>
+  <ol class="steps">
+    <li>点击上传区域选择文件夹（需 Chrome/Edge 浏览器）</li>
+    <li>文件列表自动加载，可按扩展名过滤</li>
+    <li>选择重命名模式：
+      <b>查找替换</b>（支持正则）、<b>序号前缀</b>（可排序）、<b>自定义模板</b>（{name}{num}{ext}{date}{parent} 等变量）
+    </li>
+    <li>点击"预览效果"查看结果</li>
+    <li>确认无误后"执行重命名"，支持一键撤销</li>
+  </ol>
+
+  <h3>自定义模板示例</h3>
+  <div class="note"><strong>模板：</strong>{date}_Report_{num:03}{ext} → <strong>结果：</strong>2026-05-13_Report_001.pdf</div>
+</div>
+
+<!-- ====== 3 ====== -->
+<div class="card tool-card" id="tool-cleaner">
+  <h2>🧹 CSV 数据清洗器 <span class="tag tag-done">已上线</span></h2>
+  <p class="desc">上传表格自动扫描数据问题，一键清洗，专为 Power BI 导入场景优化。</p>
+
+  <h3>操作步骤</h3>
+  <ol class="steps">
+    <li>上传 CSV / XLS / XLSX 文件</li>
+    <li>自动扫描：空值、重复行、日期格式混用、数字异常、不可见字符等</li>
+    <li>勾选清洗项：去空格、去重、标准化日期（→YYYY-MM-DD）、标准化数字、清理不可见字符、填充空值、删除全空列</li>
+    <li>清洗前后对比预览</li>
+    <li>导出清洗后 CSV 或带报告的 Excel</li>
+  </ol>
+</div>
+
+<!-- ====== 4 ====== -->
+<div class="card tool-card" id="tool-img">
+  <h2>🖼️ 图片批量压缩工具 <span class="tag tag-done">已上线</span></h2>
+  <p class="desc">批量压缩 JPG/PNG/WebP/HEIC 图片，支持拖拽、滑动条调节质量、实时预览、打包下载。含图片转 PDF 和 HEIC 转换功能。</p>
+
+  <h3>操作步骤</h3>
+  <ol class="steps">
+    <li>拖拽图片到上传区（支持多文件）</li>
+    <li>调节压缩质量滑块（实时预览大小变化）</li>
+    <li>可选：缩放尺寸、转换格式</li>
+    <li>iPhone HEIC 照片自动识别转换</li>
+    <li>批量打包下载 ZIP</li>
+  </ol>
+
+  <div class="note"><strong>特殊功能：</strong>图片转 PDF — 拖入多张图片，调整顺序，选择 A4/Letter 页面尺寸，每页右上角标注文件名（加粗红色下划线），一键导出 PDF。</div>
+</div>
+
+<!-- ====== 5 ====== -->
+<div class="card tool-card" id="tool-rou">
+  <h2>📊 ROU 租赁测算器 <span class="tag tag-done">已上线</span></h2>
+  <p class="desc">基于 CAS 21（IFRS 16）的使用权资产标准化测算工具，自动生成摊销明细表。</p>
+
+  <h3>操作步骤</h3>
+  <ol class="steps">
+    <li>录入租赁合同参数：付款金额、频率（月/季/半年/年）、折现率、租赁期</li>
+    <li>选择付款方式：期初/期末付款</li>
+    <li>可选参数：复原成本、租赁激励、余值担保</li>
+    <li>自动计算：租赁负债现值、ROU 资产原值</li>
+    <li>生成逐期摊销明细表（利息+本金+折旧+ROU净值）</li>
+    <li>含标准会计分录参考</li>
+    <li>支持 Excel 批量导入导出</li>
+  </ol>
+</div>
+
+<!-- ====== 6 ====== -->
+<div class="card tool-card" id="tool-word">
+  <h2>📊 Word 报告上数与校验工作台 <span class="tag tag-done">已上线</span></h2>
+  <p class="desc">上传 Word 报告（含附注表格），自动将审定 TB 数据填入表格空白数值列，填完后加总校验，导出 Word 和 Excel。</p>
+
+  <h3>三步操作流程</h3>
+  <ol class="steps">
+    <li><b>加载与配置：</b>上传 .docx 提取表格（或粘贴表格）→ 点击表头标记"科目名称列"和"待填数值列" → 自动识别合计行（浅黄背景）</li>
+    <li><b>匹配与上数：</b>上传 TB Excel → 自动匹配科目（去空格、全半角统一、模糊匹配 Top3 建议、手动配对）→ 映射模板可存 localStorage → 执行上数（填入数值、浅绿标识、跳过合计行）</li>
+    <li><b>校验与导出：</b>自动加计检查 → 差异超 0.01 红底闪烁 → 下载 .docx 报告 + .xlsx 校验报告</li>
+  </ol>
+
+  <div class="note"><strong>加载演示数据</strong>可体验完整流程：含 11 行资产负债表附注表格 + 审定 TB 数据源。</div>
+</div>
+
+<!-- ====== 7 ====== -->
+<div class="card tool-card" id="tool-bkd">
+  <h2>📋 BKD 底稿滚存与上数助手 <span class="tag tag-done">已上线</span></h2>
+  <p class="desc">上传上年度 BKD 底稿 Excel，自动识别日期列，期末数→期初数滚存，再导入本期科目余额表自动上数。严格保留公式结构。</p>
+
+  <h3>四个标签页</h3>
+  <table>
+    <tr><th>标签</th><th>功能</th></tr>
+    <tr><td>📁 模板管理</td><td>客户科目↔标准科目映射表 CRUD，导入/导出，存 localStorage，含12条演示模板</td></tr>
+    <tr><td>🔄 滚存操作</td><td>上传底稿 → 自动正则扫描日期列 → 源列期末值硬拷贝到目标列（死数）→ 源列清空（公式保留/死数清空）→ 更新标题</td></tr>
+    <tr><td>📊 上数与校验</td><td>导入 TB → 按模板匹配 → 定位底稿行 → 填数（跳过公式格）→ 借贷平衡校验</td></tr>
+    <tr><td>📤 导出</td><td>下载完整底稿 xlsx（公式保留）、校验报告、JSON 备份</td></tr>
+  </table>
+</div>
+
+<!-- ====== 8 ====== -->
+<div class="card tool-card" id="tool-tb">
+  <h2>📊 TB 自动上数器 <span class="tag tag-done">已上线</span></h2>
+  <p class="desc">客户科目余额表按映射模板自动填入 TB 底稿对应行，严格保留原公式和格式。</p>
+
+  <h3>四步向导</h3>
+  <ol class="steps">
+    <li><b>映射与余额表：</b>多客户模板管理 → 上传余额表自动识别列头 → 解析</li>
+    <li><b>TB 配置：</b>选项A. 上传已有 TB 底稿 / 选项B. 自动生成极简 TB 表</li>
+    <li><b>自动上数：</b>按映射匹配科目 → 填入数值（资产/负债→期末余额，收入/费用→发生额）→ 公式格跳过保护 → 未匹配红色+模糊建议</li>
+    <li><b>校验导出：</b>借贷平衡校验 → 下载 TB xlsx + 未匹配清单 + 校验报告</li>
+  </ol>
+</div>
+
+<!-- ====== 9 ====== -->
+<div class="card tool-card" id="tool-sampling">
+  <h2>🎯 审计抽凭助手 <span class="tag tag-done">已上线</span></h2>
+  <p class="desc">MUS 货币单位抽样和随机抽样，单家公司+多家公司批量双模式，Seeded PRNG 保证可复现。</p>
+
+  <h3>抽样方法</h3>
+  <table>
+    <tr><th>方法</th><th>逻辑</th><th>参数</th></tr>
+    <tr><td>MUS</td><td>累计金额数轴投射 → 随机起点等距抽样 → 高价值项目100%选取</td><td>重要性水平(PM)、风险水平、信赖控制、超PM阈值</td></tr>
+    <tr><td>设定规模随机</td><td>Fisher-Yates 洗牌（可复现种子）→ 取前 N 个</td><td>样本量 N</td></tr>
+    <tr><td>未设定规模随机</td><td>N = ⌈项目数×比例 / RF⌉ → 再执行随机抽样</td><td>PM、风险水平、信赖控制、基础比例</td></tr>
+  </table>
+
+  <h3>批量模式</h3>
+  <ol class="steps">
+    <li>上传含多 Tab 的 Excel（每个 Tab = 一家公司）</li>
+    <li>生成可编辑参数配置表，支持"向下填充"批量设置</li>
+    <li>每家公司独立子种子（全局种子+行号），日志可追溯</li>
+    <li>导出：抽样汇总 + 每公司独立 Sheet（日志+清单）+ 全局参数 Sheet</li>
+  </ol>
+
+  <div class="note"><strong>内置演示数据：</strong>批量模式下点击"加载演示数据"可体验 2 家公司抽样。</div>
+</div>
+
+<!-- ====== 10 ====== -->
+<div class="card tool-card" id="tool-audit">
+  <h2>📋 审计项目工时任务协同系统 <span class="tag tag-done">已上线</span></h2>
+  <p class="desc">多角色审计项目管理，支持所长/组长/复核人/项目经理/审计员协作，任务流转、工时追踪、复核闭环。</p>
+
+  <h3>角色体系（右上角切换）</h3>
+  <table>
+    <tr><th>角色</th><th>权限</th></tr>
+    <tr><td>审计员</td><td>查看我的待办、上报进度、记录工时</td></tr>
+    <tr><td>项目经理</td><td>新建/分配任务、查看全项目进度</td></tr>
+    <tr><td>复核人</td><td>复核通过 → task.status = "复核完成"</td></tr>
+    <tr><td>组长</td><td>确认完成 → task.status = "完成"</td></tr>
+    <tr><td>所长</td><td>全局视图、归档、导出</td></tr>
+  </table>
+
+  <h3>闭环规则</h3>
+  <p>待开始 → 进行中 → 待复核 → 复核完成 → 完成。全部分配进度完成 → 自动进入待复核。工时自动累加到 actualHours。导入 Excel 自动创建项目和分配。</p>
+</div>
+
+<!-- ====== 11 ====== -->
+<div class="card tool-card" id="tool-claude">
+  <h2>⚙️ Claude Code 个人配置 <span class="tag tag-done">已上线</span></h2>
+  <p class="desc">个人加密金库，安全存储 Anthropic / OpenAI API 密钥。AES-256-GCM 加密，PBKDF2 密钥派生，所有数据仅存储于浏览器 localStorage。</p>
+
+  <h3>安全机制</h3>
+  <ol class="steps">
+    <li>固定密码解锁（只有你知道）</li>
+    <li>API 密钥经 AES-256-GCM 加密后存 localStorage</li>
+    <li>加密密钥通过 PBKDF2 派生（200,000 次 SHA-256 迭代）</li>
+    <li>此页面加载后零网络请求，无统计数据上报、无云端同步</li>
+    <li>换电脑：Export Encrypted Backup → USB → 新电脑 Import</li>
+  </ol>
+
+  <div class="note">
+    <strong>安全保证：</strong>你的 API 密钥明文从未出现在任何服务器上。源码中仅存密码的 SHA-256 哈希（不可逆）。所有数据物理上只在你当前浏览器的 localStorage 磁盘文件中。
+  </div>
+
+  <h3>一键搭建脚本</h3>
+  <p>Claude Vault 页面底部提供 <strong>ClaudeCodeSetup.bat</strong> 下载。任何新 Windows 电脑双击运行：自动下载便携 Node.js + Git + Claude Code CLI，打开金库页面输入密码和 API Key 即可使用。</p>
+</div>
+
+<div class="card" style="text-align:center">
+  <p style="font-size:14px;color:var(--text-secondary)">
+    共 <strong style="color:var(--accent-1)">11 个已完成工具</strong> · 所有工具浏览器本地运行 · 不上传数据
+  </p>
+  <a href="index.html" style="color:var(--accent-1);font-size:14px;text-decoration:none;margin-top:8px;display:inline-block">← 返回应用工坊</a>
+</div>
+
+</div>
+
+<script>
+// Generate TOC
+(function(){
+  const toc = document.getElementById('toc');
+  const tools = document.querySelectorAll('.tool-card');
+  toc.innerHTML = Array.from(tools).map(t => {
+    const id = t.id;
+    const h2 = t.querySelector('h2');
+    const text = h2 ? h2.textContent.replace(/✅|已上线|已完成/g,'').trim() : '';
+    return `<a href="#${id}">${text}</a>`;
+  }).join('');
+})();
+</script>
+</body>
+</html>

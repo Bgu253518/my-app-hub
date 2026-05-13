@@ -1,5 +1,18 @@
 [
   {
+    "id": "help",
+    "name": "使用说明与操作指引",
+    "shortDesc": "全部已上线工具的完整使用手册、操作步骤、参数说明和技巧",
+    "fullDesc": "顾力菡应用工坊全部已完成工具的完整使用手册。涵盖 PDF 多功能工具箱（7合1）、批量文件重命名、CSV 数据清洗器、图片批量压缩（含图片转PDF）、ROU 租赁测算器、Word 报告上数与校验工作台、BKD 底稿滚存与上数助手、TB 自动上数器、审计抽凭助手（单家+批量双模式）、审计项目工时任务协同系统、Claude Code 个人配置共 11 个工具。每个工具有详细操作步骤、参数说明表格、功能标签说明和实用技巧。",
+    "category": "other",
+    "status": "done",
+    "version": "v1.0.0",
+    "icon": "📖",
+    "onlineTool": true,
+    "github": "https://github.com/Bgu253518/my-app-hub",
+    "download": ""
+  },
+  {
     "id": "audit-sampling",
     "name": "审计抽凭助手",
     "shortDesc": "MUS/随机抽样、单家+批量双模式、Seeded PRNG可复现、导出日志与清单",
