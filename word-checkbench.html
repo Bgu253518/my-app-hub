@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Word 报告上数与校验工作台 — 顾力菡·应用工坊</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+<script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+<style>
+:root {
+  --bg-deep: #0a0a14; --bg-card: rgba(22,22,44,0.6);
+  --glass-border: rgba(255,255,255,0.08); --text-primary: #e8e8f0;
+  --text-secondary: #9999b0; --accent-1: #7c5cfc; --accent-2: #5cfca0;
+  --accent-3: #fc5c9c; --radius: 14px; --radius-sm: 8px;
+}
+body {
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background: linear-gradient(160deg,#0a0a14 0%,#12122a 30%,#16163a 60%,#0d0d24 100%);
+  color: var(--text-primary); min-height:100vh; line-height:1.6;
+}
+body::before {
+  content:''; position:fixed; inset:0;
+  background: radial-gradient(ellipse at 20% 20%, rgba(124,92,252,0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 60%, rgba(252,92,156,0.04) 0%, transparent 50%);
+  pointer-events:none; z-index:0;
+}
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(124,92,252,0.25); border-radius:3px; }
+
+.header {
+  position:sticky; top:0; z-index:50;
+  background:rgba(10,10,20,0.85); backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--glass-border);
+  padding:0 20px; height:56px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.header .brand { font-size:16px; font-weight:700; }
+.header a { color:var(--text-secondary); text-decoration:none; font-size:13px; }
+.header a:hover { color:var(--text-primary); }
+
+.main { position:relative; z-index:1; max-width:1500px; margin:0 auto; padding:20px; }
+
+.card {
+  background:var(--bg-card); border:1px solid var(--glass-border);
+  border-radius:var(--radius); padding:20px; margin-bottom:16px;
+  backdrop-filter:blur(10px);
+}
+.card-title { font-size:15px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.card-hint { font-size:12px; color:var(--text-secondary); margin-bottom:12px; }
+
+.btn {
+  display:inline-flex; align-items:center; gap:4px; padding:7px 14px; border-radius:6px;
+  font-size:12px; font-weight:600; cursor:pointer;
+  border:1px solid var(--glass-border); background:rgba(255,255,255,0.05);
+  color:var(--text-primary); transition:all 0.2s; white-space:nowrap;
+}
+.btn:hover { background:rgba(255,255,255,0.1); }
+.btn-primary { background:linear-gradient(135deg,#7c5cfc,#5ccafc); border:none; color:#fff; }
+.btn-primary:hover { opacity:0.9; transform:translateY(-1px); box-shadow:0 4px 16px rgba(124,92,252,0.3); }
+.btn-danger { border-color:rgba(252,92,156,0.3); color:var(--accent-3); }
+.btn-sm { padding:4px 10px; font-size:11px; }
+.btn-xs { padding:2px 6px; font-size:10px; }
+
+input,select,textarea {
+  background:rgba(255,255,255,0.05); border:1px solid var(--glass-border);
+  border-radius:6px; padding:7px 10px; color:var(--text-primary);
+  font-size:12px; outline:none;
+}
+input:focus,select:focus,textarea:focus { border-color:var(--accent-1); }
+select option { background:#1a1a2e; color:#e8e8f0; }
+
+/* Steps */
+.steps { display:flex; gap:0; margin-bottom:20px; }
+.step {
+  flex:1; text-align:center; padding:12px;
+  background:rgba(255,255,255,0.03); border:1px solid var(--glass-border);
+  font-size:13px; color:var(--text-secondary);
+}
+.step:first-child { border-radius:var(--radius) 0 0 var(--radius); }
+.step:last-child { border-radius:0 var(--radius) var(--radius) 0; }
+.step.active { background:rgba(124,92,252,0.15); border-color:var(--accent-1); color:#fff; font-weight:600; }
+.step.done { background:rgba(92,252,160,0.08); border-color:rgba(92,252,160,0.3); color:var(--accent-2); }
+
+/* Table */
+.table-wrap { max-height:500px; overflow:auto; border:1px solid var(--glass-border); border-radius:var(--radius-sm); }
+.table-wrap table { border-collapse:collapse; font-size:12px; width:max-content; min-width:100%; }
+.table-wrap th, .table-wrap td {
+  border:1px solid rgba(255,255,255,0.12); padding:6px 10px;
+  white-space:nowrap; text-align:right;
+}
+.table-wrap th { background:rgba(124,92,252,0.15); font-weight:600; cursor:pointer; position:sticky; top:0; z-index:2; }
+.table-wrap th:hover { background:rgba(124,92,252,0.3); }
+.table-wrap td { background:rgba(0,0,0,0.2); }
+.table-wrap td.col-subject { text-align:left; font-weight:500; }
+.table-wrap td.col-value { font-family:monospace; }
+.table-wrap tr.row-total td { background:rgba(252,196,92,0.12) !important; }
+.table-wrap tr.row-header td { background:rgba(124,92,252,0.1) !important; font-weight:600; }
+.table-wrap td.filled { background:rgba(92,252,160,0.12) !important; }
+.table-wrap td.skipped { background:rgba(255,255,255,0.02) !important; color:var(--text-secondary); }
+.table-wrap td.unmatched { background:rgba(252,92,156,0.1) !important; }
+.table-wrap td.diff-flash { background:rgba(252,92,156,0.3) !important; color:#fff; font-weight:700; animation:flash 0.8s infinite; }
+@keyframes flash { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+.diff-list { max-height:300px; overflow-y:auto; font-size:12px; }
+.diff-item { padding:8px 12px; margin-bottom:4px; background:rgba(252,92,156,0.08); border:1px solid rgba(252,92,156,0.2); border-radius:6px; }
+
+.toast {
+  position:fixed; bottom:20px; right:20px; z-index:100;
+  background:rgba(22,22,44,0.95); border:1px solid var(--glass-border);
+  padding:10px 18px; border-radius:var(--radius-sm); font-size:12px;
+  backdrop-filter:blur(12px); transform:translateY(100px); opacity:0; transition:all 0.3s;
+}
+.toast.show { transform:translateY(0); opacity:1; }
+
+.hidden { display:none !important; }
+.flex-center { display:flex; align-items:center; gap:8px; }
+.gap2 { display:flex; gap:8px; flex-wrap:wrap; }
+.mt2 { margin-top:8px; } .mt3 { margin-top:12px; } .mb2 { margin-bottom:8px; }
+.text-sm { font-size:12px; } .text-xs { font-size:10px; }
+.text-secondary { color:var(--text-secondary); }
+.font-mono { font-family:monospace; }
+
+@media (max-width:768px) { .main { padding:12px; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="brand">📊 Word 报告上数与校验工作台</span>
+  <a href="index.html">← 返回应用工坊</a>
+</div>
+
+<div class="main">
+
+  <!-- Steps -->
+  <div class="steps" id="stepsBar">
+    <div class="step active" data-step="1">① 加载与配置</div>
+    <div class="step" data-step="2">② 匹配与上数</div>
+    <div class="step" data-step="3">③ 校验与导出</div>
+  </div>
+
+  <!-- ====== STEP 1: Load & Config ====== -->
+  <div id="step1">
+    <div class="card">
+      <div class="card-title">📄 加载报告表格</div>
+      <div class="gap2 mb2">
+        <label class="btn btn-sm" style="cursor:pointer">
+          📤 上传 .docx
+          <input type="file" accept=".docx" onchange="loadDocx(this)" class="hidden">
+        </label>
+        <button class="btn btn-sm" onclick="showPasteArea()">📋 粘贴表格</button>
+        <button class="btn btn-sm" onclick="loadDemo()">🔬 加载演示数据</button>
+      </div>
+      <div id="pasteArea" class="hidden mt2">
+        <textarea id="pasteHtml" rows="4" placeholder="从 Word 复制表格粘贴到这里..." style="width:100%"></textarea>
+        <button class="btn btn-sm btn-primary mt2" onclick="parsePastedTable()">解析表格</button>
+      </div>
+      <div id="docxTableList" class="mt2"></div>
+    </div>
+
+    <div class="card hidden" id="configCard">
+      <div class="card-title">⚙️ 模板配置</div>
+      <div class="flex-center gap2 mb2">
+        <span class="text-sm">科目名称列:</span>
+        <select id="subjectCol"><option value="-1">点击表头标记</option></select>
+        <span class="text-sm">待填数值列:</span>
+        <select id="valueCols" multiple style="min-width:150px;height:60px"></select>
+        <button class="btn btn-xs btn-primary" onclick="markTotalRows()">🔍 自动识别合计行</button>
+      </div>
+      <div class="text-xs text-secondary">点击表头标记：蓝色=科目列 | 双击表头标记数值列 | 合计行自动识别的关键词：合计、小计、Total、Subtotal</div>
+      <div class="flex-center mt2">
+        <button class="btn btn-primary" onclick="goStep(2)">下一步：匹配与上数 →</button>
+      </div>
+    </div>
+
+    <div class="card hidden" id="previewCard1">
+      <div class="card-title">📋 表格预览</div>
+      <div class="table-wrap" id="tablePreview1"></div>
+    </div>
+  </div>
+
+  <!-- ====== STEP 2: Match & Fill ====== -->
+  <div id="step2" class="hidden">
+    <div class="card">
+      <div class="card-title">📂 加载数据源（审定 TB / 科目余额表）</div>
+      <div class="gap2 mb2">
+        <label class="btn btn-sm" style="cursor:pointer">
+          📤 上传 Excel
+          <input type="file" accept=".xlsx,.xls" onchange="loadDataSource(this)" class="hidden">
+        </label>
+      </div>
+      <div id="dsConfig" class="hidden">
+        <div class="flex-center gap2 mb2">
+          <span class="text-sm">科目名称列:</span><select id="dsSubjectCol"></select>
+          <span class="text-sm">数据值列:</span><select id="dsValueCol"></select>
+          <button class="btn btn-xs btn-primary" onclick="parseDataSource()">解析数据源</button>
+        </div>
+        <div class="table-wrap" style="max-height:200px" id="dsPreview"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔗 科目映射匹配</div>
+      <div class="flex-center gap2 mb2">
+        <button class="btn btn-sm btn-primary" onclick="autoMatch()">🔍 自动匹配</button>
+        <button class="btn btn-sm" onclick="showUnmatched()">⚠ 查看未匹配</button>
+        <button class="btn btn-sm" onclick="saveMappingTemplate()">💾 保存映射模板</button>
+        <button class="btn btn-sm" onclick="loadMappingTemplate()">📂 加载映射模板</button>
+      </div>
+      <div id="mappingStatus" class="text-sm"></div>
+      <div id="unmatchedList" class="hidden mt2"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📋 表格预览（上数后）</div>
+      <div class="flex-center mb2">
+        <button class="btn btn-primary" onclick="executeFill()">🚀 执行上数</button>
+        <button class="btn" onclick="goStep(3)">下一步：校验与导出 →</button>
+      </div>
+      <div class="table-wrap" id="tablePreview2"></div>
+    </div>
+  </div>
+
+  <!-- ====== STEP 3: Verify & Export ====== -->
+  <div id="step3" class="hidden">
+    <div class="card">
+      <div class="card-title">✅ 加计校验</div>
+      <div class="flex-center gap2 mb2">
+        <button class="btn btn-primary" onclick="runVerification()">🔍 执行加计检查</button>
+        <button class="btn btn-sm" onclick="goStep(1)">← 返回配置</button>
+      </div>
+      <div id="verifySummary" class="text-sm mb2"></div>
+      <div class="diff-list" id="diffList"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📋 最终表格预览</div>
+      <div class="table-wrap" id="tablePreview3"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📤 导出</div>
+      <div class="gap2">
+        <button class="btn btn-primary" onclick="exportDocx()">📄 ① 下载填好的 Word 报告 (.docx)</button>
+        <button class="btn btn-primary" onclick="exportVerifyExcel()">📊 ② 下载加计校验报告 (.xlsx)</button>
+        <button class="btn" onclick="copyTableToClipboard()">📋 ③ 复制表格到剪贴板</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== STATE ====================
+const state = {
+  // Parsed table
+  tableData: [],       // 2D array: [{text, row, col, isHeader:false}]
+  subjectCol: -1,      // column index for subject name
+  valueCols: [],       // column indices for values to fill
+  totalRows: new Set(),// row indices of total rows
+  headerRows: new Set(),// row indices of header rows
+
+  // Data source
+  dsData: [],          // [{subject, value}]
+  dsSubjectCol: -1,
+  dsValueCol: -1,
+
+  // Mapping
+  mapping: {},         // {reportSubject: dsRow}
+  unmatched: [],       // [{reportSubject, suggestions:[]}]
+
+  // Fill results
+  filledCells: [],     // [{row, col, value}]
+  skippedCells: [],    // [{row, col, reason}]
+
+  // Verification
+  diffs: []           // [{row, col, original, calculated, diff}]
+};
+
+// ==================== TOAST ====================
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'toast show';
+  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ==================== STEP NAVIGATION ====================
+function goStep(n) {
+  document.querySelectorAll('[id^="step"]').forEach(el => {
+    if (el.id === 'step1' || el.id === 'step2' || el.id === 'step3') el.classList.add('hidden');
+  });
+  document.getElementById('step'+n).classList.remove('hidden');
+  document.querySelectorAll('.step').forEach((s,i) => {
+    s.classList.remove('active','done');
+    if (i+1 < n) s.classList.add('done');
+    if (i+1 === n) s.classList.add('active');
+  });
+  if (n >= 2) renderTable('tablePreview2');
+  if (n >= 3) renderTable('tablePreview3');
+}
+
+// ==================== STEP 1: LOAD TABLE ====================
+async function loadDocx(input) {
+  const file = input.files[0];
+  if (!file) return;
+  try {
+    const buf = await file.arrayBuffer();
+    const result = await mammoth.convertToHtml({ arrayBuffer: buf });
+    const html = result.value;
+    const tables = new DOMParser().parseFromString(html,'text/html').querySelectorAll('table');
+    if (tables.length === 0) { toast('未在文档中找到表格'); return; }
+    if (tables.length === 1) {
+      parseHtmlTable(tables[0]);
+    } else {
+      // Show table list
+      const list = document.getElementById('docxTableList');
+      list.innerHTML = `<p class="text-sm mb2">找到 ${tables.length} 个表格，点击选择：</p>` +
+        Array.from(tables).map((t,i) => {
+          const rows = t.querySelectorAll('tr').length;
+          const cols = t.querySelectorAll('td,th').length;
+          return `<button class="btn btn-sm mb2" onclick="parseHtmlTable(document.querySelectorAll('#docxTables > table')[${i}])">表格 ${i+1} (${rows}行 × ${Math.round(cols/rows)}列)</button>`;
+        }).join(' ');
+      // Store tables for later access
+      const hidden = document.createElement('div');
+      hidden.id = 'docxTables';
+      hidden.className = 'hidden';
+      tables.forEach(t => hidden.appendChild(t.cloneNode(true)));
+      document.getElementById('docxTableList').appendChild(hidden);
+    }
+  } catch(e) { toast('加载失败: '+e.message); }
+}
+
+function showPasteArea() { document.getElementById('pasteArea').classList.toggle('hidden'); }
+
+function parsePastedTable() {
+  const html = document.getElementById('pasteHtml').value;
+  if (!html.trim()) { toast('请粘贴表格内容'); return; }
+  const doc = new DOMParser().parseFromString(html,'text/html');
+  const table = doc.querySelector('table');
+  if (!table) { toast('未检测到表格，请确保粘贴了完整的表格'); return; }
+  parseHtmlTable(table);
+}
+
+function loadDemo() {
+  const demoHtml = `<table>
+    <tr><th>科目名称</th><th>附注编号</th><th>期末审定数</th><th>期初审定数</th><th>变动额</th></tr>
+    <tr><td>货币资金</td><td>五.1</td><td></td><td>1,250,000.00</td><td></td></tr>
+    <tr><td>应收账款</td><td>五.2</td><td></td><td>3,800,000.00</td><td></td></tr>
+    <tr><td>预付款项</td><td>五.3</td><td></td><td>450,000.00</td><td></td></tr>
+    <tr><td>其他应收款</td><td>五.4</td><td></td><td>280,000.00</td><td></td></tr>
+    <tr><td>存货</td><td>五.5</td><td></td><td>5,600,000.00</td><td></td></tr>
+    <tr><td>流动资产合计</td><td></td><td></td><td>11,380,000.00</td><td></td></tr>
+    <tr><td>固定资产</td><td>五.6</td><td></td><td>8,200,000.00</td><td></td></tr>
+    <tr><td>在建工程</td><td>五.7</td><td></td><td>1,500,000.00</td><td></td></tr>
+    <tr><td>无形资产</td><td>五.8</td><td></td><td>920,000.00</td><td></td></tr>
+    <tr><td>非流动资产合计</td><td></td><td></td><td>10,620,000.00</td><td></td></tr>
+    <tr><td>资产总计</td><td></td><td></td><td>22,000,000.00</td><td></td></tr>
+  </table>`;
+  const table = new DOMParser().parseFromString(demoHtml,'text/html').querySelector('table');
+  parseHtmlTable(table);
+  // Also load demo data source
+  state.dsData = [
+    {subject:'货币资金',value:1680000},{subject:'应收账款',value:4120000},
+    {subject:'预付款项',value:380000},{subject:'其他应收款',value:310000},
+    {subject:'存货',value:5920000},{subject:'流动资产合计',value:12430000},
+    {subject:'固定资产',value:7650000},{subject:'在建工程',value:2100000},
+    {subject:'无形资产',value:870000},{subject:'非流动资产合计',value:10620000},
+    {subject:'资产总计',value:23050000}
+  ];
+  state.dsSubjectCol = 0; state.dsValueCol = 1;
+  toast('演示数据已加载：11行报告表格 + 审定TB数据源');
+}
+
+function parseHtmlTable(table) {
+  state.tableData = []; state.totalRows.clear(); state.headerRows.clear();
+  state.filledCells = []; state.skippedCells = []; state.diffs = [];
+  const rows = table.querySelectorAll('tr');
+  rows.forEach((tr, ri) => {
+    const cells = tr.querySelectorAll('td,th');
+    cells.forEach((cell, ci) => {
+      const text = cell.textContent.trim();
+      const isHeader = cell.tagName === 'TH';
+      state.tableData.push({ text, row: ri, col: ci, isHeader, isTotal: false });
+      if (isHeader) state.headerRows.add(ri);
+    });
+  });
+  buildColumnSelects();
+  document.getElementById('configCard').classList.remove('hidden');
+  document.getElementById('previewCard1').classList.remove('hidden');
+  renderTable('tablePreview1');
+  toast(`已加载表格：${rows.length}行 × ${Math.round(state.tableData.length/rows.length)}列`);
+}
+
+function buildColumnSelects() {
+  const cols = Math.max(0, ...state.tableData.map(c => c.col)) + 1;
+  const opts = Array.from({length:cols}, (_,i) => `<option value="${i}">列 ${i+1}</option>`).join('');
+  document.getElementById('subjectCol').innerHTML = '<option value="-1">选择科目列...</option>' + opts;
+  document.getElementById('valueCols').innerHTML = opts;
+  // Click headers to mark
+  document.querySelectorAll('#tablePreview1 th').forEach((th, i) => {
+    th.title = '单击=科目列 | 双击=数值列';
+    th.onclick = () => { state.subjectCol = i; document.getElementById('subjectCol').value = i; renderTable('tablePreview1'); toast('科目名称列已标记：列'+(i+1)); };
+    th.ondblclick = () => {
+      if (state.valueCols.includes(i)) state.valueCols = state.valueCols.filter(c => c !== i);
+      else state.valueCols.push(i);
+      Array.from(document.getElementById('valueCols').options).forEach(o => o.selected = state.valueCols.includes(+o.value));
+      renderTable('tablePreview1');
+      toast('数值列已标记：'+state.valueCols.map(c=>'列'+(c+1)).join(','));
+    };
+  });
+  document.getElementById('subjectCol').onchange = function() { state.subjectCol = +this.value; renderTable('tablePreview1'); };
+  document.getElementById('valueCols').onchange = function() {
+    state.valueCols = Array.from(this.selectedOptions).map(o => +o.value);
+    renderTable('tablePreview1');
+  };
+}
+
+function markTotalRows() {
+  const keywords = ['合计','小计','total','subtotal','总计','合計','小計'];
+  state.totalRows.clear();
+  state.tableData.forEach(cell => {
+    if (keywords.some(kw => cell.text.toLowerCase().includes(kw.toLowerCase()))) {
+      state.totalRows.add(cell.row);
+      cell.isTotal = true;
+    }
+  });
+  renderTable('tablePreview1');
+  toast(`已标记 ${state.totalRows.size} 个合计行`);
+}
+
+// ==================== TABLE RENDERING ====================
+function getCell(row, col) { return state.tableData.find(c => c.row === row && c.col === col); }
+function getRowCells(row) { return state.tableData.filter(c => c.row === row).sort((a,b) => a.col - b.col); }
+
+function renderTable(targetId) {
+  const el = document.getElementById(targetId);
+  if (!el || state.tableData.length === 0) return;
+  const maxRow = Math.max(0, ...state.tableData.map(c => c.row));
+  const maxCol = Math.max(0, ...state.tableData.map(c => c.col));
+  let html = '<table><thead><tr>';
+  for (let c = 0; c <= maxCol; c++) {
+    const cell = getCell(0, c);
+    html += `<th class="${c === state.subjectCol ? 'col-subject' : state.valueCols.includes(c) ? 'col-value' : ''}">${cell ? cell.text : ''}</th>`;
+  }
+  html += '</tr></thead><tbody>';
+  for (let r = 1; r <= maxRow; r++) {
+    const isTotal = state.totalRows.has(r);
+    const isHeader = state.headerRows.has(r);
+    let cls = isTotal ? 'row-total' : isHeader ? 'row-header' : '';
+    html += `<tr class="${cls}">`;
+    for (let c = 0; c <= maxCol; c++) {
+      const cell = getCell(r, c);
+      let tdCls = '';
+      if (c === state.subjectCol) tdCls += ' col-subject';
+      if (state.valueCols.includes(c)) tdCls += ' col-value';
+      // Check filled/skipped
+      const filled = state.filledCells.find(f => f.row === r && f.col === c);
+      const skipped = state.skippedCells.find(f => f.row === r && f.col === c);
+      const diff = state.diffs.find(d => d.row === r && d.col === c);
+      if (diff) tdCls += ' diff-flash';
+      else if (filled) tdCls += ' filled';
+      else if (skipped) tdCls += ' skipped';
+      else if (cell && !cell.text && !isTotal && !isHeader && c !== state.subjectCol && state.valueCols.includes(c)) {
+        // Check if unmatched
+        const subjCell = getCell(r, state.subjectCol);
+        if (subjCell && state.mapping[subjCell.text] === undefined && Object.keys(state.mapping).length > 0) {
+          tdCls += ' unmatched';
+        }
+      }
+      const display = filled ? filled.value : (cell ? cell.text : '');
+      html += `<td class="${tdCls}">${display}</td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+// ==================== STEP 2: DATA SOURCE ====================
+function loadDataSource(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const wb = XLSX.read(e.target.result, {type:'array'});
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, {header:1});
+    if (rows.length < 2) { toast('数据为空'); return; }
+    // Build column selector
+    const maxCol = Math.max(...rows.map(r => Array.isArray(r) ? r.length : 0));
+    const headerRow = rows[0];
+    const opts = Array.from({length:maxCol}, (_,i) => {
+      const label = (Array.isArray(headerRow) && headerRow[i]) ? `列${i+1} (${headerRow[i]})` : `列 ${i+1}`;
+      return `<option value="${i}">${label}</option>`;
+    }).join('');
+    const dsCfg = document.getElementById('dsConfig');
+    dsCfg.classList.remove('hidden');
+    document.getElementById('dsSubjectCol').innerHTML = opts;
+    document.getElementById('dsValueCol').innerHTML = opts;
+    // Store all rows
+    state._dsRows = rows.slice(1).filter(r => Array.isArray(r) && r.some(c => c !== undefined && c !== null && c !== ''));
+    state._dsHeader = headerRow;
+    toast(`已加载 ${state._dsRows.length} 行数据`);
+    document.getElementById('dsPreview').innerHTML = `<table><thead><tr>${Array.from({length:maxCol},(_,i)=>`<th>${htmlEscape(String(Array.isArray(headerRow)?headerRow[i]||'':'列'+(i+1)))}</th>`).join('')}</tr></thead><tbody>${state._dsRows.slice(0,20).map(r=>`<tr>${Array.from({length:maxCol},(_,i)=>`<td>${htmlEscape(String(r[i]??''))}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseDataSource() {
+  state.dsSubjectCol = +document.getElementById('dsSubjectCol').value;
+  state.dsValueCol = +document.getElementById('dsValueCol').value;
+  state.dsData = state._dsRows.map(r => ({
+    subject: String(r[state.dsSubjectCol] || '').trim(),
+    value: parseFloat(String(r[state.dsValueCol] || '0').replace(/[,\s]/g,'')) || 0
+  })).filter(d => d.subject);
+  toast(`解析完成：${state.dsData.length} 条科目数据`);
+}
+
+// ==================== MAPPING ====================
+function normalize(s) { return String(s).replace(/\s+/g,'').replace(/[（）\(\)]/g,()=>'(').replace(/[Ａ-Ｚａ-ｚ０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).toLowerCase(); }
+
+function autoMatch() {
+  if (state.dsData.length === 0) { toast('请先加载数据源'); return; }
+  const maxRow = Math.max(0, ...state.tableData.map(c => c.row));
+  state.mapping = {};
+  state.unmatched = [];
+
+  const dsSubjects = state.dsData.map(d => d.subject);
+  const dsNormalized = dsSubjects.map(normalize);
+
+  for (let r = 1; r <= maxRow; r++) {
+    if (state.totalRows.has(r) || state.headerRows.has(r)) continue;
+    const cell = getCell(r, state.subjectCol);
+    if (!cell || !cell.text) continue;
+    const reportSubj = cell.text;
+    const reportNorm = normalize(reportSubj);
+
+    // Exact match
+    const exactIdx = dsNormalized.indexOf(reportNorm);
+    if (exactIdx >= 0) {
+      state.mapping[reportSubj] = state.dsData[exactIdx];
+      continue;
+    }
+
+    // Contains match
+    const containIdx = dsNormalized.findIndex(ds => ds.includes(reportNorm) || reportNorm.includes(ds));
+    if (containIdx >= 0) {
+      state.mapping[reportSubj] = state.dsData[containIdx];
+      continue;
+    }
+
+    // Fuzzy: find top 3 similar
+    const scores = dsSubjects.map((ds,i) => ({ds, i, score: similarity(reportNorm, dsNormalized[i])}));
+    scores.sort((a,b) => b.score - a.score);
+    const top3 = scores.slice(0,3).filter(s => s.score > 0.2);
+    state.unmatched.push({ reportSubject: reportSubj, suggestions: top3.map(s => ({ subject: s.ds, score: Math.round(s.score*100) })) });
+    state.mapping[reportSubj] = undefined; // explicitly unmatched
+  }
+
+  const matched = Object.values(state.mapping).filter(Boolean).length;
+  document.getElementById('mappingStatus').innerHTML = `匹配结果：<span style="color:var(--accent-2)">${matched} 条已匹配</span>，<span style="color:var(--accent-3)">${state.unmatched.length} 条待确认</span>`;
+  if (state.unmatched.length > 0) showUnmatched();
+  renderTable('tablePreview2');
+  toast(`自动匹配完成：${matched}/${matched+state.unmatched.length}`);
+}
+
+function similarity(a, b) {
+  if (!a || !b) return 0;
+  let matches = 0;
+  for (let i = 0; i < Math.min(a.length, b.length); i++) {
+    if (a[i] === b[i]) matches++;
+  }
+  const longer = Math.max(a.length, b.length);
+  return longer > 0 ? matches / longer : 0;
+}
+
+function showUnmatched() {
+  const el = document.getElementById('unmatchedList');
+  el.classList.remove('hidden');
+  el.innerHTML = '<h4 class="text-sm mb2">待确认科目（点击建议配对）：</h4>' +
+    state.unmatched.map((u, ui) => `
+      <div class="flex-center gap2 mb2" style="font-size:12px">
+        <span style="color:var(--accent-3);min-width:120px">⚠ ${htmlEscape(u.reportSubject)}</span>
+        <span class="text-secondary">→ 建议：</span>
+        ${u.suggestions.map((s, si) =>
+          `<button class="btn btn-xs" onclick="manualMatch(${ui},${si})">${htmlEscape(s.subject)} (${s.score}%)</button>`
+        ).join(' ')}
+        <button class="btn btn-xs btn-danger" onclick="skipSubject(${ui})">跳过</button>
+      </div>
+    `).join('');
+}
+
+function manualMatch(ui, si) {
+  const u = state.unmatched[ui];
+  const s = u.suggestions[si];
+  const dsEntry = state.dsData.find(d => d.subject === s.subject);
+  if (dsEntry) {
+    state.mapping[u.reportSubject] = dsEntry;
+    state.unmatched.splice(ui, 1);
+    showUnmatched();
+    renderTable('tablePreview2');
+    toast('已手动配对：'+u.reportSubject+' → '+s.subject);
+  }
+}
+
+function skipSubject(ui) {
+  state.mapping[state.unmatched[ui].reportSubject] = undefined;
+  state.unmatched.splice(ui, 1);
+  showUnmatched();
+  renderTable('tablePreview2');
+  toast('已跳过');
+}
+
+function saveMappingTemplate() {
+  const tpl = { subjectCol: state.subjectCol, valueCols: state.valueCols, mapping: {} };
+  Object.entries(state.mapping).forEach(([k,v]) => { if (v) tpl.mapping[normalize(k)] = v.subject; });
+  localStorage.setItem('wb_mapping_tpl', JSON.stringify(tpl));
+  toast('映射模板已保存到 localStorage');
+}
+function loadMappingTemplate() {
+  const raw = localStorage.getItem('wb_mapping_tpl');
+  if (!raw) { toast('未找到已保存的模板'); return; }
+  const tpl = JSON.parse(raw);
+  if (tpl.subjectCol !== undefined) state.subjectCol = tpl.subjectCol;
+  if (tpl.valueCols) state.valueCols = tpl.valueCols;
+  // Apply mapping
+  const maxRow = Math.max(0, ...state.tableData.map(c => c.row));
+  for (let r = 1; r <= maxRow; r++) {
+    const cell = getCell(r, state.subjectCol);
+    if (!cell || !cell.text) continue;
+    const key = normalize(cell.text);
+    const dsSubj = tpl.mapping[key];
+    if (dsSubj) {
+      const dsEntry = state.dsData.find(d => d.subject === dsSubj);
+      if (dsEntry) state.mapping[cell.text] = dsEntry;
+    }
+  }
+  document.getElementById('subjectCol').value = state.subjectCol;
+  Array.from(document.getElementById('valueCols').options).forEach(o => o.selected = state.valueCols.includes(+o.value));
+  renderTable('tablePreview2');
+  toast('映射模板已加载');
+}
+
+// ==================== EXECUTE FILL ====================
+function executeFill() {
+  state.filledCells = []; state.skippedCells = [];
+  const maxRow = Math.max(0, ...state.tableData.map(c => c.row));
+
+  for (let r = 1; r <= maxRow; r++) {
+    if (state.totalRows.has(r) || state.headerRows.has(r)) continue;
+    const subjCell = getCell(r, state.subjectCol);
+    if (!subjCell || !subjCell.text) continue;
+
+    const dsEntry = state.mapping[subjCell.text];
+    if (dsEntry === undefined) {
+      for (const vc of state.valueCols) {
+        const cell = getCell(r, vc);
+        if (cell && !cell.text) state.skippedCells.push({row:r, col:vc, reason:'未匹配科目'});
+      }
+      continue;
+    }
+
+    for (const vc of state.valueCols) {
+      const cell = getCell(r, vc);
+      if (cell && !cell.text) {
+        const val = dsEntry.value;
+        state.filledCells.push({row:r, col:vc, value: formatNumber(val)});
+      } else if (cell && cell.text) {
+        state.skippedCells.push({row:r, col:vc, reason:'已有值'});
+      }
+    }
+  }
+
+  renderTable('tablePreview2');
+  toast(`上数完成：${state.filledCells.length} 个单元格已填，${state.skippedCells.length} 个跳过`);
+}
+
+function formatNumber(n) {
+  if (isNaN(n)) return String(n);
+  return n.toLocaleString('zh-CN', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+// ==================== STEP 3: VERIFICATION ====================
+function runVerification() {
+  state.diffs = [];
+  const totalRows = [...state.totalRows].sort((a,b) => a-b);
+
+  for (const totalRow of totalRows) {
+    // Find detail rows above this total row
+    const detailRows = [];
+    for (let r = totalRow - 1; r >= 0; r--) {
+      if (state.totalRows.has(r) || state.headerRows.has(r)) break;
+      detailRows.unshift(r);
+    }
+
+    if (detailRows.length === 0) continue;
+
+    for (const vc of state.valueCols) {
+      // Sum detail values
+      let sum = 0;
+      for (const dr of detailRows) {
+        const filled = state.filledCells.find(f => f.row === dr && f.col === vc);
+        if (filled) sum += parseFloat(String(filled.value).replace(/[,\s]/g,'')) || 0;
+        else {
+          const cell = getCell(dr, vc);
+          if (cell && cell.text) sum += parseFloat(String(cell.text).replace(/[,\s]/g,'')) || 0;
+        }
+      }
+
+      // Get total row value
+      const totalCell = getCell(totalRow, vc);
+      const filledTotal = state.filledCells.find(f => f.row === totalRow && f.col === vc);
+      let totalVal = 0;
+      if (filledTotal) totalVal = parseFloat(String(filledTotal.value).replace(/[,\s]/g,'')) || 0;
+      else if (totalCell && totalCell.text) totalVal = parseFloat(String(totalCell.text).replace(/[,\s]/g,'')) || 0;
+      else continue;
+
+      const diff = Math.abs(sum - totalVal);
+      if (diff > 0.01) {
+        state.diffs.push({ row: totalRow, col: vc, original: totalVal, calculated: sum, diff });
+      }
+    }
+  }
+
+  // Render verification results
+  const summary = document.getElementById('verifySummary');
+  const diffList = document.getElementById('diffList');
+
+  if (state.diffs.length === 0) {
+    summary.innerHTML = '<span style="color:var(--accent-2)">✅ 所有合计行加总正确，未发现差异</span>';
+    diffList.innerHTML = '';
+  } else {
+    summary.innerHTML = `<span style="color:var(--accent-3)">❌ 发现 ${state.diffs.length} 处差异</span>`;
+    diffList.innerHTML = state.diffs.map(d => {
+      const subjCell = getCell(d.row, state.subjectCol);
+      return `<div class="diff-item">
+        <strong>${subjCell ? subjCell.text : '行'+(d.row+1)}</strong> — 列${d.col+1}：
+        原值 <span class="font-mono">${formatNumber(d.original)}</span> →
+        计算值 <span class="font-mono" style="color:var(--accent-2)">${formatNumber(d.calculated)}</span>
+        差异 <span class="font-mono" style="color:var(--accent-3)">${formatNumber(d.diff)}</span>
+      </div>`;
+    }).join('');
+  }
+
+  renderTable('tablePreview3');
+}
+
+// ==================== EXPORT ====================
+async function exportDocx() {
+  try {
+    const { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun, AlignmentType, BorderStyle, WidthType, ShadingType } = docx;
+    const maxRow = Math.max(0, ...state.tableData.map(c => c.row));
+    const maxCol = Math.max(0, ...state.tableData.map(c => c.col));
+
+    const rows = [];
+    for (let r = 0; r <= maxRow; r++) {
+      const cells = [];
+      for (let c = 0; c <= maxCol; c++) {
+        const cell = getCell(r, c);
+        const filled = state.filledCells.find(f => f.row === r && f.col === c);
+        let text = filled ? String(filled.value) : (cell ? cell.text : '');
+        const isBold = r === 0 || state.totalRows.has(r) || state.headerRows.has(r);
+        const shading = state.totalRows.has(r) ? { type: ShadingType.SOLID, color: 'FFF9E8' } :
+                         r === 0 ? { type: ShadingType.SOLID, color: 'EFEFF9' } : undefined;
+        cells.push(new TableCell({
+          children: [new Paragraph({
+            children: [new TextRun({ text, bold: isBold, size: 18 })],
+            alignment: c === state.subjectCol ? AlignmentType.LEFT : AlignmentType.RIGHT
+          })],
+          width: { size: Math.max(1200, 10000/(maxCol+1)), type: WidthType.DXA },
+          shading
+        }));
+      }
+      rows.push(new TableRow({ children: cells }));
+    }
+
+    const doc = new Document({
+      sections: [{
+        children: [
+          new Paragraph({ children: [new TextRun({ text: '审定报告附注表', bold: true, size: 28 })], spacing: { after: 200 } }),
+          new Table({ rows, width: { size: 100, type: WidthType.PERCENTAGE } })
+        ]
+      }]
+    });
+
+    const blob = await Packer.toBlob(doc);
+    downloadBlob(blob, '审定报告_填好数.docx');
+    toast('✓ Word 报告已下载');
+  } catch(e) { toast('导出失败: '+e.message); console.error(e); }
+}
+
+function exportVerifyExcel() {
+  const wb = XLSX.utils.book_new();
+
+  // Sheet 1: Filled table with diff highlights
+  const maxRow = Math.max(0, ...state.tableData.map(c => c.row));
+  const maxCol = Math.max(0, ...state.tableData.map(c => c.col));
+  const rows = [];
+  for (let r = 0; r <= maxRow; r++) {
+    const row = [];
+    for (let c = 0; c <= maxCol; c++) {
+      const cell = getCell(r, c);
+      const filled = state.filledCells.find(f => f.row === r && f.col === c);
+      const diff = state.diffs.find(d => d.row === r && d.col === c);
+      let val = filled ? filled.value : (cell ? cell.text : '');
+      if (diff) val = '❌ ' + val + ' (应为' + formatNumber(diff.calculated) + ')';
+      row.push(val);
+    }
+    rows.push(row);
+  }
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), '校验报告');
+
+  // Sheet 2: Diff details
+  const diffRows = state.diffs.map(d => {
+    const subjCell = getCell(d.row, state.subjectCol);
+    return {
+      '合计行': subjCell ? subjCell.text : '行'+(d.row+1),
+      '列号': d.col + 1,
+      '原值': d.original,
+      '计算值': d.calculated,
+      '差异': d.diff,
+      '是否相符': '不符'
+    };
+  });
+  if (diffRows.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(diffRows), '差异清单');
+
+  XLSX.writeFile(wb, `加计校验报告_${new Date().toISOString().slice(0,10)}.xlsx`);
+  toast('✓ 校验 Excel 已下载（含差异红底标识）');
+}
+
+function copyTableToClipboard() {
+  const maxRow = Math.max(0, ...state.tableData.map(c => c.row));
+  const maxCol = Math.max(0, ...state.tableData.map(c => c.col));
+  let html = '<table border="1"><tbody>';
+  for (let r = 0; r <= maxRow; r++) {
+    html += '<tr>';
+    for (let c = 0; c <= maxCol; c++) {
+      const cell = getCell(r, c);
+      const filled = state.filledCells.find(f => f.row === r && f.col === c);
+      const diff = state.diffs.find(d => d.row === r && d.col === c);
+      let val = filled ? filled.value : (cell ? cell.text : '');
+      if (diff) val += ' ❌';
+      html += `<td>${htmlEscape(String(val))}</td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  navigator.clipboard.write([
+    new ClipboardItem({
+      'text/html': new Blob([html], {type:'text/html'}),
+      'text/plain': new Blob([state.tableData.map(c => {
+        const filled = state.filledCells.find(f => f.row === c.row && f.col === c.col);
+        return filled ? filled.value : c.text;
+      }).join('\t')], {type:'text/plain'})
+    })
+  ]).then(() => toast('✓ 表格已复制到剪贴板')).catch(() => toast('复制失败'));
+}
+
+// ==================== HELPERS ====================
+function htmlEscape(s) { const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+function downloadBlob(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
+// ==================== INIT ====================
+// Handle global mammoth
+</script>
+</body>
+</html>
