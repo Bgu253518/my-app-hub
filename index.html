@@ -1303,6 +1303,7 @@ function openToolPanel(appId) {
   if (appId === 'img-compressor' || appId === 'img-to-pdf') { window.open('image-toolbox.html', '_self'); return; }
   if (appId === 'data-cleaner') { window.open('data-cleaner.html', '_self'); return; }
   if (appId === 'file-renamer') { window.open('file-renamer.html', '_self'); return; }
+  if (appId === 'pdf-splitter') { window.open('pdf-splitter.html', '_self'); return; }
   currentToolType = appId === 'pdf-tool' ? 'pdf' : appId === 'ai-todo' ? 'todo' : appId === 'rou-calc' ? 'rou' : 'aging';
 
   // Reset state

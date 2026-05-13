@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDF 拆图工具 — 顾力菡·应用工坊</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-deep: #0a0a14;
+  --bg-card: rgba(22, 22, 44, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --text-primary: #e8e8f0;
+  --text-secondary: #9999b0;
+  --accent-1: #7c5cfc;
+  --accent-2: #5cfca0;
+  --accent-3: #fc5c9c;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --transition: 0.2s ease;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: linear-gradient(160deg, #0a0a14 0%, #12122a 30%, #16163a 60%, #0d0d24 100%);
+  color: var(--text-primary); min-height: 100vh; line-height: 1.6;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 20% 20%, rgba(124, 92, 252, 0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 60%, rgba(252, 92, 156, 0.04) 0%, transparent 50%);
+  pointer-events: none; z-index: 0;
+}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(124, 92, 252, 0.25); border-radius: 3px; }
+
+/* ===== Header ===== */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10, 10, 20, 0.8); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 0 24px; height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header .brand { font-size: 17px; font-weight: 700; }
+.header a { color: var(--text-secondary); text-decoration: none; font-size: 13px; transition: var(--transition); }
+.header a:hover { color: var(--text-primary); }
+
+/* ===== Main ===== */
+.main { position: relative; z-index: 1; max-width: 1300px; margin: 0 auto; padding: 24px; }
+
+/* ===== Section ===== */
+.section {
+  background: var(--bg-card); border: 1px solid var(--glass-border);
+  border-radius: var(--radius); padding: 24px; margin-bottom: 20px;
+  backdrop-filter: blur(10px);
+}
+.section-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.section-hint { font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; }
+
+/* ===== Upload Zone ===== */
+.upload-zone {
+  border: 2px dashed rgba(124,92,252,0.3); border-radius: var(--radius);
+  padding: 40px 24px; text-align: center; cursor: pointer; transition: var(--transition);
+}
+.upload-zone:hover, .upload-zone.dragover { border-color: var(--accent-1); background: rgba(124,92,252,0.05); }
+.upload-zone .uz-icon { font-size: 36px; margin-bottom: 8px; }
+.upload-zone .uz-text { font-size: 15px; font-weight: 600; }
+.upload-zone .uz-hint { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+/* ===== File Info ===== */
+.file-info {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; background: rgba(124,92,252,0.08);
+  border: 1px solid rgba(124,92,252,0.2); border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+}
+.file-info .fi-icon { font-size: 28px; }
+.file-info .fi-detail { flex: 1; }
+.file-info .fi-name { font-weight: 600; font-size: 14px; }
+.file-info .fi-meta { font-size: 12px; color: var(--text-secondary); }
+.file-info .fi-action { }
+
+/* ===== Buttons ===== */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: var(--radius-sm); font-size: 13px;
+  font-weight: 600; cursor: pointer; border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.05); color: var(--text-primary);
+  transition: var(--transition); white-space: nowrap;
+}
+.btn:hover { background: rgba(255,255,255,0.1); }
+.btn-primary { background: linear-gradient(135deg, #7c5cfc, #5ccafc); border: none; color: #fff; }
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(124,92,252,0.3); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-danger { border-color: rgba(252,92,156,0.3); color: var(--accent-3); }
+.btn-danger:hover { background: rgba(252,92,156,0.1); border-color: var(--accent-3); }
+.btn-sm { padding: 4px 10px; font-size: 11px; }
+
+/* ===== Toolbar ===== */
+.toolbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  padding: 12px 16px; background: rgba(255,255,255,0.03);
+  border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+}
+.toolbar .sep { width: 1px; height: 20px; background: var(--glass-border); }
+.toolbar input[type="text"] {
+  background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+  border-radius: 6px; padding: 6px 10px; color: var(--text-primary);
+  font-size: 12px; width: 160px; outline: none;
+}
+.toolbar input[type="text"]:focus { border-color: var(--accent-1); }
+.toolbar .sel-count { margin-left: auto; font-size: 12px; color: var(--text-secondary); }
+.toolbar .sel-count strong { color: var(--accent-1); }
+
+/* ===== Settings Grid ===== */
+.settings-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px;
+  margin-bottom: 16px;
+}
+.setting-group label {
+  display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;
+}
+.setting-group select, .setting-group input {
+  width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+  border-radius: 6px; padding: 8px 10px; color: var(--text-primary);
+  font-size: 13px; outline: none;
+}
+.setting-group select:focus, .setting-group input:focus { border-color: var(--accent-1); }
+.setting-group input[type="range"] { padding: 0; accent-color: var(--accent-1); height: 24px; }
+
+/* ===== Thumbnail Grid ===== */
+.thumb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+.thumb-card {
+  position: relative; cursor: pointer;
+  background: rgba(0,0,0,0.3); border: 2px solid transparent;
+  border-radius: var(--radius-sm); overflow: hidden;
+  transition: var(--transition);
+}
+.thumb-card:hover { border-color: rgba(124,92,252,0.3); transform: translateY(-2px); }
+.thumb-card.selected { border-color: var(--accent-1); }
+.thumb-card img { width: 100%; display: block; }
+.thumb-card .tc-check {
+  position: absolute; top: 6px; right: 6px; z-index: 2;
+  width: 20px; height: 20px; accent-color: var(--accent-1);
+  cursor: pointer; opacity: 0.6; transition: var(--transition);
+}
+.thumb-card:hover .tc-check, .thumb-card.selected .tc-check { opacity: 1; }
+.thumb-card .tc-num {
+  position: absolute; bottom: 4px; left: 6px; z-index: 1;
+  background: rgba(0,0,0,0.65); color: #fff; font-size: 10px;
+  padding: 1px 6px; border-radius: 4px; pointer-events: none;
+}
+
+/* ===== Progress ===== */
+.progress-bar-wrap {
+  background: rgba(255,255,255,0.06); border-radius: 20px;
+  height: 8px; overflow: hidden; margin: 12px 0;
+}
+.progress-bar-fill {
+  height: 100%; border-radius: 20px;
+  background: linear-gradient(90deg, #7c5cfc, #5ccafc);
+  transition: width 0.3s ease; width: 0%;
+}
+.progress-text { font-size: 12px; color: var(--text-secondary); display: flex; justify-content: space-between; }
+
+/* ===== Lightbox ===== */
+.lightbox {
+  position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.92);
+  display: flex; align-items: center; justify-content: center; padding: 32px;
+  cursor: pointer;
+}
+.lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+.lightbox .lb-close { position: absolute; top: 16px; right: 20px; color: #fff; font-size: 28px; cursor: pointer; z-index: 2; }
+.lightbox .lb-info { position: absolute; top: 16px; left: 20px; color: rgba(255,255,255,0.6); font-size: 13px; }
+
+/* ===== Toast ===== */
+.toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 1000;
+  background: rgba(22,22,44,0.95); border: 1px solid var(--glass-border);
+  color: var(--text-primary); padding: 12px 20px; border-radius: var(--radius-sm);
+  font-size: 13px; backdrop-filter: blur(12px);
+  transform: translateY(100px); opacity: 0; transition: all 0.35s ease;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.error { border-color: rgba(252,92,156,0.3); color: var(--accent-3); }
+.toast.success { border-color: rgba(92,252,160,0.3); color: var(--accent-2); }
+
+/* ===== Hidden ===== */
+.hidden { display: none !important; }
+
+@media (max-width: 768px) {
+  .main { padding: 16px; }
+  .toolbar { gap: 6px; }
+  .toolbar input[type="text"] { width: 100px; }
+  .thumb-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="brand">📄 PDF 拆图工具</span>
+  <a href="index.html">← 返回应用工坊</a>
+</div>
+
+<div class="main">
+
+  <!-- Upload -->
+  <div class="section hidden" id="uploadSection">
+    <div class="upload-zone" id="uploadZone">
+      <div class="uz-icon">📂</div>
+      <div class="uz-text">拖拽 PDF 文件到此处，或点击上传</div>
+      <div class="uz-hint">所有处理均在本地浏览器完成，文件不会上传到服务器</div>
+    </div>
+  </div>
+
+  <!-- File Info -->
+  <div class="section hidden" id="infoSection">
+    <div class="file-info">
+      <span class="fi-icon">📑</span>
+      <div class="fi-detail">
+        <div class="fi-name" id="fileName"></div>
+        <div class="fi-meta">共 <span id="pageTotal">0</span> 页</div>
+      </div>
+      <button class="btn btn-sm" onclick="resetAll()">重新上传</button>
+    </div>
+
+    <!-- Selection Toolbar -->
+    <div class="toolbar">
+      <button class="btn btn-sm" onclick="selectAll()">全选</button>
+      <button class="btn btn-sm" onclick="deselectAll()">取消全选</button>
+      <span class="sep"></span>
+      <span style="font-size:12px;color:var(--text-secondary)">页码范围:</span>
+      <input type="text" id="pageRangeInp" placeholder="例: 1,3,5-10" onkeydown="if(event.key==='Enter')applyRange()">
+      <button class="btn btn-sm" onclick="applyRange()">应用</button>
+      <span class="sel-count">已选 <strong id="selCount">0</strong> 页</span>
+    </div>
+
+    <!-- Settings -->
+    <div class="settings-grid">
+      <div class="setting-group">
+        <label>图片格式</label>
+        <select id="fmt">
+          <option value="png">PNG</option>
+          <option value="jpeg">JPEG</option>
+        </select>
+      </div>
+      <div class="setting-group" id="qGrp" style="display:none">
+        <label>JPEG 质量: <span id="qVal">85</span>%</label>
+        <input type="range" id="quality" min="10" max="100" value="85">
+      </div>
+      <div class="setting-group">
+        <label>分辨率缩放</label>
+        <select id="scaleSel">
+          <option value="1">1x</option>
+          <option value="1.5">1.5x</option>
+          <option value="2" selected>2x</option>
+          <option value="3">3x</option>
+          <option value="c">自定义</option>
+        </select>
+      </div>
+      <div class="setting-group hidden" id="cGrp">
+        <label>自定义倍数</label>
+        <input type="number" id="customScale" value="2" min="0.5" max="10" step="0.1">
+      </div>
+      <div class="setting-group">
+        <label>色彩模式</label>
+        <select id="colorMode">
+          <option value="color">彩色</option>
+          <option value="gray">灰度</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      <button class="btn btn-primary" id="startBtn" onclick="startSplit()">🚀 开始拆分</button>
+      <button class="btn btn-danger hidden" id="cancelBtn" onclick="cancelSplit()">✕ 取消</button>
+    </div>
+
+    <!-- Progress -->
+    <div class="hidden" id="progressSection">
+      <div class="progress-text"><span id="progLabel">处理中...</span><span id="progPct">0%</span></div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progFill"></div></div>
+    </div>
+  </div>
+
+  <!-- Thumbnail Grid -->
+  <div class="section hidden" id="thumbSection">
+    <div class="section-title">📋 页面预览</div>
+    <div class="thumb-grid" id="thumbGrid"></div>
+  </div>
+
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox hidden" id="lightbox" onclick="closeLightbox()">
+  <span class="lb-close">✕</span>
+  <span class="lb-info" id="lbInfo"></span>
+  <img src="" id="lbImg" onclick="event.stopPropagation()">
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+// ============ State ============
+let pdfDoc = null, pdfName = '', totalPages = 0, abortCtrl = null;
+const SET_KEY = '_pdfsplit_stg';
+
+// ============ DOM Ref ============
+const $ = id => document.getElementById(id);
+const dom = {
+  uploadSection: $('uploadSection'), uploadZone: $('uploadZone'),
+  infoSection: $('infoSection'), fileName: $('fileName'), pageTotal: $('pageTotal'),
+  selCount: $('selCount'), thumbSection: $('thumbSection'), thumbGrid: $('thumbGrid'),
+  fmt: $('fmt'), qGrp: $('qGrp'), quality: $('quality'), qVal: $('qVal'),
+  scaleSel: $('scaleSel'), cGrp: $('cGrp'), customScale: $('customScale'),
+  colorMode: $('colorMode'), startBtn: $('startBtn'), cancelBtn: $('cancelBtn'),
+  progressSection: $('progressSection'), progFill: $('progFill'),
+  progLabel: $('progLabel'), progPct: $('progPct'),
+  pageRangeInp: $('pageRangeInp'), toast: $('toast'),
+  lightbox: $('lightbox'), lbImg: $('lbImg'), lbInfo: $('lbInfo')
+};
+
+// ============ Init ============
+function init() {
+  loadSettings();
+  dom.uploadSection.classList.remove('hidden');
+  dom.uploadZone.addEventListener('click', () => {
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = '.pdf';
+    inp.onchange = e => handleFile(e.target.files[0]);
+    inp.click();
+  });
+  dom.uploadZone.addEventListener('dragover', e => { e.preventDefault(); dom.uploadZone.classList.add('dragover'); });
+  dom.uploadZone.addEventListener('dragleave', () => dom.uploadZone.classList.remove('dragover'));
+  dom.uploadZone.addEventListener('drop', e => {
+    e.preventDefault(); dom.uploadZone.classList.remove('dragover');
+    handleFile(e.dataTransfer.files[0]);
+  });
+  dom.fmt.addEventListener('change', () => { dom.qGrp.style.display = dom.fmt.value === 'jpeg' ? '' : 'none'; saveSettings(); });
+  dom.quality.addEventListener('input', () => { dom.qVal.textContent = dom.quality.value; saveSettings(); });
+  dom.scaleSel.addEventListener('change', () => { dom.cGrp.classList.toggle('hidden', dom.scaleSel.value !== 'c'); saveSettings(); });
+  dom.customScale.addEventListener('input', saveSettings);
+  dom.colorMode.addEventListener('change', saveSettings);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+}
+
+// ============ Settings ============
+function loadSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SET_KEY));
+    if (!s) return;
+    dom.fmt.value = s.fmt || 'png';
+    dom.quality.value = s.quality || 85; dom.qVal.textContent = s.quality || 85;
+    dom.scaleSel.value = s.scale || '2';
+    dom.customScale.value = s.customScale || 2;
+    dom.colorMode.value = s.colorMode || 'color';
+    dom.qGrp.style.display = dom.fmt.value === 'jpeg' ? '' : 'none';
+    dom.cGrp.classList.toggle('hidden', dom.scaleSel.value !== 'c');
+  } catch(e) {}
+}
+function saveSettings() {
+  localStorage.setItem(SET_KEY, JSON.stringify({
+    fmt: dom.fmt.value, quality: dom.quality.value,
+    scale: dom.scaleSel.value, customScale: dom.customScale.value,
+    colorMode: dom.colorMode.value
+  }));
+}
+
+// ============ File Handling ============
+async function handleFile(file) {
+  if (!file || file.type !== 'application/pdf') { toast('请上传 PDF 文件', 'error'); return; }
+  pdfName = file.name.replace(/\.pdf$/i, '');
+  const buf = await file.arrayBuffer();
+  try {
+    pdfDoc = await pdfjsLib.getDocument({ data: buf }).promise;
+  } catch (err) {
+    if (err.name === 'PasswordException') {
+      const pw = prompt('此 PDF 已加密，请输入密码：');
+      if (!pw) return;
+      try { pdfDoc = await pdfjsLib.getDocument({ data: buf, password: pw }).promise; }
+      catch (e) { toast('密码错误或文件已损坏', 'error'); return; }
+    } else {
+      toast('文件已损坏或无法解析：' + err.message, 'error'); return;
+    }
+  }
+  totalPages = pdfDoc.numPages;
+  if (totalPages === 0) { toast('PDF 无页面', 'error'); return; }
+
+  dom.uploadSection.classList.add('hidden');
+  dom.infoSection.classList.remove('hidden');
+  dom.thumbSection.classList.remove('hidden');
+  dom.fileName.textContent = file.name;
+  dom.pageTotal.textContent = totalPages;
+  await renderThumbs();
+  selectAll();
+}
+
+// ============ Thumbnails ============
+async function renderThumbs() {
+  dom.thumbGrid.innerHTML = '';
+  for (let i = 1; i <= totalPages; i++) {
+    const page = await pdfDoc.getPage(i);
+    const vp = page.getViewport({ scale: 0.25 });
+    const c = document.createElement('canvas');
+    c.width = vp.width; c.height = vp.height;
+    await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+
+    const card = document.createElement('div');
+    card.className = 'thumb-card selected';
+    card.innerHTML = `
+      <input type="checkbox" class="tc-check" data-pg="${i}" checked>
+      <img src="${c.toDataURL()}" alt="第${i}页">
+      <span class="tc-num">${i}</span>
+    `;
+    card.querySelector('input').onchange = updateSel;
+    card.querySelector('img').onclick = e => { e.stopPropagation(); openLightbox(i); };
+    card.addEventListener('click', function(e) {
+      if (e.target.tagName === 'INPUT') return;
+      const cb = this.querySelector('input');
+      cb.checked = !cb.checked;
+      this.classList.toggle('selected', cb.checked);
+      updateSel();
+    });
+    dom.thumbGrid.appendChild(card);
+  }
+  updateSel();
+}
+
+// ============ Selection ============
+function selectAll() {
+  dom.thumbGrid.querySelectorAll('input').forEach(cb => { cb.checked = true; cb.closest('.thumb-card').classList.add('selected'); });
+  updateSel();
+}
+function deselectAll() {
+  dom.thumbGrid.querySelectorAll('input').forEach(cb => { cb.checked = false; cb.closest('.thumb-card').classList.remove('selected'); });
+  updateSel();
+}
+function applyRange() {
+  const raw = dom.pageRangeInp.value.trim();
+  if (!raw) return;
+  const set = new Set();
+  raw.split(',').forEach(p => {
+    const r = p.trim().split('-');
+    if (r.length === 2) { for (let i = Math.max(1,+r[0]); i <= Math.min(totalPages,+r[1]); i++) set.add(i); }
+    else { const n = +r[0]; if (n >= 1 && n <= totalPages) set.add(n); }
+  });
+  dom.thumbGrid.querySelectorAll('input').forEach(cb => {
+    cb.checked = set.has(+cb.dataset.pg);
+    cb.closest('.thumb-card').classList.toggle('selected', cb.checked);
+  });
+  updateSel();
+}
+function updateSel() {
+  const n = dom.thumbGrid.querySelectorAll('input:checked').length;
+  dom.selCount.textContent = n;
+  dom.startBtn.disabled = n === 0;
+}
+
+// ============ Lightbox ============
+async function openLightbox(pg) {
+  dom.lbInfo.textContent = `第 ${pg} / ${totalPages} 页`;
+  const page = await pdfDoc.getPage(pg);
+  const vp = page.getViewport({ scale: 2 });
+  const c = document.createElement('canvas');
+  c.width = vp.width; c.height = vp.height;
+  await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+  dom.lbImg.src = c.toDataURL();
+  dom.lightbox.classList.remove('hidden');
+}
+function closeLightbox() { dom.lightbox.classList.add('hidden'); }
+
+// ============ Split ============
+function getScale() {
+  const v = dom.scaleSel.value;
+  return v === 'c' ? (+dom.customScale.value || 2) : +v;
+}
+
+async function startSplit() {
+  const cbs = dom.thumbGrid.querySelectorAll('input:checked');
+  if (cbs.length === 0) { toast('请至少选择一页', 'error'); return; }
+  const pages = Array.from(cbs).map(cb => +cb.dataset.pg).sort((a,b) => a-b);
+  const fmt = dom.fmt.value;
+  const quality = +dom.quality.value / 100;
+  const scale = getScale();
+  const gray = dom.colorMode.value === 'gray';
+  const mime = fmt === 'jpeg' ? 'image/jpeg' : 'image/png';
+  const ext = fmt === 'jpeg' ? 'jpg' : 'png';
+
+  abortCtrl = new AbortController();
+  const signal = abortCtrl.signal;
+
+  dom.startBtn.classList.add('hidden');
+  dom.cancelBtn.classList.remove('hidden');
+  dom.progressSection.classList.remove('hidden');
+
+  const zip = new JSZip();
+  for (let i = 0; i < pages.length; i++) {
+    if (signal.aborted) break;
+    const p = pages[i];
+    dom.progLabel.textContent = `正在处理第 ${p} / ${totalPages} 页...`;
+    const pct = Math.round((i / pages.length) * 100);
+    dom.progPct.textContent = pct + '%';
+    dom.progFill.style.width = pct + '%';
+
+    try {
+      const page = await pdfDoc.getPage(p);
+      const vp = page.getViewport({ scale });
+      const c = document.createElement('canvas');
+      c.width = vp.width; c.height = vp.height;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+      await page.render({ canvasContext: ctx, viewport: vp }).promise;
+      if (gray) {
+        const imgData = ctx.getImageData(0, 0, c.width, c.height);
+        const d = imgData.data;
+        for (let j = 0; j < d.length; j += 4) {
+          const g = d[j]*0.299 + d[j+1]*0.587 + d[j+2]*0.114;
+          d[j] = d[j+1] = d[j+2] = g;
+        }
+        ctx.putImageData(imgData, 0, 0);
+      }
+      const blob = await new Promise(r => c.toBlob(r, mime, quality));
+      zip.file(`${pdfName}_${String(p).padStart(3,'0')}.${ext}`, blob);
+    } catch(e) { console.error(e); }
+  }
+
+  dom.progLabel.textContent = signal.aborted ? '已取消' : '正在打包 ZIP...';
+  dom.progPct.textContent = '100%';
+  dom.progFill.style.width = '100%';
+
+  if (!signal.aborted) {
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(zipBlob);
+    const a = document.createElement('a');
+    a.href = url; a.download = pdfName + '_图片包.zip';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast(`✓ 导出完成！${pages.length} 张图片已打包下载`, 'success');
+  }
+
+  dom.startBtn.classList.remove('hidden');
+  dom.cancelBtn.classList.add('hidden');
+  setTimeout(() => { dom.progressSection.classList.add('hidden'); dom.progFill.style.width = '0%'; }, 1500);
+  abortCtrl = null;
+}
+
+function cancelSplit() { if (abortCtrl) abortCtrl.abort(); }
+
+// ============ Reset ============
+function resetAll() {
+  pdfDoc = null; pdfName = ''; totalPages = 0;
+  dom.uploadSection.classList.remove('hidden');
+  dom.infoSection.classList.add('hidden');
+  dom.thumbSection.classList.add('hidden');
+  dom.thumbGrid.innerHTML = '';
+  dom.progressSection.classList.add('hidden');
+  dom.progFill.style.width = '0%';
+  dom.startBtn.classList.remove('hidden');
+  dom.cancelBtn.classList.add('hidden');
+  abortCtrl = null;
+}
+
+// ============ Toast ============
+let toastTimer;
+function toast(msg, type) {
+  const el = dom.toast;
+  el.textContent = msg; el.className = 'toast ' + (type || '') + ' show';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ============ Start ============
+init();
+</script>
+</body>
+</html>
