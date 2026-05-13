@@ -1563,14 +1563,6 @@ function renderToolControls(op) {
         <div class="tool-input-group" id="si-custom-grp" style="display:none"><label>自定义倍数</label><input type="number" id="si-custom-scale" value="2" min="0.5" max="10" step="0.1" style="width:70px"></div>
         <div class="tool-input-group"><label>色彩</label><select id="si-color"><option value="color">彩色</option><option value="gray">灰度</option></select></div>
       </div>
-      <script>
-        (function(){
-          var f=document.getElementById('si-format'), q=document.getElementById('si-quality-grp'),
-              s=document.getElementById('si-scale'), c=document.getElementById('si-custom-grp');
-          f.onchange=function(){q.style.display=f.value==='jpeg'?'':'none';};
-          s.onchange=function(){c.style.display=s.value==='c'?'':'none';};
-        })();
-      </script>
       <div class="tool-input-group"><label>页码范围（可选，留空=全部）</label><input type="text" id="si-pages" placeholder="例: 1,3,5-10（留空则导出全部）"></div>
     `;
   }
@@ -1582,6 +1574,17 @@ function renderToolControls(op) {
       <button class="btn-tool btn-tool-secondary" onclick="toolState.files=[]; renderFileList(); clearResult();">🗑️ 清空文件</button>
     </div>
   `;
+  // Init split-images toggle listeners (can't use inline <script> in innerHTML)
+  if (op === 'split-images') {
+    setTimeout(() => {
+      const f = document.getElementById('si-format');
+      const q = document.getElementById('si-quality-grp');
+      const s = document.getElementById('si-scale');
+      const c = document.getElementById('si-custom-grp');
+      if (f && q) f.onchange = () => { q.style.display = f.value === 'jpeg' ? '' : 'none'; };
+      if (s && c) s.onchange = () => { c.style.display = s.value === 'c' ? '' : 'none'; };
+    }, 0);
+  }
 }
 
 /* ============ PDF Operations ============ */
