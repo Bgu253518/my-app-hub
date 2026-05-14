@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https:; connect-src 'self' https://cdn.jsdelivr.net https://huggingface.co; worker-src 'self' blob:; font-src 'self' https://cdn.jsdelivr.net;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https:; connect-src 'self' https://cdn.jsdelivr.net https://huggingface.co https://cdn-lfs.huggingface.co https://cdn-lfs-us-1.huggingface.co https://cdn-lfs-eu-1.huggingface.co; worker-src 'self' blob: https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net;">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>离线 AI 助手</title>
@@ -80,7 +80,7 @@
   <!-- 核心卡片 -->
   <div class="bg-white rounded-[16px] card-shadow p-6 mb-4">
     <!-- 状态指示 -->
-    <div class="flex items-center justify-between mb-5 px-1">
+    <div class="flex items-center justify-between mb-3 px-1">
       <div class="flex items-center gap-2">
         <span class="status-dot" id="statusDot" style="background:#f59e0b;"></span>
         <span id="statusText" class="text-sm font-semibold text-gray-700">🟠 模型加载中...</span>
@@ -89,6 +89,8 @@
         重试加载
       </button>
     </div>
+    <!-- 错误详情（失败时显示） -->
+    <div id="errorBox" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 font-mono whitespace-pre-wrap"></div>
 
     <!-- 功能标签组 -->
     <div class="flex flex-wrap gap-2 mb-5" id="tabGroup">
@@ -152,44 +154,49 @@
 
   // ===== 状态更新 =====
   function setStatus(state) {
+    var errorBox = document.getElementById('errorBox');
     if (state === 'loading') {
       statusDot.style.background = '#f59e0b';
       statusText.textContent = '🟠 模型加载中...';
       btnRetry.classList.add('hidden');
+      errorBox.classList.add('hidden');
     } else if (state === 'ready') {
       statusDot.style.background = '#10b981';
       statusText.textContent = '🟢 模型就绪';
       btnRetry.classList.add('hidden');
+      errorBox.classList.add('hidden');
     } else if (state === 'ready-cpu') {
       statusDot.style.background = '#10b981';
       statusText.textContent = '🟢 模型就绪 (CPU模式)';
       btnRetry.classList.add('hidden');
+      errorBox.classList.add('hidden');
     } else if (state === 'error') {
       statusDot.style.background = '#ef4444';
-      statusText.textContent = '🔴 加载失败';
+      statusText.textContent = '🔴 加载失败 — 请点击"重试加载"';
       btnRetry.classList.remove('hidden');
+      errorBox.classList.remove('hidden');
+      errorBox.textContent = document.getElementById('errorDetail').textContent || '未知错误';
     }
   }
 
   // ===== 模型加载 =====
   async function loadModel() {
     setStatus('loading');
+    // 优先 WASM（兼容性最好），再尝试 WebGPU
     try {
-      aiPipeline = await pipeline('text2text-generation', 'Xenova/LaMini-Flan-T5-783M', {
-        device: 'webgpu',
-        dtype: 'q4'
-      });
-      setStatus('ready');
-    } catch (e) {
-      console.warn('WebGPU 加载失败，尝试 WASM:', e.message);
+      aiPipeline = await pipeline('text2text-generation', 'Xenova/LaMini-Flan-T5-783M');
+      setStatus('ready-cpu');
+    } catch (e1) {
+      console.warn('默认加载失败，尝试 WebGPU:', e1.message);
       try {
         aiPipeline = await pipeline('text2text-generation', 'Xenova/LaMini-Flan-T5-783M', {
-          device: 'wasm',
-          dtype: 'q4'
+          device: 'webgpu'
         });
-        setStatus('ready-cpu');
+        setStatus('ready');
       } catch (e2) {
-        console.error('模型加载完全失败:', e2.message);
+        var errDetail = '错误1: ' + (e1.message || e1) + '\n错误2: ' + (e2.message || e2);
+        console.error('模型加载完全失败:', errDetail);
+        document.getElementById('errorDetail').textContent = errDetail;
         setStatus('error');
       }
     }
@@ -316,6 +323,8 @@
     return el;
   }
 </script>
+
+<div id="errorDetail" style="display:none"></div>
 
 <style>
   #toast.show { opacity: 1 !important; }
