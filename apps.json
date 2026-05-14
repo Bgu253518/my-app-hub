@@ -80,8 +80,8 @@
   {
     "id": "claude-config",
     "name": "Claude Code 个人配置",
-    "shortDesc": "加密存储 Anthropic / OpenAI API 密钥，配置默认模型参数",
-    "fullDesc": "本地加密存储你的 Claude API 密钥和模型配置。使用 AES-256-GCM 加密，密钥由你设置的本地密码派生，所有数据仅存储在浏览器 localStorage，不会上传到任何服务器。支持保存 Anthropic API Key、OpenAI API Key（可选）、默认模型选择和最大输出 Token 配置。每次打开需要输入本地密码解密，确保即使他人使用你的电脑也无法读取密钥。",
+    "shortDesc": "一键配置 Claude Code 使用 DeepSeek/OpenRouter/阿里云百炼等第三方 API 服务商",
+    "fullDesc": "快速配置 Claude Code 使用第三方 API 服务商的 Web 工具。支持 DeepSeek（国产高性价比）、OpenRouter（多模型聚合网关）、阿里云百炼（通义千问系列）以及自定义接口。选择服务商、填写 API Key、选择模型后，一键生成并下载 PowerShell 配置脚本（setup.ps1），在本地执行即可自动设置环境变量，启动 Claude Code。无需手动配置环境变量，适合新手快速上手。",
     "category": "gui",
     "status": "done",
     "version": "v1.0.0",
