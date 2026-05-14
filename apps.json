@@ -104,6 +104,19 @@
     "download": ""
   },
   {
+    "id": "smart-todo",
+    "name": "智能待办",
+    "shortDesc": "AI 驱动的待办事项管理，支持桌面提醒、自然语言解析、导入导出",
+    "fullDesc": "基于 Transformers.js 的智能待办事项管理工具。支持 AI 自然语言解析（自动提取任务、优先级、截止日期、标签）、桌面通知提醒（临近/逾期自动红色标识）、手动添加和批量导入（CSV/JSON/剪贴板粘贴）、导出备份（JSON/CSV）、待办勾选完成、编辑文本和截止日期、删除。所有数据存储在浏览器 localStorage，无需注册登录。支持离线使用，页面关闭后停止提醒。",
+    "category": "gui",
+    "status": "done",
+    "version": "v1.0.0",
+    "icon": "📋",
+    "onlineTool": true,
+    "github": "https://github.com/Bgu253518/my-app-hub",
+    "download": ""
+  },
+  {
     "id": "file-renamer",
     "name": "批量文件重命名工具",
     "shortDesc": "浏览器中一键批量重命名文件：查找替换/序号前缀/自定义模板，支持预览和撤销",
