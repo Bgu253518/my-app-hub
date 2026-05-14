@@ -6,6 +6,7 @@
 <title>使用说明与操作指引 — 顾力菡·应用工坊</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 :root {
   --bg-deep: #0a0a14; --bg-card: rgba(22,22,44,0.6); --glass-border: rgba(255,255,255,0.08);
@@ -438,128 +439,88 @@ td { background:rgba(0,0,0,0.15); }
   }).join('');
 })();
 
-// Download PDF
-function downloadPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  doc.setFont('helvetica', 'normal');
+// Download PDF using html2canvas for perfect Chinese rendering
+async function downloadPDF() {
+  var btn = document.querySelector('.btn-primary');
+  var origText = btn.textContent;
+  btn.textContent = '⏳ 正在生成 PDF...';
+  btn.disabled = true;
 
-  const title = '顾力菡·应用工坊 — 完整使用手册';
-  const dateStr = '生成日期：' + new Date().toLocaleDateString('zh-CN');
+  try {
+    var { jsPDF } = window.jspdf;
+    var doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    var pageW = 190; // mm (A4 width 210 minus 10mm margins)
+    var pageH = 277; // mm (A4 height 297 minus 10mm margins)
+    var scale = 2;   // 2x for sharp text
 
-  doc.setFontSize(20);
-  doc.text(title, 105, 20, { align: 'center' });
-  doc.setFontSize(10);
-  doc.setTextColor(120, 120, 140);
-  doc.text(dateStr, 105, 28, { align: 'center' });
-  doc.setTextColor(40, 40, 40);
-
-  let y = 40;
-  const margin = 20;
-  const pageW = 170;
-
-  const tools = document.querySelectorAll('.tool-card');
-  tools.forEach((tool, ti) => {
-    // Title
-    const h2 = tool.querySelector('h2');
-    const titleText = h2 ? h2.textContent.trim() : 'Tool ' + (ti+1);
-    const cleanTitle = titleText.replace(/✅|已上线|已完成/g,'').trim();
-
-    if (y > 250) { doc.addPage(); y = 20; }
-    doc.setFontSize(14);
-    doc.setTextColor(30, 30, 50);
-    doc.text(cleanTitle, margin, y);
-    y += 8;
-
-    // Description
-    const descEl = tool.querySelector('.desc');
-    if (descEl) {
-      doc.setFontSize(9);
-      doc.setTextColor(80, 80, 100);
-      const descLines = doc.splitTextToSize(descEl.textContent.trim(), pageW);
-      descLines.forEach(line => {
-        if (y > 275) { doc.addPage(); y = 20; }
-        doc.text(line, margin, y);
-        y += 5;
-      });
-      y += 2;
+    // ---- Cover page ----
+    var cover = document.querySelector('.card');
+    if (cover) {
+      var coverCanvas = await html2canvas(cover, { scale: scale, useCORS: true, backgroundColor: '#0a0a14' });
+      var coverImg = coverCanvas.toDataURL('image/jpeg', 0.9);
+      var coverRatio = coverCanvas.height / coverCanvas.width;
+      var coverW = pageW;
+      var coverH = Math.min(coverW * coverRatio, pageH);
+      doc.addImage(coverImg, 'JPEG', 10, (297 - coverH) / 2, coverW, coverH);
     }
 
-    // Sections (h3, h4, p, table, ol)
-    const sections = tool.querySelectorAll('h3, h4, p, table, .steps, .note');
-    sections.forEach(el => {
-      if (y > 260) { doc.addPage(); y = 20; }
+    // ---- Tool cards: one card per page ----
+    var cards = document.querySelectorAll('.tool-card');
+    for (var i = 0; i < cards.length; i++) {
+      doc.addPage();
+      var card = cards[i];
+      var canvas = await html2canvas(card, {
+        scale: scale,
+        useCORS: true,
+        backgroundColor: '#0a0a14',
+        onclone: function(clonedDoc) {
+          // Ensure the cloned card is fully visible
+          var clonedCard = clonedDoc.querySelectorAll('.tool-card')[i];
+          if (clonedCard) clonedCard.style.maxHeight = 'none';
+        }
+      });
+      var imgData = canvas.toDataURL('image/jpeg', 0.92);
+      var ratio = canvas.height / canvas.width;
+      var imgW = pageW;
+      var imgH = imgW * ratio;
 
-      if (el.tagName === 'H3') {
-        doc.setFontSize(11);
-        doc.setTextColor(80, 60, 200);
-        doc.text(el.textContent.trim(), margin, y);
-        y += 6;
-      } else if (el.tagName === 'H4') {
-        doc.setFontSize(10);
-        doc.setTextColor(50, 50, 70);
-        doc.text(el.textContent.trim(), margin, y);
-        y += 5;
-      } else if (el.tagName === 'P') {
-        doc.setFontSize(9);
-        doc.setTextColor(80, 80, 100);
-        const lines = doc.splitTextToSize(el.textContent.trim(), pageW);
-        lines.forEach(line => {
-          if (y > 275) { doc.addPage(); y = 20; }
-          doc.text(line, margin, y);
-          y += 4.5;
-        });
-        y += 1;
-      } else if (el.tagName === 'TABLE') {
-        const rows = el.querySelectorAll('tr');
-        rows.forEach((row, ri) => {
-          if (y > 270) { doc.addPage(); y = 20; }
-          const cells = row.querySelectorAll('th, td');
-          const cellTexts = Array.from(cells).map(c => c.textContent.trim());
-          const cols = cellTexts.length;
-          const colW = pageW / cols;
-          doc.setFontSize(ri === 0 ? 8 : 7.5);
-          doc.setTextColor(ri === 0 ? 50 : 80, ri === 0 ? 50 : 80, ri === 0 ? 70 : 100);
-          cellTexts.forEach((ct, ci) => {
-            const lines = doc.splitTextToSize(ct, colW - 2);
-            lines.forEach((line, li) => {
-              if (y > 275) { doc.addPage(); y = 20; }
-              doc.text(line, margin + ci * colW, y);
-            });
-          });
-          y += Math.max(...cellTexts.map(ct => doc.splitTextToSize(ct, colW - 2).length)) * 4 + 2;
-        });
-        y += 3;
-      } else if (el.classList.contains('steps')) {
-        const items = el.querySelectorAll('li');
-        items.forEach(li => {
-          doc.setFontSize(8.5);
-          doc.setTextColor(80, 80, 100);
-          const lines = doc.splitTextToSize('· ' + li.textContent.trim(), pageW - 4);
-          lines.forEach(line => {
-            if (y > 275) { doc.addPage(); y = 20; }
-            doc.text(line, margin + 4, y);
-            y += 4;
-          });
-        });
-        y += 1;
-      } else if (el.classList.contains('note')) {
-        doc.setFontSize(8);
-        doc.setTextColor(120, 100, 60);
-        const lines = doc.splitTextToSize(el.textContent.trim(), pageW - 4);
-        lines.forEach(line => {
-          if (y > 275) { doc.addPage(); y = 20; }
-          doc.text(line, margin + 2, y);
-          y += 4;
-        });
-        y += 2;
+      // If content is taller than one page, split across pages
+      if (imgH <= pageH) {
+        doc.addImage(imgData, 'JPEG', 10, (297 - imgH) / 2, imgW, imgH);
+      } else {
+        // Content spans multiple pages
+        var remainingH = imgH;
+        var srcY = 0;
+        while (remainingH > 0) {
+          if (srcY > 0) doc.addPage();
+          var sliceH = Math.min(remainingH, pageH);
+          var srcRatio = sliceH / imgH;
+          doc.addImage(imgData, 'JPEG', 10, 10, imgW, sliceH, undefined, undefined, 0, srcY / imgH, 1, srcRatio);
+          srcY += sliceH;
+          remainingH -= sliceH;
+        }
       }
-    });
+    }
 
-    y += 6;
-  });
+    // Add a final note page
+    doc.addPage();
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(14);
+    doc.setTextColor(60, 60, 80);
+    doc.text('— 手册完 —', 105, 140, { align: 'center' });
+    doc.setFontSize(9);
+    doc.setTextColor(130, 130, 150);
+    doc.text('所有工具浏览器本地运行 · 数据不上传任何服务器', 105, 150, { align: 'center' });
+    doc.text('生成日期：' + new Date().toLocaleDateString('zh-CN'), 105, 157, { align: 'center' });
 
-  doc.save('应用工坊使用手册_' + new Date().toISOString().slice(0,10) + '.pdf');
+    doc.save('应用工坊使用手册_' + new Date().toISOString().slice(0,10) + '.pdf');
+  } catch (err) {
+    alert('PDF 生成失败：' + err.message + '。请刷新页面后重试。');
+    console.error('PDF error:', err);
+  } finally {
+    btn.textContent = origText;
+    btn.disabled = false;
+  }
 }
 </script>
 </body>
