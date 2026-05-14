@@ -20,7 +20,7 @@
   --glass: rgba(255, 255, 255, 0.04);
   --glass-border: rgba(255, 255, 255, 0.08);
   --text-primary: #e8e8f0;
-  --text-secondary: #9999b0;
+  --text-secondary: #b0b0c0;
   --accent-1: #7c5cfc;
   --accent-2: #5ccafc;
   --accent-3: #fc5c9c;
@@ -60,6 +60,19 @@ body::before {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(124, 92, 252, 0.3); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(124, 92, 252, 0.5); }
+
+/* ============ Focus visible ============ */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.card:focus-visible {
+  outline: 2px solid var(--accent-1);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.card:focus-visible { border-radius: var(--radius); }
 
 /* ============ Password Gate ============ */
 #password-gate {
@@ -194,7 +207,7 @@ body::before {
   min-width: 0;
 }
 
-.nav-controls input:focus { border-color: var(--accent-1); }
+.nav-controls input:focus { border-color: var(--accent-1); box-shadow: 0 0 0 3px rgba(124, 92, 252, 0.15); }
 
 .nav-controls select {
   padding: 8px 12px;
@@ -210,48 +223,152 @@ body::before {
 
 .nav-controls select:focus { border-color: var(--accent-1); }
 
+/* ============ Quick Filter Tags ============ */
+.filter-tags-bar {
+  position: relative; z-index: 1;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 0 24px 8px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.filter-tag {
+  padding: 7px 18px;
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  background: rgba(22, 22, 44, 0.5);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+  user-select: none;
+}
+.filter-tag:hover {
+  border-color: rgba(124, 92, 252, 0.3);
+  color: var(--text-primary);
+  background: rgba(124, 92, 252, 0.08);
+}
+.filter-tag.active {
+  border-color: var(--accent-1);
+  color: #fff;
+  background: rgba(124, 92, 252, 0.2);
+}
+.filter-tag:focus-visible {
+  outline: 2px solid var(--accent-1);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .filter-tags-bar { gap: 6px; padding: 0 12px 6px; }
+  .filter-tag { padding: 5px 12px; font-size: 11px; }
+}
+
 /* ============ Hero ============ */
 .hero {
   position: relative;
   z-index: 1;
-  padding: 100px 24px 48px;
+  padding: 110px 24px 56px;
   text-align: center;
-  max-width: 700px;
+  max-width: 800px;
   margin: 0 auto;
+  overflow: hidden;
+}
+
+/* Particle / glow animation background */
+.hero-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.hero-particle {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--accent-1);
+  opacity: 0;
+  animation: floatUp 6s ease-in-out infinite;
+}
+@keyframes floatUp {
+  0%   { transform: translateY(100%) scale(0); opacity: 0; }
+  20%  { opacity: 0.6; }
+  50%  { opacity: 0.3; }
+  80%  { opacity: 0.05; }
+  100% { transform: translateY(-100%) scale(1.5); opacity: 0; }
+}
+.hero-glow {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 500px; height: 500px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(124,92,252,0.12) 0%, rgba(92,202,252,0.06) 40%, transparent 70%);
+  border-radius: 50%;
+  animation: glowPulse 4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+@keyframes glowPulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(0.85); opacity: 0.6; }
+  50%      { transform: translate(-50%, -50%) scale(1.25); opacity: 1; }
 }
 
 .hero h1 {
-  font-size: clamp(28px, 5vw, 44px);
+  position: relative; z-index: 1;
+  font-size: clamp(30px, 5vw, 48px);
   font-weight: 800;
+  letter-spacing: -0.5px;
   background: var(--gradient-hero);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
+  line-height: 1.2;
 }
 
-.hero p { color: var(--text-secondary); font-size: 16px; margin-bottom: 20px; }
+.hero p {
+  position: relative; z-index: 1;
+  color: var(--text-secondary); font-size: 17px; margin-bottom: 28px;
+  font-weight: 400; letter-spacing: 0.3px;
+}
 
 .hero .stats {
+  position: relative; z-index: 1;
   display: flex;
   justify-content: center;
-  gap: 32px;
+  gap: 16px;
   flex-wrap: wrap;
 }
 
-.hero .stat-item { text-align: center; }
-.hero .stat-num { font-size: 32px; font-weight: 700; color: var(--accent-1); }
-.hero .stat-label { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+.hero .stat-item {
+  background: rgba(22, 22, 44, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 18px 28px;
+  text-align: center;
+  min-width: 120px;
+  backdrop-filter: blur(8px);
+  transition: var(--transition);
+}
+.hero .stat-item:hover {
+  border-color: rgba(124, 92, 252, 0.25);
+  box-shadow: 0 4px 20px rgba(124, 92, 252, 0.08);
+  transform: translateY(-2px);
+}
+.hero .stat-num { font-size: 34px; font-weight: 700; color: var(--accent-1); line-height: 1.1; }
+.hero .stat-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px; }
 
 /* ============ Card Grid ============ */
 .card-grid {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 24px;
   padding: 0 24px 80px;
-  max-width: 1200px;
+  max-width: 1240px;
   margin: 0 auto;
 }
 
@@ -260,7 +377,7 @@ body::before {
   background: var(--bg-card);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius);
-  padding: 24px;
+  padding: 28px;
   cursor: pointer;
   transition: var(--transition);
   position: relative;
@@ -285,10 +402,28 @@ body::before {
 .card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-hover);
-  border-color: rgba(124, 92, 252, 0.3);
+  border-color: rgba(124, 92, 252, 0.35);
 }
 
 .card:hover::before { opacity: 1; }
+.card:hover .card-icon { transform: scale(1.1); }
+
+/* WIP card overlay */
+.card.wip-card { opacity: 0.7; }
+.card.wip-card::after {
+  content: '建设中';
+  position: absolute;
+  top: 14px; right: 14px;
+  padding: 3px 10px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(252, 200, 92, 0.2);
+  color: #fcc85c;
+  border: 1px solid rgba(252, 200, 92, 0.3);
+  z-index: 2;
+  pointer-events: none;
+}
 
 .card-icon {
   width: 48px; height: 48px;
@@ -299,13 +434,14 @@ body::before {
   font-size: 24px;
   margin-bottom: 14px;
   background: rgba(124, 92, 252, 0.12);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card h3 { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
 
 .card .desc {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: #b0b0c0;
   margin-bottom: 12px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -511,11 +647,38 @@ body::before {
 .footer {
   position: relative;
   z-index: 1;
-  text-align: center;
-  padding: 40px 20px;
+  padding: 32px 24px;
   border-top: 1px solid var(--glass-border);
+  max-width: 1240px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.footer-left { color: var(--text-secondary); font-size: 13px; }
+.footer-right a {
   color: var(--text-secondary);
-  font-size: 12px;
+  text-decoration: none;
+  font-size: 13px;
+  padding: 6px 14px;
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+.footer-right a:hover {
+  border-color: rgba(124, 92, 252, 0.3);
+  color: var(--text-primary);
+  background: rgba(124, 92, 252, 0.06);
+}
+.footer-right a:focus-visible {
+  outline: 2px solid var(--accent-1);
+  outline-offset: 2px;
+}
+@media (max-width: 640px) {
+  .footer { flex-direction: column; text-align: center; }
 }
 
 /* ============ Animations ============ */
@@ -526,12 +689,18 @@ body::before {
   .navbar { padding: 0 12px; height: 52px; gap: 8px; }
   .nav-brand { font-size: 15px; }
   .nav-brand .logo { width: 28px; height: 28px; font-size: 15px; border-radius: 8px; }
+  .nav-brand a { display: none; }
+  .nav-controls { gap: 6px; }
   .nav-controls input { font-size: 12px; padding: 6px 10px; }
   .nav-controls select { font-size: 11px; padding: 6px 8px; }
-  .hero { padding: 80px 16px 32px; }
-  .hero h1 { font-size: 24px; }
-  .card-grid { grid-template-columns: 1fr; padding: 0 12px 60px; gap: 14px; }
-  .card { padding: 18px; }
+  .hero { padding: 80px 16px 36px; }
+  .hero h1 { font-size: 26px; }
+  .hero p { font-size: 14px; }
+  .hero .stats { gap: 10px; }
+  .hero .stat-item { min-width: 90px; padding: 14px 16px; }
+  .hero .stat-num { font-size: 26px; }
+  .card-grid { grid-template-columns: 1fr; padding: 0 12px 60px; gap: 16px; }
+  .card { padding: 20px; }
   .modal { border-radius: 16px 16px 0 0; max-height: 90vh; }
   .modal-body { padding: 0 20px 24px; }
   .modal-header { padding: 20px 20px 12px; }
@@ -917,8 +1086,20 @@ body::before {
   </div>
 </nav>
 
+<!-- Quick filter tags -->
+<div class="filter-tags-bar" id="filter-tags-bar">
+  <button class="filter-tag active" data-filter="all">全部</button>
+  <button class="filter-tag" data-filter="done">已完成</button>
+  <button class="filter-tag" data-filter="wip">开发中</button>
+  <button class="filter-tag" data-filter="category-gui">🖥️ GUI工具</button>
+  <button class="filter-tag" data-filter="category-data">📊 数据处理</button>
+  <button class="filter-tag" data-filter="category-other">📦 其他</button>
+</div>
+
 <!-- Hero -->
 <section class="hero">
+  <div class="hero-particles" id="hero-particles"></div>
+  <div class="hero-glow"></div>
   <h1>顾力菡的应用工坊</h1>
   <p>用 Python 解决实际问题，每个工具都源于真实需求。</p>
   <div class="stats">
@@ -933,7 +1114,10 @@ body::before {
 
 <!-- Footer -->
 <footer class="footer">
-  <p>© 顾力菡 Gu Lihan · 持续构建中</p>
+  <div class="footer-left">审计工具箱 · 本地安全计算 · 版本 2.0</div>
+  <div class="footer-right">
+    <a href="#">隐私与数据安全声明</a>
+  </div>
 </footer>
 
 <!-- Detail Modal -->
@@ -1051,7 +1235,7 @@ const STATUS_MAP = { done: '已完成', wip: '开发中' };
 
 /* ============ State ============ */
 let apps = [];
-let currentFilter = { search: '', category: 'all' };
+let currentFilter = { search: '', category: 'all', tag: 'all' };
 
 /* ============ Anti-Clickjacking ============ */
 if (window.top !== window.self) {
@@ -1077,6 +1261,26 @@ async function initApp() {
   updateStats();
   renderCards();
   bindEvents();
+  initHeroParticles();
+}
+
+/* ============ Hero Particles ============ */
+function initHeroParticles() {
+  var container = document.getElementById('hero-particles');
+  if (!container) return;
+  var colors = ['#7c5cfc','#5ccafc','#fc5c9c','#b4a0ff','#8ad4ff'];
+  for (var i = 0; i < 18; i++) {
+    var particle = document.createElement('div');
+    particle.className = 'hero-particle';
+    var size = Math.random() * 6 + 2;
+    particle.style.width = size + 'px';
+    particle.style.height = size + 'px';
+    particle.style.left = Math.random() * 100 + '%';
+    particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+    particle.style.animationDuration = (Math.random() * 4 + 4) + 's';
+    particle.style.animationDelay = Math.random() * 6 + 's';
+    container.appendChild(particle);
+  }
 }
 
 /* ============ Stats ============ */
@@ -1093,6 +1297,10 @@ function renderCards() {
 
   const filtered = apps.filter(app => {
     if (category !== 'all' && app.category !== category) return false;
+    var tag = currentFilter.tag;
+    if (tag === 'done' && app.status !== 'done') return false;
+    if (tag === 'wip' && app.status === 'done') return false;
+    if (tag && tag.startsWith('category-') && app.category !== tag.replace('category-','')) return false;
     if (search) {
       const q = search.toLowerCase();
       return (
@@ -1116,8 +1324,9 @@ function renderCards() {
     const cat = CATEGORIES[app.category] || CATEGORIES.other;
     const statusLabel = STATUS_MAP[app.status] || app.status;
     const statusClass = app.status === 'wip' ? 'wip' : '';
+    var wipClass = app.status === 'wip' ? ' wip-card' : '';
     return `
-      <div class="card" data-id="${app.id}" style="transition-delay: ${idx * 0.04}s">
+      <div class="card${wipClass}" data-id="${app.id}" style="transition-delay: ${idx * 0.04}s">
         <div class="card-icon">${app.icon || cat.icon}</div>
         <h3>${escapeHtml(app.name)}</h3>
         <p class="desc">${escapeHtml(app.shortDesc)}</p>
@@ -1238,8 +1447,28 @@ function bindEvents() {
 
   categorySelect.addEventListener('change', () => {
     currentFilter.category = categorySelect.value;
+    updateTagActive(null);
     renderCards();
   });
+
+  // Quick filter tags
+  document.querySelectorAll('.filter-tag').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      currentFilter.tag = this.dataset.filter;
+      currentFilter.category = 'all';
+      document.getElementById('category-filter').value = 'all';
+      updateTagActive(this);
+      renderCards();
+    });
+  });
+  function updateTagActive(activeBtn) {
+    document.querySelectorAll('.filter-tag').forEach(function(b) { b.classList.remove('active'); });
+    if (activeBtn) { activeBtn.classList.add('active'); }
+    else {
+      var allBtn = document.querySelector('.filter-tag[data-filter="all"]');
+      if (allBtn) allBtn.classList.add('active');
+    }
+  }
 
   document.getElementById('modal-overlay').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeModal();
