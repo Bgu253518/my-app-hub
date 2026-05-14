@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code 一键配置工具</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-secondary: #8b949e;
+    --accent: #58a6ff;
+    --accent-hover: #79c0ff;
+    --danger: #f85149;
+    --success: #3fb950;
+    --warning: #d2991d;
+    --input-bg: #0d1117;
+    --radius: 8px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 640px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 36px 32px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .header .icon { font-size: 40px; margin-bottom: 8px; }
+  .header h1 { font-size: 24px; font-weight: 700; color: var(--text); }
+  .header p { font-size: 14px; color: var(--text-secondary); margin-top: 6px; }
+
+  .form-group { margin-bottom: 20px; }
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .form-group label .required { color: var(--danger); margin-left: 2px; }
+
+  select, input[type="text"], input[type="password"] {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', 'Noto Sans SC', monospace;
+    background: var(--input-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  select:focus, input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(88,166,255,0.15);
+  }
+  select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238b949e' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+
+  .input-row { display: flex; gap: 8px; }
+  .input-row input { flex: 1; }
+  .input-row button {
+    white-space: nowrap;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--border);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .input-row button:hover { background: #484f58; }
+
+  .provider-info {
+    margin-top: 8px;
+    padding: 10px 14px;
+    background: rgba(88,166,255,0.06);
+    border: 1px solid rgba(88,166,255,0.15);
+    border-radius: var(--radius);
+    font-size: 12px;
+    color: var(--accent);
+    line-height: 1.5;
+  }
+  .provider-info code {
+    background: rgba(88,166,255,0.12);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+  }
+
+  .model-selector {
+    margin-top: 10px;
+  }
+  .model-selector label {
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 500;
+    font-size: 12px;
+  }
+  .model-selector select { margin-top: 4px; }
+
+  .preview-box {
+    margin-top: 20px;
+  }
+  .preview-box details {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .preview-box summary {
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    user-select: none;
+  }
+  .preview-box pre {
+    padding: 14px 16px;
+    padding-top: 0;
+    font-size: 12px;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .btn-generate {
+    width: 100%;
+    margin-top: 24px;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, #238636, #2ea043);
+    border: 1px solid #2ea043;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+  .btn-generate:hover { background: linear-gradient(135deg, #2ea043, #3fb950); box-shadow: 0 4px 16px rgba(46,160,67,0.3); }
+  .btn-generate:active { transform: scale(0.98); }
+
+  .btn-download {
+    width: 100%;
+    margin-top: 10px;
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, #1f6feb, #388bfd);
+    border: 1px solid #388bfd;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: none;
+    letter-spacing: 1px;
+  }
+  .btn-download:hover { background: linear-gradient(135deg, #388bfd, #79c0ff); box-shadow: 0 4px 16px rgba(56,139,253,0.3); }
+  .btn-download.show { display: block; }
+
+  .toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 24px;
+    background: var(--success);
+    color: #fff;
+    font-weight: 600;
+    border-radius: 8px;
+    font-size: 14px;
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+  .toast.error { background: var(--danger); }
+
+  .steps {
+    margin-top: 20px;
+    padding: 16px 18px;
+    background: rgba(210,153,29,0.08);
+    border: 1px solid rgba(210,153,29,0.2);
+    border-radius: var(--radius);
+    font-size: 13px;
+    color: var(--warning);
+    line-height: 1.8;
+  }
+  .steps ol { margin-left: 18px; }
+  .steps code {
+    background: rgba(210,153,29,0.15);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="icon">&#9881;</div>
+    <h1>Claude Code &#19968;&#38190;&#37197;&#32622;&#24037;&#20855;</h1>
+    <p>&#24555;&#36895;&#37197;&#32622;&#31532;&#19977;&#26041; API &#26381;&#21153;&#21830;&#65292;&#21551;&#29992; Claude Code</p>
+  </div>
+
+  <div class="form-group">
+    <label>&#26381;&#21153;&#21830; <span class="required">*</span></label>
+    <select id="provider">
+      <option value="deepseek">DeepSeek</option>
+      <option value="openrouter">OpenRouter</option>
+      <option value="bailian">&#38463;&#37324;&#20113;&#30334;&#28860; (DashScope)</option>
+      <option value="custom">&#33258;&#23450;&#20041; (Custom)</option>
+    </select>
+    <div class="provider-info" id="providerInfo">
+      &#25509;&#21475;&#22320;&#22336;&#65306;<code>https://api.deepseek.com</code><br>
+      &#40664;&#35748;&#27169;&#22411;&#65306;<code>deepseek-chat</code>
+    </div>
+  </div>
+
+  <div class="form-group custom-url" style="display:none">
+    <label>&#33258;&#23450;&#20041; API &#22320;&#22336; <span class="required">*</span></label>
+    <input type="text" id="customUrl" placeholder="https://your-api-endpoint.com">
+  </div>
+
+  <div class="form-group">
+    <label>API Key <span class="required">*</span></label>
+    <div class="input-row">
+      <input type="password" id="apiKey" placeholder="&#36755;&#20837;&#20320;&#30340; API Key...">
+      <button type="button" id="toggleKey">&#26174;&#31034;</button>
+    </div>
+  </div>
+
+  <div class="form-group model-selector">
+    <label>&#27169;&#22411;&#36873;&#25321;&#65288;&#21487;&#36873;&#65292;&#20351;&#29992;&#26381;&#21153;&#21830;&#40664;&#35748;&#27169;&#22411;&#65289;</label>
+    <select id="modelSelect">
+      <option value="">&#40664;&#35748;&#27169;&#22411;</option>
+    </select>
+  </div>
+
+  <div class="form-group model-selector">
+    <label>&#23567;&#22411;/&#24555;&#36895;&#27169;&#22411;&#65288;&#21487;&#36873;&#65289;</label>
+    <select id="smallModelSelect">
+      <option value="">&#40664;&#35748;</option>
+    </select>
+  </div>
+
+  <div class="preview-box">
+    <details>
+      <summary>&#39044;&#35272;&#33050;&#26412;&#20869;&#23481;</summary>
+      <pre id="scriptPreview">&#35831;&#22635;&#20889; API Key &#21518;&#28857;&#20987;"&#29983;&#25104;&#37197;&#32622;&#33050;&#26412;"&#39044;&#35272;</pre>
+    </details>
+  </div>
+
+  <button class="btn-generate" id="btnGenerate">&#29983;&#25104;&#37197;&#32622;&#33050;&#26412;</button>
+  <button class="btn-download" id="btnDownload">&#19979;&#36733; setup.ps1</button>
+
+  <div class="steps">
+    <strong>&#20351;&#29992;&#27493;&#39588;&#65306;</strong>
+    <ol>
+      <li>&#36873;&#25321;&#26381;&#21153;&#21830;&#65292;&#22635;&#20889; API Key</li>
+      <li>&#28857;&#20987;&#8220;&#29983;&#25104;&#37197;&#32622;&#33050;&#26412;&#8221;&#65292;&#39044;&#35272;&#30830;&#35748;&#26080;&#35823;</li>
+      <li>&#28857;&#20987;&#8220;&#19979;&#36733; setup.ps1&#8221;</li>
+      <li>&#22312;&#19979;&#36733;&#30446;&#24405;&#25171;&#24320; PowerShell&#65292;&#25191;&#34892;&#65306;<code>.\setup.ps1</code></li>
+      <li>&#37325;&#21551;&#32456;&#31471;&#65292;&#21551;&#21160; <code>claude</code></li>
+    </ol>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const config = {
+  deepseek: {
+    label: 'DeepSeek',
+    baseUrl: 'https://api.deepseek.com',
+    models: ['deepseek-chat', 'deepseek-reasoner'],
+    defaultModel: 'deepseek-chat',
+    smallModels: ['deepseek-chat'],
+    defaultSmall: 'deepseek-chat'
+  },
+  openrouter: {
+    label: 'OpenRouter',
+    baseUrl: 'https://openrouter.ai/api/v1',
+    models: [
+      'anthropic/claude-opus-4-7',
+      'anthropic/claude-sonnet-4-6',
+      'anthropic/claude-haiku-4-5',
+      'openai/gpt-4o',
+      'google/gemini-2.5-pro',
+      'google/gemini-2.5-flash',
+      'deepseek/deepseek-chat',
+      'deepseek/deepseek-reasoner'
+    ],
+    defaultModel: 'anthropic/claude-sonnet-4-6',
+    smallModels: [
+      'anthropic/claude-haiku-4-5',
+      'openai/gpt-4o-mini',
+      'google/gemini-2.5-flash'
+    ],
+    defaultSmall: 'anthropic/claude-haiku-4-5'
+  },
+  bailian: {
+    label: '阿里云百炼',
+    baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    models: ['qwen-plus', 'qwen-max', 'qwen-turbo', 'qwen3-235b-a22b', 'deepseek-v3', 'deepseek-r1'],
+    defaultModel: 'qwen-plus',
+    smallModels: ['qwen-turbo'],
+    defaultSmall: 'qwen-turbo'
+  },
+  custom: {
+    label: '自定义',
+    baseUrl: '',
+    models: [],
+    defaultModel: '',
+    smallModels: [],
+    defaultSmall: ''
+  }
+};
+
+const providerEl = document.getElementById('provider');
+const providerInfoEl = document.getElementById('providerInfo');
+const apiKeyEl = document.getElementById('apiKey');
+const toggleKeyEl = document.getElementById('toggleKey');
+const modelSelectEl = document.getElementById('modelSelect');
+const smallModelSelectEl = document.getElementById('smallModelSelect');
+const customUrlEl = document.getElementById('customUrl');
+const customUrlGroup = document.querySelector('.custom-url');
+const scriptPreviewEl = document.getElementById('scriptPreview');
+const btnGenerate = document.getElementById('btnGenerate');
+const btnDownload = document.getElementById('btnDownload');
+const toastEl = document.getElementById('toast');
+
+let generatedScript = '';
+
+function showToast(msg, isError) {
+  toastEl.textContent = msg;
+  toastEl.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(function() { toastEl.className = 'toast'; }, 3000);
+}
+
+function updateProviderInfo() {
+  var p = config[providerEl.value];
+  var html = '接口地址：<code>' + (p.baseUrl || 'https://your-endpoint.com') + '</code><br>';
+  html += '默认模型：<code>' + (p.defaultModel || '请手动填写') + '</code>';
+  providerInfoEl.innerHTML = html;
+
+  if (providerEl.value === 'custom') {
+    customUrlGroup.style.display = 'block';
+  } else {
+    customUrlGroup.style.display = 'none';
+  }
+
+  updateModelSelects();
+}
+
+function updateModelSelects() {
+  var p = config[providerEl.value];
+  var models = p.models;
+  var smallModels = p.smallModels;
+
+  modelSelectEl.innerHTML = '<option value="">默认模型</option>';
+  for (var i = 0; i < models.length; i++) {
+    var sel = models[i] === p.defaultModel ? ' selected' : '';
+    modelSelectEl.innerHTML += '<option value="' + models[i] + '"' + sel + '>' + models[i] + '</option>';
+  }
+
+  smallModelSelectEl.innerHTML = '<option value="">默认</option>';
+  for (var j = 0; j < smallModels.length; j++) {
+    var s = smallModels[j] === p.defaultSmall ? ' selected' : '';
+    smallModelSelectEl.innerHTML += '<option value="' + smallModels[j] + '"' + s + '>' + smallModels[j] + '</option>';
+  }
+}
+
+function generateScript() {
+  var provider = providerEl.value;
+  var apiKey = apiKeyEl.value.trim();
+
+  if (!apiKey) {
+    showToast('请先填写 API Key', true);
+    return;
+  }
+
+  var p = config[provider];
+  var baseUrl = provider === 'custom' ? customUrlEl.value.trim() : p.baseUrl;
+
+  if (provider === 'custom' && !baseUrl) {
+    showToast('请填写自定义 API 地址', true);
+    return;
+  }
+
+  var model = modelSelectEl.value || p.defaultModel;
+  var smallModel = smallModelSelectEl.value || p.defaultSmall;
+
+  var displayKey = apiKey.substring(0, 6) + '****' + apiKey.substring(apiKey.length - 4);
+
+  var script = '# ============================================\n';
+  script += '#  Claude Code 一键配置脚本 (PowerShell)\n';
+  script += '#  服务商: ' + p.label + '\n';
+  script += '#  生成时间: ' + new Date().toLocaleString('zh-CN') + '\n';
+  script += '# ============================================\n\n';
+
+  script += 'Write-Host ""\n';
+  script += 'Write-Host "  === Claude Code 配置工具 ===" -ForegroundColor Cyan\n';
+  script += 'Write-Host "  服务商: ' + p.label + '"\n';
+  script += 'Write-Host "  接口地址: ' + baseUrl + '"\n';
+  script += 'Write-Host ""\n\n';
+
+  script += '# -- 用户级环境变量 --------------------------\n';
+  script += 'Write-Host "[1/4] 正在设置 ANTHROPIC_BASE_URL..." -ForegroundColor Yellow\n';
+  script += '[Environment]::SetEnvironmentVariable("ANTHROPIC_BASE_URL", "' + baseUrl + '", "User")\n\n';
+
+  script += 'Write-Host "[2/4] 正在设置 ANTHROPIC_API_KEY..." -ForegroundColor Yellow\n';
+  script += '[Environment]::SetEnvironmentVariable("ANTHROPIC_API_KEY", "' + apiKey + '", "User")\n\n';
+
+  script += 'Write-Host "[3/4] 正在设置 ANTHROPIC_MODEL..." -ForegroundColor Yellow\n';
+  script += '[Environment]::SetEnvironmentVariable("ANTHROPIC_MODEL", "' + model + '", "User")\n\n';
+
+  if (smallModel) {
+    script += 'Write-Host "[4/4] 正在设置 ANTHROPIC_SMALL_FAST_MODEL..." -ForegroundColor Yellow\n';
+    script += '[Environment]::SetEnvironmentVariable("ANTHROPIC_SMALL_FAST_MODEL", "' + smallModel + '", "User")\n\n';
+  } else {
+    script += 'Write-Host "[4/4] 跳过 ANTHROPIC_SMALL_FAST_MODEL（未指定）" -ForegroundColor Gray\n\n';
+  }
+
+  script += 'Write-Host ""\n';
+  script += 'Write-Host "  ========================================" -ForegroundColor Green\n';
+  script += 'Write-Host "  配置完成!" -ForegroundColor Green\n';
+  script += 'Write-Host "  请关闭当前终端并打开新终端，运行 claude" -ForegroundColor Green\n';
+  script += 'Write-Host "  ========================================" -ForegroundColor Green\n';
+  script += 'Write-Host ""\n';
+  script += 'Read-Host "按 Enter 键退出"\n';
+
+  generatedScript = script;
+
+  var preview = '# ============================================\n';
+  preview += '#  Claude Code 一键配置脚本 (PowerShell)\n';
+  preview += '#  服务商: ' + p.label + '\n';
+  preview += '#  接口地址: ' + baseUrl + '\n';
+  preview += '#  API Key: ' + displayKey + '\n';
+  preview += '#  模型: ' + model + (smallModel ? ' / ' + smallModel : '') + '\n';
+  preview += '#  生成时间: ' + new Date().toLocaleString('zh-CN') + '\n';
+  preview += '# ============================================\n\n';
+  preview += '[Environment]::SetEnvironmentVariable("ANTHROPIC_BASE_URL", "' + baseUrl + '", "User")\n';
+  preview += '[Environment]::SetEnvironmentVariable("ANTHROPIC_API_KEY", "' + displayKey + '", "User")\n';
+  preview += '[Environment]::SetEnvironmentVariable("ANTHROPIC_MODEL", "' + model + '", "User")\n';
+  if (smallModel) {
+    preview += '[Environment]::SetEnvironmentVariable("ANTHROPIC_SMALL_FAST_MODEL", "' + smallModel + '", "User")\n';
+  }
+
+  scriptPreviewEl.textContent = preview;
+  btnDownload.classList.add('show');
+  showToast('脚本已生成，点击下载');
+}
+
+function downloadScript() {
+  if (!generatedScript) {
+    showToast('请先生成脚本', true);
+    return;
+  }
+  var blob = new Blob([generatedScript], { type: 'text/plain;charset=utf-8' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'setup.ps1';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('下载完成！请在下载目录打开 PowerShell 执行 .\\setup.ps1');
+}
+
+providerEl.addEventListener('change', updateProviderInfo);
+
+toggleKeyEl.addEventListener('click', function() {
+  if (apiKeyEl.type === 'password') {
+    apiKeyEl.type = 'text';
+    toggleKeyEl.textContent = '隐藏';
+  } else {
+    apiKeyEl.type = 'password';
+    toggleKeyEl.textContent = '显示';
+  }
+});
+
+btnGenerate.addEventListener('click', generateScript);
+btnDownload.addEventListener('click', downloadScript);
+
+updateProviderInfo();
+</script>
+
+</body>
+</html>
