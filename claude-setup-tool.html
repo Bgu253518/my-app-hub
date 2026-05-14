@@ -231,69 +231,69 @@
 <div class="container">
   <div class="header">
     <div class="icon">&#9881;</div>
-    <h1>Claude Code &#19968;&#38190;&#37197;&#32622;&#24037;&#20855;</h1>
-    <p>&#24555;&#36895;&#37197;&#32622;&#31532;&#19977;&#26041; API &#26381;&#21153;&#21830;&#65292;&#21551;&#29992; Claude Code</p>
+    <h1>Claude Code 一键配置工具</h1>
+    <p>快速配置第三方 API 服务商，启用 Claude Code</p>
   </div>
 
   <div class="form-group">
-    <label>&#26381;&#21153;&#21830; <span class="required">*</span></label>
+    <label>选择服务商 <span class="required">*</span></label>
     <select id="provider">
-      <option value="deepseek">DeepSeek</option>
-      <option value="openrouter">OpenRouter</option>
-      <option value="bailian">&#38463;&#37324;&#20113;&#30334;&#28860; (DashScope)</option>
-      <option value="custom">&#33258;&#23450;&#20041; (Custom)</option>
+      <option value="deepseek">DeepSeek - 国产高性价比大模型</option>
+      <option value="openrouter">OpenRouter - 多模型聚合网关</option>
+      <option value="bailian">阿里云百炼 (DashScope) - 通义千问系列</option>
+      <option value="custom">自定义接口地址</option>
     </select>
     <div class="provider-info" id="providerInfo">
-      &#25509;&#21475;&#22320;&#22336;&#65306;<code>https://api.deepseek.com</code><br>
-      &#40664;&#35748;&#27169;&#22411;&#65306;<code>deepseek-chat</code>
+      接口地址：<code>https://api.deepseek.com</code><br>
+      默认模型：<code>deepseek-chat</code>
     </div>
   </div>
 
   <div class="form-group custom-url" style="display:none">
-    <label>&#33258;&#23450;&#20041; API &#22320;&#22336; <span class="required">*</span></label>
-    <input type="text" id="customUrl" placeholder="https://your-api-endpoint.com">
+    <label>自定义 API 地址 <span class="required">*</span></label>
+    <input type="text" id="customUrl" placeholder="https://你的API接口地址.com">
   </div>
 
   <div class="form-group">
-    <label>API Key <span class="required">*</span></label>
+    <label>API 密钥 <span class="required">*</span></label>
     <div class="input-row">
-      <input type="password" id="apiKey" placeholder="&#36755;&#20837;&#20320;&#30340; API Key...">
-      <button type="button" id="toggleKey">&#26174;&#31034;</button>
+      <input type="password" id="apiKey" placeholder="请输入你的 API Key...">
+      <button type="button" id="toggleKey">点击显示</button>
     </div>
   </div>
 
   <div class="form-group model-selector">
-    <label>&#27169;&#22411;&#36873;&#25321;&#65288;&#21487;&#36873;&#65292;&#20351;&#29992;&#26381;&#21153;&#21830;&#40664;&#35748;&#27169;&#22411;&#65289;</label>
+    <label>选择模型（可选，不选则使用服务商默认模型）</label>
     <select id="modelSelect">
-      <option value="">&#40664;&#35748;&#27169;&#22411;</option>
+      <option value="">使用默认模型</option>
     </select>
   </div>
 
   <div class="form-group model-selector">
-    <label>&#23567;&#22411;/&#24555;&#36895;&#27169;&#22411;&#65288;&#21487;&#36873;&#65289;</label>
+    <label>小型/快速模型（可选）</label>
     <select id="smallModelSelect">
-      <option value="">&#40664;&#35748;</option>
+      <option value="">使用默认</option>
     </select>
   </div>
 
   <div class="preview-box">
     <details>
-      <summary>&#39044;&#35272;&#33050;&#26412;&#20869;&#23481;</summary>
-      <pre id="scriptPreview">&#35831;&#22635;&#20889; API Key &#21518;&#28857;&#20987;"&#29983;&#25104;&#37197;&#32622;&#33050;&#26412;"&#39044;&#35272;</pre>
+      <summary>点击预览脚本内容</summary>
+      <pre id="scriptPreview">请填写 API 密钥后点击"生成配置脚本"预览</pre>
     </details>
   </div>
 
-  <button class="btn-generate" id="btnGenerate">&#29983;&#25104;&#37197;&#32622;&#33050;&#26412;</button>
-  <button class="btn-download" id="btnDownload">&#19979;&#36733; setup.ps1</button>
+  <button class="btn-generate" id="btnGenerate">生成配置脚本</button>
+  <button class="btn-download" id="btnDownload">下载 setup.ps1</button>
 
   <div class="steps">
-    <strong>&#20351;&#29992;&#27493;&#39588;&#65306;</strong>
+    <strong>使用步骤：</strong>
     <ol>
-      <li>&#36873;&#25321;&#26381;&#21153;&#21830;&#65292;&#22635;&#20889; API Key</li>
-      <li>&#28857;&#20987;&#8220;&#29983;&#25104;&#37197;&#32622;&#33050;&#26412;&#8221;&#65292;&#39044;&#35272;&#30830;&#35748;&#26080;&#35823;</li>
-      <li>&#28857;&#20987;&#8220;&#19979;&#36733; setup.ps1&#8221;</li>
-      <li>&#22312;&#19979;&#36733;&#30446;&#24405;&#25171;&#24320; PowerShell&#65292;&#25191;&#34892;&#65306;<code>.\setup.ps1</code></li>
-      <li>&#37325;&#21551;&#32456;&#31471;&#65292;&#21551;&#21160; <code>claude</code></li>
+      <li>选择服务商，填写 API 密钥</li>
+      <li>点击「生成配置脚本」，预览确认无误</li>
+      <li>点击「下载 setup.ps1」保存到本地</li>
+      <li>在下载目录打开 PowerShell，执行：<code>.\setup.ps1</code></li>
+      <li>关闭当前终端，重新打开终端后运行 <code>claude</code> 即可</li>
     </ol>
   </div>
 </div>
@@ -301,222 +301,215 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const config = {
-  deepseek: {
-    label: 'DeepSeek',
-    baseUrl: 'https://api.deepseek.com',
-    models: ['deepseek-chat', 'deepseek-reasoner'],
-    defaultModel: 'deepseek-chat',
-    smallModels: ['deepseek-chat'],
-    defaultSmall: 'deepseek-chat'
-  },
-  openrouter: {
-    label: 'OpenRouter',
-    baseUrl: 'https://openrouter.ai/api/v1',
-    models: [
-      'anthropic/claude-opus-4-7',
-      'anthropic/claude-sonnet-4-6',
-      'anthropic/claude-haiku-4-5',
-      'openai/gpt-4o',
-      'google/gemini-2.5-pro',
-      'google/gemini-2.5-flash',
-      'deepseek/deepseek-chat',
-      'deepseek/deepseek-reasoner'
-    ],
-    defaultModel: 'anthropic/claude-sonnet-4-6',
-    smallModels: [
-      'anthropic/claude-haiku-4-5',
-      'openai/gpt-4o-mini',
-      'google/gemini-2.5-flash'
-    ],
-    defaultSmall: 'anthropic/claude-haiku-4-5'
-  },
-  bailian: {
-    label: '阿里云百炼',
-    baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
-    models: ['qwen-plus', 'qwen-max', 'qwen-turbo', 'qwen3-235b-a22b', 'deepseek-v3', 'deepseek-r1'],
-    defaultModel: 'qwen-plus',
-    smallModels: ['qwen-turbo'],
-    defaultSmall: 'qwen-turbo'
-  },
-  custom: {
-    label: '自定义',
-    baseUrl: '',
-    models: [],
-    defaultModel: '',
-    smallModels: [],
-    defaultSmall: ''
-  }
-};
+(function() {
+  var providerEl = document.getElementById('provider');
+  var providerInfoEl = document.getElementById('providerInfo');
+  var apiKeyEl = document.getElementById('apiKey');
+  var toggleKeyEl = document.getElementById('toggleKey');
+  var modelSelectEl = document.getElementById('modelSelect');
+  var smallModelSelectEl = document.getElementById('smallModelSelect');
+  var customUrlEl = document.getElementById('customUrl');
+  var customUrlGroup = document.querySelector('.custom-url');
+  var scriptPreviewEl = document.getElementById('scriptPreview');
+  var btnGenerate = document.getElementById('btnGenerate');
+  var btnDownload = document.getElementById('btnDownload');
+  var toastEl = document.getElementById('toast');
+  var generatedScript = '';
 
-const providerEl = document.getElementById('provider');
-const providerInfoEl = document.getElementById('providerInfo');
-const apiKeyEl = document.getElementById('apiKey');
-const toggleKeyEl = document.getElementById('toggleKey');
-const modelSelectEl = document.getElementById('modelSelect');
-const smallModelSelectEl = document.getElementById('smallModelSelect');
-const customUrlEl = document.getElementById('customUrl');
-const customUrlGroup = document.querySelector('.custom-url');
-const scriptPreviewEl = document.getElementById('scriptPreview');
-const btnGenerate = document.getElementById('btnGenerate');
-const btnDownload = document.getElementById('btnDownload');
-const toastEl = document.getElementById('toast');
+  var configData = {
+    deepseek: {
+      label: 'DeepSeek',
+      baseUrl: 'https://api.deepseek.com',
+      models: ['deepseek-chat', 'deepseek-reasoner'],
+      defaultModel: 'deepseek-chat',
+      smallModels: ['deepseek-chat'],
+      defaultSmall: 'deepseek-chat'
+    },
+    openrouter: {
+      label: 'OpenRouter',
+      baseUrl: 'https://openrouter.ai/api/v1',
+      models: [
+        'anthropic/claude-opus-4-7',
+        'anthropic/claude-sonnet-4-6',
+        'anthropic/claude-haiku-4-5',
+        'openai/gpt-4o',
+        'google/gemini-2.5-pro',
+        'google/gemini-2.5-flash',
+        'deepseek/deepseek-chat',
+        'deepseek/deepseek-reasoner'
+      ],
+      defaultModel: 'anthropic/claude-sonnet-4-6',
+      smallModels: [
+        'anthropic/claude-haiku-4-5',
+        'openai/gpt-4o-mini',
+        'google/gemini-2.5-flash'
+      ],
+      defaultSmall: 'anthropic/claude-haiku-4-5'
+    },
+    bailian: {
+      label: '阿里云百炼',
+      baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+      models: ['qwen-plus', 'qwen-max', 'qwen-turbo', 'qwen3-235b-a22b', 'deepseek-v3', 'deepseek-r1'],
+      defaultModel: 'qwen-plus',
+      smallModels: ['qwen-turbo'],
+      defaultSmall: 'qwen-turbo'
+    },
+    custom: {
+      label: '自定义',
+      baseUrl: '',
+      models: [],
+      defaultModel: '',
+      smallModels: [],
+      defaultSmall: ''
+    }
+  };
 
-let generatedScript = '';
-
-function showToast(msg, isError) {
-  toastEl.textContent = msg;
-  toastEl.className = 'toast show' + (isError ? ' error' : '');
-  setTimeout(function() { toastEl.className = 'toast'; }, 3000);
-}
-
-function updateProviderInfo() {
-  var p = config[providerEl.value];
-  var html = '接口地址：<code>' + (p.baseUrl || 'https://your-endpoint.com') + '</code><br>';
-  html += '默认模型：<code>' + (p.defaultModel || '请手动填写') + '</code>';
-  providerInfoEl.innerHTML = html;
-
-  if (providerEl.value === 'custom') {
-    customUrlGroup.style.display = 'block';
-  } else {
-    customUrlGroup.style.display = 'none';
+  function showToast(msg, isError) {
+    toastEl.textContent = msg;
+    toastEl.className = 'toast show' + (isError ? ' error' : '');
+    setTimeout(function() { toastEl.className = 'toast'; }, 3000);
   }
 
-  updateModelSelects();
-}
+  function updateProviderInfo() {
+    var p = configData[providerEl.value];
+    var html = '接口地址：<code>' + (p.baseUrl || 'https://你的接口地址.com') + '</code><br>';
+    html += '默认模型：<code>' + (p.defaultModel || '请手动填写') + '</code>';
+    providerInfoEl.innerHTML = html;
 
-function updateModelSelects() {
-  var p = config[providerEl.value];
-  var models = p.models;
-  var smallModels = p.smallModels;
-
-  modelSelectEl.innerHTML = '<option value="">默认模型</option>';
-  for (var i = 0; i < models.length; i++) {
-    var sel = models[i] === p.defaultModel ? ' selected' : '';
-    modelSelectEl.innerHTML += '<option value="' + models[i] + '"' + sel + '>' + models[i] + '</option>';
+    customUrlGroup.style.display = providerEl.value === 'custom' ? 'block' : 'none';
+    updateModelSelects();
   }
 
-  smallModelSelectEl.innerHTML = '<option value="">默认</option>';
-  for (var j = 0; j < smallModels.length; j++) {
-    var s = smallModels[j] === p.defaultSmall ? ' selected' : '';
-    smallModelSelectEl.innerHTML += '<option value="' + smallModels[j] + '"' + s + '>' + smallModels[j] + '</option>';
-  }
-}
+  function updateModelSelects() {
+    var p = configData[providerEl.value];
+    var models = p.models;
+    var smallModels = p.smallModels;
 
-function generateScript() {
-  var provider = providerEl.value;
-  var apiKey = apiKeyEl.value.trim();
+    modelSelectEl.innerHTML = '<option value="">使用默认模型</option>';
+    for (var i = 0; i < models.length; i++) {
+      var sel = models[i] === p.defaultModel ? ' selected' : '';
+      modelSelectEl.innerHTML += '<option value="' + models[i] + '"' + sel + '>' + models[i] + '</option>';
+    }
 
-  if (!apiKey) {
-    showToast('请先填写 API Key', true);
-    return;
-  }
-
-  var p = config[provider];
-  var baseUrl = provider === 'custom' ? customUrlEl.value.trim() : p.baseUrl;
-
-  if (provider === 'custom' && !baseUrl) {
-    showToast('请填写自定义 API 地址', true);
-    return;
+    smallModelSelectEl.innerHTML = '<option value="">使用默认</option>';
+    for (var j = 0; j < smallModels.length; j++) {
+      var s = smallModels[j] === p.defaultSmall ? ' selected' : '';
+      smallModelSelectEl.innerHTML += '<option value="' + smallModels[j] + '"' + s + '>' + smallModels[j] + '</option>';
+    }
   }
 
-  var model = modelSelectEl.value || p.defaultModel;
-  var smallModel = smallModelSelectEl.value || p.defaultSmall;
+  function generateScript() {
+    var provider = providerEl.value;
+    var apiKey = apiKeyEl.value.trim();
 
-  var displayKey = apiKey.substring(0, 6) + '****' + apiKey.substring(apiKey.length - 4);
+    if (!apiKey) {
+      showToast('请先填写 API 密钥', true);
+      return;
+    }
 
-  var script = '# ============================================\n';
-  script += '#  Claude Code 一键配置脚本 (PowerShell)\n';
-  script += '#  服务商: ' + p.label + '\n';
-  script += '#  生成时间: ' + new Date().toLocaleString('zh-CN') + '\n';
-  script += '# ============================================\n\n';
+    var p = configData[provider];
+    var baseUrl = provider === 'custom' ? customUrlEl.value.trim() : p.baseUrl;
 
-  script += 'Write-Host ""\n';
-  script += 'Write-Host "  === Claude Code 配置工具 ===" -ForegroundColor Cyan\n';
-  script += 'Write-Host "  服务商: ' + p.label + '"\n';
-  script += 'Write-Host "  接口地址: ' + baseUrl + '"\n';
-  script += 'Write-Host ""\n\n';
+    if (provider === 'custom' && !baseUrl) {
+      showToast('请填写自定义 API 地址', true);
+      return;
+    }
 
-  script += '# -- 用户级环境变量 --------------------------\n';
-  script += 'Write-Host "[1/4] 正在设置 ANTHROPIC_BASE_URL..." -ForegroundColor Yellow\n';
-  script += '[Environment]::SetEnvironmentVariable("ANTHROPIC_BASE_URL", "' + baseUrl + '", "User")\n\n';
+    var model = modelSelectEl.value || p.defaultModel;
+    var smallModel = smallModelSelectEl.value || p.defaultSmall;
+    var displayKey = apiKey.substring(0, 6) + '****' + apiKey.substring(apiKey.length - 4);
 
-  script += 'Write-Host "[2/4] 正在设置 ANTHROPIC_API_KEY..." -ForegroundColor Yellow\n';
-  script += '[Environment]::SetEnvironmentVariable("ANTHROPIC_API_KEY", "' + apiKey + '", "User")\n\n';
+    var script = '# ============================================\n';
+    script += '#  Claude Code 一键配置脚本 (PowerShell)\n';
+    script += '#  服务商: ' + p.label + '\n';
+    script += '#  生成时间: ' + new Date().toLocaleString('zh-CN') + '\n';
+    script += '# ============================================\n\n';
 
-  script += 'Write-Host "[3/4] 正在设置 ANTHROPIC_MODEL..." -ForegroundColor Yellow\n';
-  script += '[Environment]::SetEnvironmentVariable("ANTHROPIC_MODEL", "' + model + '", "User")\n\n';
+    script += 'Write-Host ""\n';
+    script += 'Write-Host "  === Claude Code 配置工具 ===" -ForegroundColor Cyan\n';
+    script += 'Write-Host "  服务商: ' + p.label + '"\n';
+    script += 'Write-Host "  接口地址: ' + baseUrl + '"\n';
+    script += 'Write-Host ""\n\n';
 
-  if (smallModel) {
-    script += 'Write-Host "[4/4] 正在设置 ANTHROPIC_SMALL_FAST_MODEL..." -ForegroundColor Yellow\n';
-    script += '[Environment]::SetEnvironmentVariable("ANTHROPIC_SMALL_FAST_MODEL", "' + smallModel + '", "User")\n\n';
-  } else {
-    script += 'Write-Host "[4/4] 跳过 ANTHROPIC_SMALL_FAST_MODEL（未指定）" -ForegroundColor Gray\n\n';
+    script += '# -- 用户级环境变量 --------------------------\n';
+    script += 'Write-Host "[1/4] 正在设置 ANTHROPIC_BASE_URL..." -ForegroundColor Yellow\n';
+    script += '[Environment]::SetEnvironmentVariable("ANTHROPIC_BASE_URL", "' + baseUrl + '", "User")\n\n';
+
+    script += 'Write-Host "[2/4] 正在设置 ANTHROPIC_API_KEY..." -ForegroundColor Yellow\n';
+    script += '[Environment]::SetEnvironmentVariable("ANTHROPIC_API_KEY", "' + apiKey + '", "User")\n\n';
+
+    script += 'Write-Host "[3/4] 正在设置 ANTHROPIC_MODEL..." -ForegroundColor Yellow\n';
+    script += '[Environment]::SetEnvironmentVariable("ANTHROPIC_MODEL", "' + model + '", "User")\n\n';
+
+    if (smallModel) {
+      script += 'Write-Host "[4/4] 正在设置 ANTHROPIC_SMALL_FAST_MODEL..." -ForegroundColor Yellow\n';
+      script += '[Environment]::SetEnvironmentVariable("ANTHROPIC_SMALL_FAST_MODEL", "' + smallModel + '", "User")\n\n';
+    } else {
+      script += 'Write-Host "[4/4] 跳过 ANTHROPIC_SMALL_FAST_MODEL（未指定）" -ForegroundColor Gray\n\n';
+    }
+
+    script += 'Write-Host ""\n';
+    script += 'Write-Host "  ========================================" -ForegroundColor Green\n';
+    script += 'Write-Host "  配置完成!" -ForegroundColor Green\n';
+    script += 'Write-Host "  请关闭当前终端并打开新终端，运行 claude" -ForegroundColor Green\n';
+    script += 'Write-Host "  ========================================" -ForegroundColor Green\n';
+    script += 'Write-Host ""\n';
+    script += 'Read-Host "按 Enter 键退出"\n';
+
+    generatedScript = script;
+
+    var preview = '# ============================================\n';
+    preview += '#  Claude Code 一键配置脚本 (PowerShell)\n';
+    preview += '#  服务商: ' + p.label + '\n';
+    preview += '#  接口地址: ' + baseUrl + '\n';
+    preview += '#  API 密钥: ' + displayKey + '\n';
+    preview += '#  模型: ' + model + (smallModel ? ' / ' + smallModel : '') + '\n';
+    preview += '#  生成时间: ' + new Date().toLocaleString('zh-CN') + '\n';
+    preview += '# ============================================\n\n';
+    preview += '[Environment]::SetEnvironmentVariable("ANTHROPIC_BASE_URL", "' + baseUrl + '", "User")\n';
+    preview += '[Environment]::SetEnvironmentVariable("ANTHROPIC_API_KEY", "' + displayKey + '", "User")\n';
+    preview += '[Environment]::SetEnvironmentVariable("ANTHROPIC_MODEL", "' + model + '", "User")\n';
+    if (smallModel) {
+      preview += '[Environment]::SetEnvironmentVariable("ANTHROPIC_SMALL_FAST_MODEL", "' + smallModel + '", "User")\n';
+    }
+
+    scriptPreviewEl.textContent = preview;
+    btnDownload.classList.add('show');
+    showToast('脚本已生成！点击下方按钮下载');
   }
 
-  script += 'Write-Host ""\n';
-  script += 'Write-Host "  ========================================" -ForegroundColor Green\n';
-  script += 'Write-Host "  配置完成!" -ForegroundColor Green\n';
-  script += 'Write-Host "  请关闭当前终端并打开新终端，运行 claude" -ForegroundColor Green\n';
-  script += 'Write-Host "  ========================================" -ForegroundColor Green\n';
-  script += 'Write-Host ""\n';
-  script += 'Read-Host "按 Enter 键退出"\n';
-
-  generatedScript = script;
-
-  var preview = '# ============================================\n';
-  preview += '#  Claude Code 一键配置脚本 (PowerShell)\n';
-  preview += '#  服务商: ' + p.label + '\n';
-  preview += '#  接口地址: ' + baseUrl + '\n';
-  preview += '#  API Key: ' + displayKey + '\n';
-  preview += '#  模型: ' + model + (smallModel ? ' / ' + smallModel : '') + '\n';
-  preview += '#  生成时间: ' + new Date().toLocaleString('zh-CN') + '\n';
-  preview += '# ============================================\n\n';
-  preview += '[Environment]::SetEnvironmentVariable("ANTHROPIC_BASE_URL", "' + baseUrl + '", "User")\n';
-  preview += '[Environment]::SetEnvironmentVariable("ANTHROPIC_API_KEY", "' + displayKey + '", "User")\n';
-  preview += '[Environment]::SetEnvironmentVariable("ANTHROPIC_MODEL", "' + model + '", "User")\n';
-  if (smallModel) {
-    preview += '[Environment]::SetEnvironmentVariable("ANTHROPIC_SMALL_FAST_MODEL", "' + smallModel + '", "User")\n';
+  function downloadScript() {
+    if (!generatedScript) {
+      showToast('请先生成脚本', true);
+      return;
+    }
+    var blob = new Blob([generatedScript], { type: 'text/plain;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'setup.ps1';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('下载完成！在下载目录打开 PowerShell 执行 .\\setup.ps1');
   }
 
-  scriptPreviewEl.textContent = preview;
-  btnDownload.classList.add('show');
-  showToast('脚本已生成，点击下载');
-}
+  providerEl.addEventListener('change', updateProviderInfo);
+  toggleKeyEl.addEventListener('click', function() {
+    if (apiKeyEl.type === 'password') {
+      apiKeyEl.type = 'text';
+      toggleKeyEl.textContent = '点击隐藏';
+    } else {
+      apiKeyEl.type = 'password';
+      toggleKeyEl.textContent = '点击显示';
+    }
+  });
+  btnGenerate.addEventListener('click', generateScript);
+  btnDownload.addEventListener('click', downloadScript);
 
-function downloadScript() {
-  if (!generatedScript) {
-    showToast('请先生成脚本', true);
-    return;
-  }
-  var blob = new Blob([generatedScript], { type: 'text/plain;charset=utf-8' });
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url;
-  a.download = 'setup.ps1';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showToast('下载完成！请在下载目录打开 PowerShell 执行 .\\setup.ps1');
-}
-
-providerEl.addEventListener('change', updateProviderInfo);
-
-toggleKeyEl.addEventListener('click', function() {
-  if (apiKeyEl.type === 'password') {
-    apiKeyEl.type = 'text';
-    toggleKeyEl.textContent = '隐藏';
-  } else {
-    apiKeyEl.type = 'password';
-    toggleKeyEl.textContent = '显示';
-  }
-});
-
-btnGenerate.addEventListener('click', generateScript);
-btnDownload.addEventListener('click', downloadScript);
-
-updateProviderInfo();
+  updateProviderInfo();
+})();
 </script>
 
 </body>
