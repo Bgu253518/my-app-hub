@@ -91,6 +91,19 @@
     "download": ""
   },
   {
+    "id": "offline-ai",
+    "name": "离线 AI 助手",
+    "shortDesc": "完全浏览器本地运行的 AI 文本处理助手，支持润色/翻译/总结/提取要点",
+    "fullDesc": "基于 Transformers.js 的纯浏览器端 AI 助手，所有处理在用户本地完成，不调用任何外部 API。使用 LaMini-Flan-T5-783M 模型，支持 WebGPU 加速或 WASM 回退。提供五种文本处理功能：润色改写、翻译成英文、翻译成中文、内容总结、提取要点。模型首次下载后支持完全断网使用，数据永不上传，保护用户隐私。",
+    "category": "gui",
+    "status": "done",
+    "version": "v1.0.0",
+    "icon": "🤖",
+    "onlineTool": true,
+    "github": "https://github.com/Bgu253518/my-app-hub",
+    "download": ""
+  },
+  {
     "id": "file-renamer",
     "name": "批量文件重命名工具",
     "shortDesc": "浏览器中一键批量重命名文件：查找替换/序号前缀/自定义模板，支持预览和撤销",

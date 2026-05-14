@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https:; connect-src 'self' https://cdn.jsdelivr.net https://huggingface.co; worker-src 'self' blob:; font-src 'self' https://cdn.jsdelivr.net;">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>离线 AI 助手</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          primary: '#1e3a5f',
+          accent: '#14b8a6'
+        }
+      }
+    }
+  }
+</script>
+<style>
+  body { background: #f8fafc; }
+  .card-shadow { box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+  .btn-primary {
+    background: #1e3a5f; color: #fff; border-radius: 10px;
+    transition: all 0.2s;
+  }
+  .btn-primary:hover:not(:disabled) { background: #2a5080; transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+  .btn-outline {
+    border: 2px solid #d1d5db; color: #374151; border-radius: 10px;
+    transition: all 0.2s;
+  }
+  .btn-outline:hover:not(:disabled) { border-color: #14b8a6; color: #14b8a6; }
+  .tab-btn {
+    padding: 8px 16px; font-size: 13px; font-weight: 600; border-radius: 8px;
+    border: 2px solid #e5e7eb; background: #fff; color: #6b7280;
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  }
+  .tab-btn.active {
+    border-color: #14b8a6; color: #14b8a6; background: #f0fdfa;
+  }
+  .tab-btn:hover:not(.active) { border-color: #d1d5db; background: #f9fafb; }
+  textarea {
+    border: 2px solid #e5e7eb; border-radius: 12px; padding: 14px;
+    font-size: 14px; line-height: 1.6; resize: vertical;
+    transition: border-color 0.2s; outline: none; width: 100%;
+  }
+  textarea:focus { border-color: #14b8a6; }
+  textarea.readonly { background: #f9fafb; }
+  .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .spinner {
+    display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .alert-bar {
+    background: #eff6ff; border-bottom: 1px solid #bfdbfe;
+    color: #1e40af; font-size: 13px; text-align: center; padding: 8px 16px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .alert-bar button { cursor: pointer; background: none; border: none; font-size: 16px; color: #6b7280; }
+</style>
+</head>
+<body>
+
+<!-- 安全提示条 -->
+<div class="alert-bar" id="alertBar">
+  <span>🔒 本工具完全离线运行，所有数据仅在您本地浏览器处理。</span>
+  <button onclick="document.getElementById('alertBar').style.display='none'" title="关闭">✕</button>
+</div>
+
+<div class="max-w-[700px] mx-auto px-4 py-8">
+  <!-- 标题 -->
+  <div class="text-center mb-6">
+    <h1 class="text-3xl font-bold text-primary mb-2">🤖 离线 AI 助手</h1>
+    <p class="text-gray-500 text-sm">完全在您浏览器本地运行，数据永不上传</p>
+  </div>
+
+  <!-- 核心卡片 -->
+  <div class="bg-white rounded-[16px] card-shadow p-6 mb-4">
+    <!-- 状态指示 -->
+    <div class="flex items-center justify-between mb-5 px-1">
+      <div class="flex items-center gap-2">
+        <span class="status-dot" id="statusDot" style="background:#f59e0b;"></span>
+        <span id="statusText" class="text-sm font-semibold text-gray-700">🟠 模型加载中...</span>
+      </div>
+      <button id="btnRetry" onclick="retryLoad()" class="text-xs text-accent font-semibold hover:underline hidden">
+        重试加载
+      </button>
+    </div>
+
+    <!-- 功能标签组 -->
+    <div class="flex flex-wrap gap-2 mb-5" id="tabGroup">
+      <button class="tab-btn active" data-mode="polish">润色</button>
+      <button class="tab-btn" data-mode="translate-en">翻译成英文</button>
+      <button class="tab-btn" data-mode="translate-zh">翻译成中文</button>
+      <button class="tab-btn" data-mode="summarize">总结</button>
+      <button class="tab-btn" data-mode="keypoints">提取要点</button>
+    </div>
+
+    <!-- 输入文本域 -->
+    <label class="text-sm font-semibold text-gray-600 mb-1 block">输入文本</label>
+    <textarea id="inputText" rows="5" placeholder="在此输入文本..."></textarea>
+    <div id="charWarning" class="text-amber-600 text-xs mt-1 hidden"></div>
+
+    <!-- 输出文本域 -->
+    <label class="text-sm font-semibold text-gray-600 mb-1 block mt-4">AI 输出</label>
+    <textarea id="outputText" rows="5" readonly class="readonly" placeholder="AI 处理结果将显示在这里..."></textarea>
+
+    <!-- 按钮行 -->
+    <div class="flex gap-3 mt-5">
+      <button id="btnExecute" onclick="executeAI()" class="btn-primary flex-1 py-3 font-bold text-base flex items-center justify-center gap-2">
+        执行
+      </button>
+      <button id="btnCopy" onclick="copyResult()" class="btn-outline px-5 py-3 font-semibold text-sm">
+        复制结果
+      </button>
+      <button onclick="clearAll()" class="btn-outline px-4 py-3 font-semibold text-sm">
+        清除
+      </button>
+    </div>
+
+    <!-- 隐私声明 -->
+    <p class="text-gray-400 text-xs mt-5 text-center">
+      🔒 所有处理均在您本地浏览器完成，数据不上传任何服务器。模型下载完成后支持完全断网使用。
+    </p>
+  </div>
+</div>
+
+<script type="module">
+  import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1';
+
+  // ===== 全局状态 =====
+  let aiPipeline = null;
+  let isExecuting = false;
+
+  const MAX_CHARS = 1500;
+
+  // ===== DOM 引用 =====
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  const btnRetry = document.getElementById('btnRetry');
+  const btnExecute = document.getElementById('btnExecute');
+  const btnCopy = document.getElementById('btnCopy');
+  const inputText = document.getElementById('inputText');
+  const outputText = document.getElementById('outputText');
+  const charWarning = document.getElementById('charWarning');
+  const tabGroup = document.getElementById('tabGroup');
+
+  let currentMode = 'polish';
+
+  // ===== 状态更新 =====
+  function setStatus(state) {
+    if (state === 'loading') {
+      statusDot.style.background = '#f59e0b';
+      statusText.textContent = '🟠 模型加载中...';
+      btnRetry.classList.add('hidden');
+    } else if (state === 'ready') {
+      statusDot.style.background = '#10b981';
+      statusText.textContent = '🟢 模型就绪';
+      btnRetry.classList.add('hidden');
+    } else if (state === 'ready-cpu') {
+      statusDot.style.background = '#10b981';
+      statusText.textContent = '🟢 模型就绪 (CPU模式)';
+      btnRetry.classList.add('hidden');
+    } else if (state === 'error') {
+      statusDot.style.background = '#ef4444';
+      statusText.textContent = '🔴 加载失败';
+      btnRetry.classList.remove('hidden');
+    }
+  }
+
+  // ===== 模型加载 =====
+  async function loadModel() {
+    setStatus('loading');
+    try {
+      aiPipeline = await pipeline('text2text-generation', 'Xenova/LaMini-Flan-T5-783M', {
+        device: 'webgpu',
+        dtype: 'q4'
+      });
+      setStatus('ready');
+    } catch (e) {
+      console.warn('WebGPU 加载失败，尝试 WASM:', e.message);
+      try {
+        aiPipeline = await pipeline('text2text-generation', 'Xenova/LaMini-Flan-T5-783M', {
+          device: 'wasm',
+          dtype: 'q4'
+        });
+        setStatus('ready-cpu');
+      } catch (e2) {
+        console.error('模型加载完全失败:', e2.message);
+        setStatus('error');
+      }
+    }
+  }
+
+  window.retryLoad = function() {
+    loadModel();
+  };
+
+  // 页面加载后自动初始化（不阻塞渲染）
+  loadModel();
+
+  // ===== 标签切换 =====
+  tabGroup.addEventListener('click', function(e) {
+    var btn = e.target.closest('.tab-btn');
+    if (!btn) return;
+    var mode = btn.dataset.mode;
+    if (mode === currentMode) return;
+    tabGroup.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    currentMode = mode;
+  });
+
+  // ===== 字符数检测 =====
+  inputText.addEventListener('input', function() {
+    var len = inputText.value.length;
+    if (len > MAX_CHARS) {
+      charWarning.textContent = '⚠ 文本超过 ' + MAX_CHARS + ' 字符限制（当前' + len + '），将自动截断处理';
+      charWarning.classList.remove('hidden');
+    } else {
+      charWarning.classList.add('hidden');
+    }
+  });
+
+  // ===== 执行 AI =====
+  window.executeAI = async function() {
+    if (isExecuting) return;
+    if (!aiPipeline) {
+      setToast('模型尚未就绪，请等待加载完成');
+      return;
+    }
+    var text = inputText.value.trim();
+    if (!text) {
+      setToast('请先输入文本');
+      return;
+    }
+
+    var truncated = false;
+    if (text.length > MAX_CHARS) {
+      text = text.substring(0, MAX_CHARS);
+      truncated = true;
+    }
+
+    isExecuting = true;
+    btnExecute.disabled = true;
+    btnExecute.innerHTML = '<span class="spinner"></span> 处理中...';
+    outputText.value = '';
+
+    var prompts = {
+      polish: 'Rewrite the following text more professionally and clearly:\n\n',
+      'translate-en': 'Translate the following text to English:\n\n',
+      'translate-zh': 'Translate the following text to Chinese:\n\n',
+      summarize: 'Summarize the following text concisely:\n\n',
+      keypoints: 'Extract the key points from the following text as bullet points:\n\n'
+    };
+
+    var prompt = prompts[currentMode] + text;
+
+    try {
+      var result = await aiPipeline(prompt);
+      var generated = result[0].generated_text;
+      outputText.value = generated;
+
+      if (truncated) {
+        outputText.value = '⚠ 输入文本已自动截断至 ' + MAX_CHARS + ' 字符。\n\n' + outputText.value;
+      }
+    } catch (err) {
+      outputText.value = '处理出错：' + err.message;
+    } finally {
+      isExecuting = false;
+      btnExecute.disabled = false;
+      btnExecute.innerHTML = '执行';
+    }
+  };
+
+  // ===== 复制结果 =====
+  window.copyResult = async function() {
+    var text = outputText.value.trim();
+    if (!text) {
+      setToast('没有可复制的内容');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      btnCopy.textContent = '✅ 已复制';
+      setTimeout(function() { btnCopy.textContent = '复制结果'; }, 2000);
+    } catch (err) {
+      setToast('复制失败，请手动复制');
+    }
+  };
+
+  // ===== 清除对话 =====
+  window.clearAll = function() {
+    inputText.value = '';
+    outputText.value = '';
+    charWarning.classList.add('hidden');
+  };
+
+  // ===== Toast 提示 =====
+  var toastTimer = null;
+  function setToast(msg) {
+    var el = document.getElementById('toast') || createToastEl();
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function() { el.classList.remove('show'); }, 2500);
+  }
+
+  function createToastEl() {
+    var el = document.createElement('div');
+    el.id = 'toast';
+    el.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);padding:10px 24px;background:#1e3a5f;color:#fff;border-radius:20px;font-size:14px;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+    document.body.appendChild(el);
+    return el;
+  }
+</script>
+
+<style>
+  #toast.show { opacity: 1 !important; }
+</style>
+
+</body>
+</html>
