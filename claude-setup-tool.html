@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code 一键配置工具</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-secondary: #8b949e;
+    --accent: #58a6ff;
+    --accent-hover: #79c0ff;
+    --danger: #f85149;
+    --success: #3fb950;
+    --warning: #d2991d;
+    --input-bg: #0d1117;
+    --radius: 8px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 640px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 36px 32px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .header .icon { font-size: 40px; margin-bottom: 8px; }
+  .header h1 { font-size: 24px; font-weight: 700; color: var(--text); }
+  .header p { font-size: 14px; color: var(--text-secondary); margin-top: 6px; }
+
+  .form-group { margin-bottom: 20px; }
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .form-group label .required { color: var(--danger); margin-left: 2px; }
+
+  select, input[type="text"], input[type="password"] {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', 'Noto Sans SC', monospace;
+    background: var(--input-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  select:focus, input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(88,166,255,0.15);
+  }
+  select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238b949e' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+
+  .input-row { display: flex; gap: 8px; }
+  .input-row input { flex: 1; }
+  .input-row button {
+    white-space: nowrap;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--border);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .input-row button:hover { background: #484f58; }
+
+  .provider-info {
+    margin-top: 8px;
+    padding: 10px 14px;
+    background: rgba(88,166,255,0.06);
+    border: 1px solid rgba(88,166,255,0.15);
+    border-radius: var(--radius);
+    font-size: 12px;
+    color: var(--accent);
+    line-height: 1.5;
+  }
+  .provider-info code {
+    background: rgba(88,166,255,0.12);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+  }
+
+  .model-selector {
+    margin-top: 10px;
+  }
+  .model-selector label {
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 500;
+    font-size: 12px;
+  }
+  .model-selector select { margin-top: 4px; }
+
+  .preview-box {
+    margin-top: 20px;
+  }
+  .preview-box details {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .preview-box summary {
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    user-select: none;
+  }
+  .preview-box pre {
+    padding: 14px 16px;
+    padding-top: 0;
+    font-size: 12px;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .btn-generate {
+    width: 100%;
+    margin-top: 24px;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, #238636, #2ea043);
+    border: 1px solid #2ea043;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+  .btn-generate:hover { background: linear-gradient(135deg, #2ea043, #3fb950); box-shadow: 0 4px 16px rgba(46,160,67,0.3); }
+  .btn-generate:active { transform: scale(0.98); }
+
+  .btn-download {
+    width: 100%;
+    margin-top: 10px;
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, #1f6feb, #388bfd);
+    border: 1px solid #388bfd;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: none;
+    letter-spacing: 1px;
+  }
+  .btn-download:hover { background: linear-gradient(135deg, #388bfd, #79c0ff); box-shadow: 0 4px 16px rgba(56,139,253,0.3); }
+  .btn-download.show { display: block; }
+
+  .toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 24px;
+    background: var(--success);
+    color: #fff;
+    font-weight: 600;
+    border-radius: 8px;
+    font-size: 14px;
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+  .toast.error { background: var(--danger); }
+
+  .steps {
+    margin-top: 20px;
+    padding: 16px 18px;
+    background: rgba(210,153,29,0.08);
+    border: 1px solid rgba(210,153,29,0.2);
+    border-radius: var(--radius);
+    font-size: 13px;
+    color: var(--warning);
+    line-height: 1.8;
+  }
+  .steps ol { margin-left: 18px; }
+  .steps code {
+    background: rgba(210,153,29,0.15);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+  }
+
+/* Password Gate */
+#pw-gate {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 20px;
+}
+#pw-gate::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center, rgba(88,166,255,0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+.pw-box {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 36px 32px;
+  width: 380px; max-width: 90vw;
+  display: flex; flex-direction: column; gap: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+.pw-box h2 { text-align: center; font-size: 20px; font-weight: 700; color: var(--text); }
+.pw-box .pw-hint { text-align: center; font-size: 13px; color: var(--text-secondary); }
+.pw-box input {
+  padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--input-bg); color: var(--text); font-size: 15px; outline: none;
+  transition: border-color 0.2s; text-align: center; letter-spacing: 2px;
+}
+.pw-box input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(88,166,255,0.15); }
+.pw-box .pw-btn {
+  padding: 12px; border: none; border-radius: var(--radius);
+  background: linear-gradient(135deg, #238636, #2ea043);
+  color: #fff; font-size: 15px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s;
+}
+.pw-box .pw-btn:hover { background: linear-gradient(135deg, #2ea043, #3fb950); }
+.pw-box .pw-error { color: var(--danger); font-size: 13px; text-align: center; display: none; }
+
+#main-wrap { display: none; }
+#main-wrap.unlocked { display: block; }
+</style>
+</head>
+<body>
+
+<!-- Password Gate -->
+<div id="pw-gate">
+  <div style="font-size:48px">🔐</div>
+  <div class="pw-box">
+    <h2>Claude Code 配置工具</h2>
+    <p class="pw-hint">此工具已加密，请输入密码以继续</p>
+    <input type="password" id="pw-input" placeholder="请输入密码..." autofocus>
+    <button class="pw-btn" id="pw-btn">验证</button>
+    <p class="pw-error" id="pw-error">密码错误，请重试</p>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div id="main-wrap">
+<div class="container">
+  <div class="header">
+    <div class="icon">&#9881;</div>
+    <h1>Claude Code 一键配置工具</h1>
+    <p>快速配置第三方 API 服务商，启用 Claude Code</p>
+  </div>
+
+  <div class="form-group">
+    <label>选择服务商 <span class="required">*</span></label>
+    <select id="provider">
+      <option value="deepseek">DeepSeek - 国产高性价比大模型</option>
+      <option value="openrouter">OpenRouter - 多模型聚合网关</option>
+      <option value="bailian">阿里云百炼 (DashScope) - 通义千问系列</option>
+      <option value="custom">自定义接口地址</option>
+    </select>
+    <div class="provider-info" id="providerInfo">
+      接口地址：<code>https://api.deepseek.com</code><br>
+      默认模型：<code>deepseek-chat</code>
+    </div>
+  </div>
+
+  <div class="form-group custom-url" style="display:none">
+    <label>自定义 API 地址 <span class="required">*</span></label>
+    <input type="text" id="customUrl" placeholder="https://你的API接口地址.com">
+  </div>
+
+  <div class="form-group">
+    <label>API 密钥 <span class="required">*</span></label>
+    <div class="input-row">
+      <input type="password" id="apiKey" placeholder="请输入你的 API Key...">
+      <button type="button" id="toggleKey">点击显示</button>
+    </div>
+  </div>
+
+  <div class="form-group model-selector">
+    <label>选择模型（可选，不选则使用服务商默认模型）</label>
+    <select id="modelSelect">
+      <option value="">使用默认模型</option>
+    </select>
+  </div>
+
+  <div class="form-group model-selector">
+    <label>小型/快速模型（可选）</label>
+    <select id="smallModelSelect">
+      <option value="">使用默认</option>
+    </select>
+  </div>
+
+  <div class="preview-box">
+    <details>
+      <summary>点击预览脚本内容</summary>
+      <pre id="scriptPreview">请填写 API 密钥后点击"生成配置脚本"预览</pre>
+    </details>
+  </div>
+
+  <button class="btn-generate" id="btnGenerate">生成配置脚本</button>
+  <button class="btn-download" id="btnDownload">下载 setup.bat</button>
+
+  <div class="steps">
+    <strong>使用步骤：</strong>
+    <ol>
+      <li>选择服务商，填写 API 密钥</li>
+      <li>点击「生成配置脚本」，预览确认无误</li>
+      <li>点击「下载 setup.bat」保存到本地</li>
+      <li>双击 <code>setup.bat</code> 即可自动配置（无需管理员权限）</li>
+      <li>关闭当前终端，重新打开终端后运行 <code>claude</code> 即可</li>
+    </ol>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+</div><!-- end main-wrap -->
+
+<script>
+/* ===== Password Gate ===== */
+(function() {
+  var gateEl = document.getElementById('pw-gate');
+  var inputEl = document.getElementById('pw-input');
+  var btnEl = document.getElementById('pw-btn');
+  var errorEl = document.getElementById('pw-error');
+  var mainWrap = document.getElementById('main-wrap');
+  var PASSWORD = 'Glh@253518';
+
+  if (sessionStorage.getItem('claude_setup_auth') === '1') {
+    gateEl.style.display = 'none';
+    mainWrap.classList.add('unlocked');
+    return;
+  }
+
+  function tryUnlock() {
+    if (inputEl.value.trim() === PASSWORD) {
+      sessionStorage.setItem('claude_setup_auth', '1');
+      gateEl.style.display = 'none';
+      mainWrap.classList.add('unlocked');
+    } else {
+      errorEl.style.display = 'block';
+      inputEl.value = '';
+      inputEl.focus();
+    }
+  }
+
+  btnEl.addEventListener('click', tryUnlock);
+  inputEl.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') tryUnlock();
+  });
+})();
+
+/* ===== App Logic ===== */
+(function() {
+  var providerEl = document.getElementById('provider');
+  var providerInfoEl = document.getElementById('providerInfo');
+  var apiKeyEl = document.getElementById('apiKey');
+  var toggleKeyEl = document.getElementById('toggleKey');
+  var modelSelectEl = document.getElementById('modelSelect');
+  var smallModelSelectEl = document.getElementById('smallModelSelect');
+  var customUrlEl = document.getElementById('customUrl');
+  var customUrlGroup = document.querySelector('.custom-url');
+  var scriptPreviewEl = document.getElementById('scriptPreview');
+  var btnGenerate = document.getElementById('btnGenerate');
+  var btnDownload = document.getElementById('btnDownload');
+  var toastEl = document.getElementById('toast');
+  var generatedScript = '';
+
+  var configData = {
+    deepseek: {
+      label: 'DeepSeek',
+      baseUrl: 'https://api.deepseek.com',
+      models: ['deepseek-chat', 'deepseek-reasoner'],
+      defaultModel: 'deepseek-chat',
+      smallModels: ['deepseek-chat'],
+      defaultSmall: 'deepseek-chat'
+    },
+    openrouter: {
+      label: 'OpenRouter',
+      baseUrl: 'https://openrouter.ai/api/v1',
+      models: [
+        'anthropic/claude-opus-4-7',
+        'anthropic/claude-sonnet-4-6',
+        'anthropic/claude-haiku-4-5',
+        'openai/gpt-4o',
+        'google/gemini-2.5-pro',
+        'google/gemini-2.5-flash',
+        'deepseek/deepseek-chat',
+        'deepseek/deepseek-reasoner'
+      ],
+      defaultModel: 'anthropic/claude-sonnet-4-6',
+      smallModels: [
+        'anthropic/claude-haiku-4-5',
+        'openai/gpt-4o-mini',
+        'google/gemini-2.5-flash'
+      ],
+      defaultSmall: 'anthropic/claude-haiku-4-5'
+    },
+    bailian: {
+      label: '阿里云百炼',
+      baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+      models: ['qwen-plus', 'qwen-max', 'qwen-turbo', 'qwen3-235b-a22b', 'deepseek-v3', 'deepseek-r1'],
+      defaultModel: 'qwen-plus',
+      smallModels: ['qwen-turbo'],
+      defaultSmall: 'qwen-turbo'
+    },
+    custom: {
+      label: '自定义',
+      baseUrl: '',
+      models: [],
+      defaultModel: '',
+      smallModels: [],
+      defaultSmall: ''
+    }
+  };
+
+  function showToast(msg, isError) {
+    toastEl.textContent = msg;
+    toastEl.className = 'toast show' + (isError ? ' error' : '');
+    setTimeout(function() { toastEl.className = 'toast'; }, 3000);
+  }
+
+  function updateProviderInfo() {
+    var p = configData[providerEl.value];
+    var html = '接口地址：<code>' + (p.baseUrl || 'https://你的接口地址.com') + '</code><br>';
+    html += '默认模型：<code>' + (p.defaultModel || '请手动填写') + '</code>';
+    providerInfoEl.innerHTML = html;
+
+    customUrlGroup.style.display = providerEl.value === 'custom' ? 'block' : 'none';
+    updateModelSelects();
+  }
+
+  function updateModelSelects() {
+    var p = configData[providerEl.value];
+    var models = p.models;
+    var smallModels = p.smallModels;
+
+    modelSelectEl.innerHTML = '<option value="">使用默认模型</option>';
+    for (var i = 0; i < models.length; i++) {
+      var sel = models[i] === p.defaultModel ? ' selected' : '';
+      modelSelectEl.innerHTML += '<option value="' + models[i] + '"' + sel + '>' + models[i] + '</option>';
+    }
+
+    smallModelSelectEl.innerHTML = '<option value="">使用默认</option>';
+    for (var j = 0; j < smallModels.length; j++) {
+      var s = smallModels[j] === p.defaultSmall ? ' selected' : '';
+      smallModelSelectEl.innerHTML += '<option value="' + smallModels[j] + '"' + s + '>' + smallModels[j] + '</option>';
+    }
+  }
+
+  function generateScript() {
+    var provider = providerEl.value;
+    var apiKey = apiKeyEl.value.trim();
+
+    if (!apiKey) {
+      showToast('请先填写 API 密钥', true);
+      return;
+    }
+
+    var p = configData[provider];
+    var baseUrl = provider === 'custom' ? customUrlEl.value.trim() : p.baseUrl;
+
+    if (provider === 'custom' && !baseUrl) {
+      showToast('请填写自定义 API 地址', true);
+      return;
+    }
+
+    var model = modelSelectEl.value || p.defaultModel;
+    var smallModel = smallModelSelectEl.value || p.defaultSmall;
+    var displayKey = apiKey.substring(0, 6) + '****' + apiKey.substring(apiKey.length - 4);
+
+    // 生成 .bat 批处理文件，双击即可运行，无需 PowerShell 执行策略
+    var script = '@echo off\r\n';
+    script += 'echo.\r\n';
+    script += 'echo   === Claude Code 配置工具 ===\r\n';
+    script += 'echo   服务商: ' + p.label + '\r\n';
+    script += 'echo   接口地址: ' + baseUrl + '\r\n';
+    script += 'echo.\r\n';
+    script += 'echo.\r\n';
+    script += 'echo [1/4] 正在设置 ANTHROPIC_BASE_URL...\r\n';
+    script += 'setx ANTHROPIC_BASE_URL "' + baseUrl + '"\r\n';
+    script += 'echo.\r\n';
+    script += 'echo [2/4] 正在设置 ANTHROPIC_API_KEY...\r\n';
+    script += 'setx ANTHROPIC_API_KEY "' + apiKey + '"\r\n';
+    script += 'echo.\r\n';
+    script += 'echo [3/4] 正在设置 ANTHROPIC_MODEL...\r\n';
+    script += 'setx ANTHROPIC_MODEL "' + model + '"\r\n';
+    script += 'echo.\r\n';
+    if (smallModel) {
+      script += 'echo [4/4] 正在设置 ANTHROPIC_SMALL_FAST_MODEL...\r\n';
+      script += 'setx ANTHROPIC_SMALL_FAST_MODEL "' + smallModel + '"\r\n';
+      script += 'echo.\r\n';
+    } else {
+      script += 'echo [4/4] 跳过 ANTHROPIC_SMALL_FAST_MODEL（未指定）\r\n';
+      script += 'echo.\r\n';
+    }
+    script += 'echo.\r\n';
+    script += 'echo   ========================================\r\n';
+    script += 'echo   配置完成!\r\n';
+    script += 'echo   请关闭当前终端并打开新终端，运行 claude\r\n';
+    script += 'echo   ========================================\r\n';
+    script += 'echo.\r\n';
+    script += 'pause\r\n';
+
+    generatedScript = script;
+
+    // 预览内容（隐藏完整 API Key）
+    var preview = '@echo off\r\n';
+    preview += 'echo.\r\n';
+    preview += 'echo   === Claude Code 配置工具 ===\r\n';
+    preview += 'echo   服务商: ' + p.label + '\r\n';
+    preview += 'echo   接口地址: ' + baseUrl + '\r\n';
+    preview += 'echo   API 密钥: ' + displayKey + '\r\n';
+    preview += 'echo.\r\n';
+    preview += 'setx ANTHROPIC_BASE_URL "' + baseUrl + '"\r\n';
+    preview += 'setx ANTHROPIC_API_KEY "' + displayKey + '"\r\n';
+    preview += 'setx ANTHROPIC_MODEL "' + model + '"\r\n';
+    if (smallModel) {
+      preview += 'setx ANTHROPIC_SMALL_FAST_MODEL "' + smallModel + '"\r\n';
+    }
+    preview += 'pause\r\n';
+
+    scriptPreviewEl.textContent = preview;
+    btnDownload.classList.add('show');
+    showToast('脚本已生成！点击下方按钮下载');
+  }
+
+  function downloadScript() {
+    if (!generatedScript) {
+      showToast('请先生成脚本', true);
+      return;
+    }
+    var blob = new Blob([generatedScript], { type: 'text/plain;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'setup.bat';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('下载完成！双击 setup.bat 即可配置');
+  }
+
+  providerEl.addEventListener('change', updateProviderInfo);
+  toggleKeyEl.addEventListener('click', function() {
+    if (apiKeyEl.type === 'password') {
+      apiKeyEl.type = 'text';
+      toggleKeyEl.textContent = '点击隐藏';
+    } else {
+      apiKeyEl.type = 'password';
+      toggleKeyEl.textContent = '点击显示';
+    }
+  });
+  btnGenerate.addEventListener('click', generateScript);
+  btnDownload.addEventListener('click', downloadScript);
+
+  updateProviderInfo();
+})();
+</script>
+
+</body>
+</html>
