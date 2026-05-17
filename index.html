@@ -1444,7 +1444,7 @@ textarea:focus-visible,
 
 <script>
 /* ============ Configuration ============ */
-const DATA_URL = 'apps.json?v=5';
+const DATA_URL = 'apps.json?v=6';
 // 密码（base64 编码，运行时解码后直接对比，避免编码问题）
 const _k = 'R2xoQDI1MzUxOA==';
 
@@ -1842,7 +1842,7 @@ if (typeof pdfjsLib !== 'undefined') {
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 
-let currentToolType = ''; // 'pdf' or 'todo'
+let currentToolType = '';
 
 function openToolPanel(appId) {
   const app = apps.find(a => a.id === appId);
@@ -1873,7 +1873,7 @@ function openToolPanel(appId) {
   document.getElementById('tool-title').textContent = app.icon + ' ' + app.name;
   panel.classList.add('open');
   document.body.style.overflow = 'hidden';
-  currentToolType = appId === 'pdf-tool' ? 'pdf' : appId === 'ai-todo' ? 'todo' : appId === 'rou-calc' ? 'rou' : 'aging';
+  currentToolType = appId === 'pdf-tool' ? 'pdf' : appId === 'rou-calc' ? 'rou' : 'aging';
 
   // Reset state
   toolState = { currentOp: 'merge', files: [], resultBytes: null, resultName: '' };
@@ -1882,8 +1882,6 @@ function openToolPanel(appId) {
 
   if (currentToolType === 'pdf') {
     initPDFTool();
-  } else if (currentToolType === 'todo') {
-    initTodoTool();
   } else if (currentToolType === 'rou') {
     initRouTool();
   } else if (currentToolType === 'aging') {
@@ -1910,36 +1908,6 @@ function initPDFTool() {
   };
   switchTab('merge');
   setupDropZone();
-}
-
-function initTodoTool() {
-  // Hide PDF-specific stuff
-  document.getElementById('drop-zone').style.display = 'none';
-  document.querySelector('.tool-left').style.display = '';
-  document.querySelector('.tool-right').style.display = 'none';
-  document.getElementById('tool-tabs').innerHTML = '<button class="tool-tab active">🧠 智能待办解析</button>';
-  document.getElementById('file-list').innerHTML = '';
-  document.getElementById('preview-area').classList.remove('show');
-  document.getElementById('preview-placeholder').style.display = 'none';
-
-  document.getElementById('tool-controls').innerHTML = `
-    <div class="tool-input-group">
-      <label>📝 粘贴自然语言或邮件内容</label>
-      <textarea id="todo-input" rows="8" placeholder="例如：&#10;明天下午3点找张三确认需求&#10;周五前提交项目报告给李四&#10;紧急：修复登录页面的bug&#10;&#10;或者粘贴邮件内容..."></textarea>
-    </div>
-    <div class="tool-actions">
-      <button class="btn-tool btn-tool-primary" onclick="parseTodoText()">🔍 智能解析</button>
-      <button class="btn-tool btn-tool-secondary" onclick="document.getElementById('todo-input').value=''; document.getElementById('todo-result').innerHTML='';">🗑️ 清空</button>
-    </div>
-    <div id="todo-result" style="display:none">
-      <h4 style="margin-bottom:12px">📋 解析结果</h4>
-      <div id="todo-list"></div>
-      <div class="tool-actions" style="margin-top:12px">
-        <button class="btn-tool btn-tool-secondary" onclick="copyTodoList()">📋 复制清单</button>
-        <button class="btn-tool btn-tool-secondary" onclick="downloadTodoList()">⬇ 导出文本</button>
-      </div>
-    </div>
-  `;
 }
 
 function closeToolPanel() {
@@ -2433,219 +2401,6 @@ document.getElementById('btn-download').addEventListener('click', () => {
   a.click();
   URL.revokeObjectURL(url);
 });
-
-/* ============ AI Todo: Rule-based Chinese NLP Parser ============ */
-function parseTodoText() {
-  const text = document.getElementById('todo-input').value.trim();
-  if (!text) return;
-
-  const tasks = ruleBasedParser(text);
-  const container = document.getElementById('todo-result');
-  const list = document.getElementById('todo-list');
-
-  if (tasks.length === 0) {
-    list.innerHTML = '<p style="color:var(--text-secondary);text-align:center;padding:20px">未识别到待办事项，请检查输入内容</p>';
-  } else {
-    list.innerHTML = tasks.map((t, i) => {
-      const priorityIcon = t.priority === 'urgent' ? '🔴紧急' : t.priority === 'high' ? '🟠重要' : '🟡普通';
-      const dueStr = t.due ? `<div style="font-size:11px;color:var(--accent-2);margin-top:2px">⏰ ${t.due}</div>` : '<div style="font-size:11px;color:var(--text-secondary);margin-top:2px">无截止日期</div>';
-      const personStr = t.person ? ` <span style="color:var(--accent-1)">@${t.person}</span>` : '';
-      return `
-        <div style="padding:10px 14px;margin-bottom:8px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid var(--glass-border)">
-          <div style="font-size:12px;margin-bottom:4px">${priorityIcon}</div>
-          <div style="font-size:14px">${i + 1}. ${escapeHtml(t.action)}${personStr}</div>
-          ${dueStr}
-        </div>
-      `;
-    }).join('');
-  }
-
-  container.style.display = 'block';
-}
-
-function ruleBasedParser(text) {
-  const tasks = [];
-  // Split by newlines or numbered items
-  const lines = text.split(/[\n\r]+/).filter(l => l.trim());
-  const allLines = [];
-  // Also split by bullet points and numbers
-  lines.forEach(line => {
-    const subLines = line.split(/(?:^|\s*)(?:\d+[\.\)、]|[-*•])\s*/).filter(s => s.trim());
-    if (subLines.length > 1) { allLines.push(...subLines); }
-    else { allLines.push(line); }
-  });
-
-  // Detect email format
-  const isEmail = /^(From|To|Subject|发件人|收件人|主题|Date):/im.test(text);
-  let body = text;
-  if (isEmail) {
-    const bodyMatch = text.match(/(?:正文|Body|内容)[：:]\s*([\s\S]+)/i);
-    if (bodyMatch) body = bodyMatch[1];
-    else {
-      // Try to find body after headers
-      const parts = text.split(/\n\n/);
-      if (parts.length > 1) body = parts.slice(1).join('\n\n');
-    }
-    allLines.length = 0;
-    body.split(/[\n\r]+/).filter(l => l.trim()).forEach(l => allLines.push(l));
-  }
-
-  const now = new Date();
-
-  allLines.forEach(line => {
-    const trimmed = line.replace(/^[\d\.\)、\s\-*•]+/, '').trim();
-    if (!trimmed || trimmed.length < 3) return;
-
-    let priority = 'normal';
-    let action = trimmed;
-    let due = null;
-    let person = null;
-
-    // Detect priority
-    if (/^紧急|^🔥|^urgent|^ASAP/i.test(trimmed)) {
-      priority = 'urgent';
-      action = action.replace(/^(紧急|🔥|urgent|ASAP)[：:\s]*/i, '');
-    } else if (/^重要|^⚠️|^high/i.test(trimmed)) {
-      priority = 'high';
-      action = action.replace(/^(重要|⚠️|high)[：:\s]*/i, '');
-    }
-
-    // Detect date/time expressions
-    const datePatterns = [
-      { regex: /(\d{1,2})月(\d{1,2})[号日]/, handler: (m) => {
-        const month = parseInt(m[1]), day = parseInt(m[2]);
-        const y = now.getFullYear();
-        const d = new Date(y, month - 1, day);
-        if (d < now) d.setFullYear(y + 1);
-        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-      }},
-      { regex: /明天/, handler: () => {
-        const d = new Date(now); d.setDate(d.getDate() + 1);
-        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-      }},
-      { regex: /后天/, handler: () => {
-        const d = new Date(now); d.setDate(d.getDate() + 2);
-        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-      }},
-      { regex: /下周(一|二|三|四|五|六|日|天)/, handler: (m) => {
-        const dayMap = { '一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'日':0,'天':0 };
-        const target = dayMap[m[1]];
-        const d = new Date(now);
-        const daysUntil = (target + 7 - d.getDay()) % 7 || 7;
-        d.setDate(d.getDate() + daysUntil);
-        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-      }},
-      { regex: /周(一|二|三|四|五|六|日|天)/, handler: (m) => {
-        const dayMap = { '一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'日':0,'天':0 };
-        const target = dayMap[m[1]];
-        const d = new Date(now);
-        let daysUntil = target - d.getDay();
-        if (daysUntil <= 0) daysUntil += 7;
-        d.setDate(d.getDate() + daysUntil);
-        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-      }},
-      { regex: /(\d{4})[年\-\.](\d{1,2})[月\-\.](\d{1,2})[号日]?/, handler: (m) => `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}` },
-    ];
-
-    let hasDate = false;
-    for (const dp of datePatterns) {
-      const m = trimmed.match(dp.regex);
-      if (m) { due = dp.handler(m); hasDate = true; break; }
-    }
-
-    // Detect time of day
-    const timeMatch = trimmed.match(/(上午|下午|晚上|中午)?(\d{1,2})[点:：](\d{0,2})?/);
-    if (timeMatch) {
-      let hour = parseInt(timeMatch[2]);
-      const minute = timeMatch[3] ? parseInt(timeMatch[3]) : 0;
-      if (timeMatch[1] === '下午' && hour < 12) hour += 12;
-      if (timeMatch[1] === '上午' && hour === 12) hour = 0;
-      if (timeMatch[1] === '晚上') hour += 12;
-      const timeStr = `${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;
-      if (due) due += ' ' + timeStr;
-      else {
-        const d = new Date(now);
-        if (hour < now.getHours() || (hour === now.getHours() && minute < now.getMinutes())) d.setDate(d.getDate()+1);
-        due = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${timeStr}`;
-      }
-      hasDate = true;
-    }
-
-    // Detect temporal phrases
-    if (!hasDate) {
-      if (/今天/.test(trimmed)) {
-        due = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-      } else if (/周五前|周五之前/.test(trimmed)) {
-        const d = new Date(now); const daysUntil = (5 + 7 - d.getDay()) % 7 || 7; d.setDate(d.getDate() + daysUntil);
-        due = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-      } else if (/尽快|尽快处理|尽快完成/.test(trimmed)) {
-        due = '尽快';
-      }
-    }
-
-    // Detect person (Chinese name patterns: 找XXX, 联系XXX, 跟XXX沟通, 给XXX)
-    const personPatterns = [/找([一-龥]{2,4})/, /联系([一-龥]{2,4})/, /跟([一-龥]{2,4})沟通/, /给([一-龥]{2,4})/, /和([一-龥]{2,4})/];
-    for (const pp of personPatterns) {
-      const pm = trimmed.match(pp);
-      if (pm) { person = pm[1]; break; }
-    }
-
-    // Clean up action text (remove date/time/person fragments for cleaner display)
-    action = action.replace(/(\d{1,2})月(\d{1,2})[号日]?/g, '').replace(/明天|后天|今天|下周[一二三四五六日天]|周[一二三四五六日天]/g, '');
-    action = action.replace(/(上午|下午|晚上|中午)?\d{1,2}[点:：]\d{0,2}分?/g, '');
-    action = action.replace(/前$/, '').replace(/找[一-龥]{2,4}/g, '').replace(/联系[一-龥]{2,4}/g, '');
-    action = action.replace(/跟[一-龥]{2,4}沟通/g, '').replace(/给[一-龥]{2,4}/g, '').replace(/和[一-龥]{2,4}/g, '');
-    action = action.replace(/尽快处理|尽快完成|尽快/g, '').replace(/周五前|周五之前/g, '');
-    action = action.replace(/\s+/g, ' ').trim();
-
-    if (action.length > 1) {
-      tasks.push({ action, due, person, priority });
-    }
-  });
-
-  return tasks;
-}
-
-function copyTodoList() {
-  const tasks = getParsedTasks();
-  if (tasks.length === 0) return;
-  const text = tasks.map((t, i) => {
-    let line = `${i + 1}. ${t.action}`;
-    if (t.person) line += ` @${t.person}`;
-    if (t.due) line += ` ⏰${t.due}`;
-    if (t.priority === 'urgent') line = '🔴 ' + line;
-    else if (t.priority === 'high') line = '🟠 ' + line;
-    return line;
-  }).join('\n');
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = event.target;
-    btn.textContent = '✅ 已复制';
-    setTimeout(() => { btn.textContent = '📋 复制清单'; }, 2000);
-  });
-}
-
-function downloadTodoList() {
-  const tasks = getParsedTasks();
-  if (tasks.length === 0) return;
-  const text = tasks.map((t, i) => {
-    let line = `${i + 1}. [${t.priority === 'urgent' ? '紧急' : t.priority === 'high' ? '重要' : '普通'}] ${t.action}`;
-    if (t.person) line += ` @${t.person}`;
-    if (t.due) line += ` ⏰${t.due}`;
-    return line;
-  }).join('\n');
-  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = '待办清单.txt'; a.click();
-  URL.revokeObjectURL(url);
-}
-
-function getParsedTasks() {
-  // Re-run parser to get current tasks
-  const text = document.getElementById('todo-input').value.trim();
-  if (!text) return [];
-  return ruleBasedParser(text);
-}
 
 /* ============ ROU Lease Calculator ============ */
 function initRouTool() {

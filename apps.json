@@ -195,19 +195,6 @@
     "download": ""
   },
   {
-    "id": "ai-todo",
-    "name": "智能待办解析器",
-    "shortDesc": "粘贴自然语言或邮件，自动解析为结构化待办事项清单",
-    "fullDesc": "将日常口语、工作安排、邮件内容粘贴进来，自动识别其中的任务、截止时间、相关人员和优先级。支持识别中文日期表达（明天下午3点、下周一、5月15号）、常见动词（完成/提交/联系/跟进/回复/确认）、人名提取、紧急程度标记。也支持解析邮件格式（From/To/Subject/正文）。解析结果可复制或导出为文本清单。",
-    "category": "cli",
-    "status": "wip",
-    "version": "v1.0.0",
-    "icon": "🧠",
-    "onlineTool": true,
-    "github": "https://github.com/Bgu253518/my-app-hub",
-    "download": ""
-  },
-  {
     "id": "rou-calc",
     "name": "ROU 租赁测算器",
     "shortDesc": "多合同租赁现值测算，自动生成摊销明细表",
