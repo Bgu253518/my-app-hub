@@ -142,7 +142,15 @@
         <h1><i class="fas fa-chart-line"></i> GDC 审计任务工时管理系统</h1>
         <div class="subtitle">德勤全球交付中心 · 任务级工时 & 分摊看板 · 数据闭环</div>
     </div>
-    <div class="badge"><i class="fas fa-database"></i> 本地安全存储 · 浏览器端计算</div>
+    <div style="display:flex;align-items:center;gap:12px">
+        <div class="badge" id="modeBadge" style="cursor:pointer" onclick="toggleMode()" title="点击切换本地/团队模式">
+            <i class="fas fa-laptop"></i> <span id="modeLabel">本地模式</span>
+        </div>
+        <div class="badge" id="serverStatus" style="background:rgba(255,255,255,0.06);display:none">
+            <span id="serverDot" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#999;margin-right:4px"></span>
+            <span id="serverText">检测中...</span>
+        </div>
+    </div>
 </div>
 
 <!-- ====== Tabs ====== -->
@@ -389,15 +397,73 @@
 </div><!-- /container -->
 
 <script>
-// ============ 数据模型 ============
-let projects = [];        // { id, code, name, client, createdAt }
-let tasks = [];           // { id, name, type, account, uniqueCode, projectId }
-let timeEntries = [];     // { id, taskId, member, date, hours, notes }
-let allocationRules = []; // { id, taskId, projectId, percent }
-let aiHistory = [];       // [{ q, a, time }]
+// ============ 数据模型 & 后台切换 ============
+let projects = [];
+let tasks = [];
+let timeEntries = [];
+let allocationRules = [];
+let aiHistory = [];
+let USE_API = false;                              // 团队模式开关
+let API_BASE = 'http://127.0.0.1:5000';           // 服务器地址（可手动修改）
 
-// IO
+// 模式切换
+function toggleMode() {
+    USE_API = !USE_API;
+    if (USE_API) {
+        document.getElementById('modeBadge').style.background = '#2c7da0';
+        document.getElementById('modeLabel').textContent = '团队模式';
+        document.getElementById('modeBadge').innerHTML = '<i class="fas fa-users"></i> <span id="modeLabel">团队模式</span>';
+        document.getElementById('serverStatus').style.display = '';
+        checkServer();
+        refreshFromServer();
+    } else {
+        document.getElementById('modeBadge').style.background = '';
+        document.getElementById('modeLabel').textContent = '本地模式';
+        document.getElementById('modeBadge').innerHTML = '<i class="fas fa-laptop"></i> <span id="modeLabel">本地模式</span>';
+        document.getElementById('serverStatus').style.display = 'none';
+        loadAll(); renderAll();
+    }
+}
+
+// 服务器连接检测
+async function checkServer() {
+    const dot = document.getElementById('serverDot');
+    const txt = document.getElementById('serverText');
+    try {
+        const r = await fetch(API_BASE + '/api/health', { signal: AbortSignal.timeout(3000) });
+        if (r.ok) {
+            dot.style.background = '#3fb950'; txt.textContent = '已连接';
+        } else {
+            dot.style.background = '#d2991d'; txt.textContent = '响应异常';
+        }
+    } catch(e) {
+        dot.style.background = '#f85149'; txt.textContent = '未连接';
+    }
+}
+
+// 从服务器刷新全部数据
+async function refreshFromServer() {
+    if (!USE_API) return;
+    try {
+        const [p, t, e, r] = await Promise.all([
+            fetch(API_BASE + '/api/projects').then(r => r.json()),
+            fetch(API_BASE + '/api/tasks').then(r => r.json()),
+            fetch(API_BASE + '/api/time-entries').then(r => r.json()),
+            fetch(API_BASE + '/api/allocation-rules').then(r => r.json())
+        ]);
+        projects = p; tasks = t; timeEntries = e; allocationRules = r;
+        renderAll();
+        checkServer();
+    } catch(err) {
+        console.warn('服务器连接失败，使用本地缓存:', err.message);
+        document.getElementById('serverDot').style.background = '#f85149';
+        document.getElementById('serverText').textContent = '连接失败';
+    }
+}
+
+// 数据读写（自动判断本地/团队模式）
 function saveAll() {
+    if (USE_API) return; // 团队模式下操作即时同步，不需要全量保存
     localStorage.setItem('gdc2_projects', JSON.stringify(projects));
     localStorage.setItem('gdc2_tasks', JSON.stringify(tasks));
     localStorage.setItem('gdc2_timeEntries', JSON.stringify(timeEntries));
@@ -411,9 +477,31 @@ function loadAll() {
         timeEntries = JSON.parse(localStorage.getItem('gdc2_timeEntries')) || [];
         allocationRules = JSON.parse(localStorage.getItem('gdc2_allocationRules')) || [];
         aiHistory = JSON.parse(localStorage.getItem('gdc2_aiHistory')) || [];
-    } catch(e) { /* reset on corrupt data */ }
+    } catch(e) {}
 }
+
+// 团队模式下 API 增删
+async function apiPost(path, data) {
+    if (!USE_API) return null;
+    try {
+        const r = await fetch(API_BASE + path, {
+            method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
+        });
+        return await r.json();
+    } catch(e) { console.warn('API POST 失败:', e.message); return null; }
+}
+async function apiDelete(path) {
+    if (!USE_API) return;
+    try { await fetch(API_BASE + path, { method: 'DELETE' }); }
+    catch(e) { console.warn('API DELETE 失败:', e.message); }
+}
+
 function genId() { return 'id_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
+
+function renderAll() {
+    renderProjects(); renderTasks(); renderTimeEntries(); renderAllocRules();
+    refreshSelects(); refreshDashboard();
+}
 
 // 工具函数
 function fmtDate(d) { return d ? d.slice(0,10) : ''; }
@@ -499,20 +587,22 @@ function renderProjects() {
         const delBtn = document.createElement('button');
         delBtn.className = 'small danger';
         delBtn.innerText = '删除';
-        delBtn.onclick = () => {
+        delBtn.onclick = async () => {
             if (confirm(`删除项目 "${p.code}" 及其关联任务？`)) {
                 const linkedTasks = tasks.filter(t => t.projectId === p.id);
-                linkedTasks.forEach(t => {
-                    timeEntries = timeEntries.filter(e => e.taskId !== t.id);
-                    allocationRules = allocationRules.filter(r => r.taskId !== t.id);
-                });
-                tasks = tasks.filter(t => t.projectId !== p.id);
-                projects = projects.filter(x => x.id !== p.id);
-                saveAll();
-                renderProjects();
-                renderTasks();
-                refreshSelects();
-                refreshDashboard();
+                if (USE_API) {
+                    await apiDelete('/api/projects/' + p.id);
+                    await refreshFromServer();
+                } else {
+                    linkedTasks.forEach(t => {
+                        timeEntries = timeEntries.filter(e => e.taskId !== t.id);
+                        allocationRules = allocationRules.filter(r => r.taskId !== t.id);
+                    });
+                    tasks = tasks.filter(t => t.projectId !== p.id);
+                    projects = projects.filter(x => x.id !== p.id);
+                    saveAll();
+                }
+                renderProjects(); renderTasks(); refreshSelects(); refreshDashboard();
             }
         };
         delCell.appendChild(delBtn);
@@ -541,17 +631,16 @@ function renderTasks() {
         const delBtn = document.createElement('button');
         delBtn.className = 'small danger';
         delBtn.innerText = '删除';
-        delBtn.onclick = () => {
+        delBtn.onclick = async () => {
             if (confirm(`删除任务 "${task.uniqueCode}"？关联的工时和分摊规则也将删除。`)) {
-                tasks = tasks.filter(t => t.id !== task.id);
-                timeEntries = timeEntries.filter(e => e.taskId !== task.id);
-                allocationRules = allocationRules.filter(r => r.taskId !== task.id);
-                saveAll();
-                renderTasks();
-                renderTimeEntries();
-                renderAllocRules();
-                refreshSelects();
-                refreshDashboard();
+                if (USE_API) { await apiDelete('/api/tasks/' + task.id); await refreshFromServer(); }
+                else {
+                    tasks = tasks.filter(t => t.id !== task.id);
+                    timeEntries = timeEntries.filter(e => e.taskId !== task.id);
+                    allocationRules = allocationRules.filter(r => r.taskId !== task.id);
+                    saveAll();
+                }
+                renderTasks(); renderTimeEntries(); renderAllocRules(); refreshSelects(); refreshDashboard();
             }
         };
         delCell.appendChild(delBtn);
@@ -582,12 +671,13 @@ function renderTimeEntries() {
         const delBtn = document.createElement('button');
         delBtn.className = 'small danger';
         delBtn.innerText = '删除';
-        delBtn.onclick = () => {
-            timeEntries = timeEntries.filter(e => e.id !== entry.id);
-            saveAll();
-            renderTimeEntries();
-            refreshSelects();
-            refreshDashboard();
+        delBtn.onclick = async () => {
+            if (USE_API) { await apiDelete('/api/time-entries/' + entry.id); await refreshFromServer(); }
+            else {
+                timeEntries = timeEntries.filter(e => e.id !== entry.id);
+                saveAll();
+            }
+            renderTimeEntries(); refreshSelects(); refreshDashboard();
         };
         delCell.appendChild(delBtn);
     });
@@ -627,9 +717,9 @@ function renderAllocRules() {
     }
     container.innerHTML = html;
 }
-window.removeAllocRule = (ruleId) => {
-    allocationRules = allocationRules.filter(r => r.id !== ruleId);
-    saveAll();
+window.removeAllocRule = async (ruleId) => {
+    if (USE_API) { await apiDelete('/api/allocation-rules/' + ruleId); await refreshFromServer(); }
+    else { allocationRules = allocationRules.filter(r => r.id !== ruleId); saveAll(); }
     renderAllocRules();
     refreshDashboard();
 };
@@ -833,10 +923,11 @@ function addProject() {
     const client = document.getElementById('clientName').value.trim();
     if (!code || !name) { alert('请填写项目编号和名称'); return; }
     if (projects.some(p => p.code === code)) { alert('项目编号重复'); return; }
-    projects.push({ id: genId(), code, name, client, createdAt: new Date().toISOString().slice(0,10) });
-    saveAll();
-    renderProjects();
-    refreshSelects();
+    const newId = genId(), createdAt = new Date().toISOString().slice(0,10);
+    projects.push({ id: newId, code, name, client, createdAt });
+    if (USE_API) apiPost('/api/projects', { id:newId, code, name, client, createdAt });
+    else saveAll();
+    renderProjects(); refreshSelects();
     document.getElementById('projectCode').value = '';
     document.getElementById('projectName').value = '';
     document.getElementById('clientName').value = '';
@@ -869,10 +960,11 @@ function createTask() {
     if (!projectId || !name || !account) { alert('请填写项目、任务名称和科目'); return; }
     if (!uniqueCode) uniqueCode = `${type}_${account}_${Date.now()}`;
     if (tasks.some(t => t.uniqueCode === uniqueCode)) { alert(`唯一识别码 "${uniqueCode}" 已存在，请修改`); return; }
-    tasks.push({ id: genId(), name, type, account, uniqueCode, projectId });
-    saveAll();
-    renderTasks();
-    refreshSelects();
+    const newId = genId();
+    tasks.push({ id: newId, name, type, account, uniqueCode, projectId });
+    if (USE_API) apiPost('/api/tasks', { id:newId, name, type, account, uniqueCode, projectId });
+    else saveAll();
+    renderTasks(); refreshSelects();
     document.getElementById('taskName').value = '';
     document.getElementById('accountSubject').value = '';
     document.getElementById('uniqueCode').value = '';
@@ -906,11 +998,11 @@ function addTimeEntry() {
         alert('请完整填写任务、填报人、日期和有效工时');
         return;
     }
-    timeEntries.push({ id: genId(), taskId, member, date, hours, notes });
-    saveAll();
-    renderTimeEntries();
-    refreshSelects();
-    refreshDashboard();
+    const newId = genId();
+    timeEntries.push({ id: newId, taskId, member, date, hours, notes });
+    if (USE_API) apiPost('/api/time-entries', { id:newId, taskId, member, date, hours, notes });
+    else saveAll();
+    renderTimeEntries(); refreshSelects(); refreshDashboard();
     document.getElementById('timeHours').value = '1';
     document.getElementById('timeNotes').value = '';
 }
@@ -930,11 +1022,12 @@ function addAllocRule() {
     if (existing) {
         existing.percent = percent;
     } else {
-        allocationRules.push({ id: genId(), taskId, projectId, percent });
+        const newId = genId();
+        allocationRules.push({ id: newId, taskId, projectId, percent });
+        if (USE_API) apiPost('/api/allocation-rules', { id:newId, taskId, projectId, percent });
     }
-    saveAll();
-    renderAllocRules();
-    refreshDashboard();
+    if (!USE_API || existing) saveAll();
+    renderAllocRules(); refreshDashboard();
     document.getElementById('allocPercent').value = '100';
 }
 document.getElementById('addAllocRuleBtn').addEventListener('click', addAllocRule);
