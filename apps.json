@@ -156,18 +156,6 @@
     "download": ""
   },
   {
-    "id": "weather-cli",
-    "name": "命令行天气预报",
-    "shortDesc": "终端里查看实时天气和未来预报，支持城市搜索",
-    "fullDesc": "调用 OpenWeatherMap API 的命令行天气查询工具。支持按城市名或邮编查询、当前天气详情（温度/湿度/风速/能见度）、未来 5 天预报、彩色终端输出（按温度高低变色）、多城市收藏夹、摄氏度/华氏度切换。",
-    "category": "cli",
-    "status": "wip",
-    "version": "v0.8.0",
-    "icon": "🌤️",
-    "github": "",
-    "download": ""
-  },
-  {
     "id": "img-compressor",
     "name": "图片批量压缩工具",
     "shortDesc": "批量压缩 JPG/PNG/HEIC 图片，拖拽操作，预览压缩效果",
@@ -183,24 +171,13 @@
   {
     "id": "log-analyzer",
     "name": "日志分析器",
-    "shortDesc": "解析 Nginx/Apache 日志，统计访问量、错误分布、IP 排行",
-    "fullDesc": "命令行日志分析工具，支持 Nginx、Apache、自定义格式的日志文件。自动识别日志格式、按时间段统计 PV/UV、状态码分布饼图（ASCII art）、Top N IP 访问排行、慢请求检测、错误日志关键字告警、支持导出为 HTML 报告。",
+    "shortDesc": "浏览器端解析 Nginx/Apache/JSON 日志，可视化图表、IP排行、状态码分布、导出报告",
+    "fullDesc": "纯浏览器端运行的日志分析工具。支持粘贴或上传 Nginx、Apache、自定义格式、JSON 格式的日志文件。自动识别日志格式，实时统计：总请求数、独立 IP 数、状态码分布（环形图）、Top 10 IP 排行、每小时请求趋势（折线图）、请求方法分布、错误率、平均响应时间。支持多文件合并分析，结果可导出为 Excel 报告。所有数据在本地处理，日志不会上传到任何服务器。",
     "category": "data",
-    "status": "wip",
-    "version": "v1.2.0",
+    "status": "done",
+    "version": "v2.0.0",
     "icon": "📋",
-    "github": "",
-    "download": ""
-  },
-  {
-    "id": "todo-web",
-    "name": "简易待办事项 Web 应用",
-    "shortDesc": "Flask 搭建的个人待办事项管理，支持分类和截止日期",
-    "fullDesc": "基于 Flask + SQLite 的待办事项管理 Web 应用。支持用户注册登录、任务增删改查、按分类（工作/个人/学习）筛选、截止日期设置与到期提醒、任务优先级标记、完成状态切换动画、响应式移动端适配。",
-    "category": "web",
-    "status": "wip",
-    "version": "v0.5.0",
-    "icon": "✅",
+    "onlineTool": true,
     "github": "https://github.com/Bgu253518/my-app-hub",
     "download": ""
   },

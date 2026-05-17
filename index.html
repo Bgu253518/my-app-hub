@@ -1444,7 +1444,7 @@ textarea:focus-visible,
 
 <script>
 /* ============ Configuration ============ */
-const DATA_URL = 'apps.json?v=4';
+const DATA_URL = 'apps.json?v=5';
 // 密码（base64 编码，运行时解码后直接对比，避免编码问题）
 const _k = 'R2xoQDI1MzUxOA==';
 
@@ -1863,7 +1863,8 @@ function openToolPanel(appId) {
     'tb-autofill': 'tb-autofill.html',
     'help': 'help.html',
     'audit-sampling': 'audit-sampling.html',
-    'gdc-task-system': 'gdc-task-system.html'
+    'gdc-task-system': 'gdc-task-system.html',
+    'log-analyzer': 'log-analyzer.html'
   };
   if (externalPages[appId]) { window.open(externalPages[appId], '_self'); return; }
 
