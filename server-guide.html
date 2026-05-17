@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GDC 团队模式 · 服务器搭建与安全管理指南</title>
+<style>
+:root {
+  --bg:#0d1117; --surface:#161b22; --border:#30363d; --text:#e6edf3;
+  --text2:#8b949e; --accent:#58a6ff; --success:#3fb950; --warn:#d2991d;
+  --danger:#f85149; --radius:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:system-ui,'PingFang SC','Microsoft YaHei',sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.7;font-size:15px;
+  padding:20px;
+}
+.wrap{max-width:900px;margin:0 auto}
+/* Header */
+.topbar{
+  display:flex;align-items:center;gap:12px;margin-bottom:24px;
+  padding:14px 20px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);
+}
+.topbar a{color:var(--accent);text-decoration:none;font-size:0.85rem}
+.topbar a:hover{text-decoration:underline}
+/* Cover */
+.cover{
+  text-align:center;padding:60px 30px 40px;background:var(--surface);
+  border:1px solid var(--border);border-radius:16px;margin-bottom:28px;
+}
+.cover h1{font-size:2rem;font-weight:800;margin-bottom:8px}
+.cover p{color:var(--text2);font-size:0.95rem}
+.cover .shield{font-size:3rem;margin-bottom:12px}
+/* Nav */
+.nav{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px 20px;margin-bottom:28px;
+}
+.nav h3{margin-bottom:10px}
+.nav ol{list-style:none;counter-reset:n}
+.nav li{counter-increment:n;padding:3px 0}
+.nav li::before{content:counter(n)". ";color:var(--accent);font-weight:700}
+.nav a{color:var(--text);text-decoration:none}
+.nav a:hover{color:var(--accent)}
+/* Section */
+.section{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:28px 24px;margin-bottom:24px;
+}
+.section h2{font-size:1.4rem;border-left:4px solid var(--accent);padding-left:14px;margin-bottom:20px}
+.section h3{font-size:1.1rem;color:var(--accent);margin:24px 0 12px}
+.section h3:first-of-type{margin-top:0}
+/* Steps */
+.step{display:flex;gap:16px;margin:16px 0;padding:16px;background:rgba(88,166,255,0.04);border-radius:var(--radius);border:1px solid var(--border)}
+.step-num{
+  flex-shrink:0;width:38px;height:38px;background:var(--accent);color:#fff;
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:0.9rem
+}
+.step-body{flex:1}
+.step-body strong{display:block;margin-bottom:4px}
+.step-body p{color:var(--text2);font-size:0.88rem}
+.step-body code{
+  background:rgba(88,166,255,0.12);padding:2px 7px;border-radius:4px;
+  font-family:'Cascadia Code','Consolas',monospace;font-size:0.82rem;color:var(--accent)
+}
+/* Info boxes */
+.info{
+  padding:12px 16px;border-radius:8px;margin:12px 0;font-size:0.88rem;
+  border-left:3px solid;
+}
+.info-blue{background:rgba(88,166,255,0.06);border-color:var(--accent)}
+.info-green{background:rgba(63,185,80,0.06);border-color:var(--success)}
+.info-yellow{background:rgba(210,153,29,0.06);border-color:var(--warn)}
+.info-red{background:rgba(248,81,73,0.06);border-color:var(--danger)}
+.info strong{display:block;margin-bottom:4px}
+/* Tables */
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:0.85rem}
+th{background:rgba(88,166,255,0.12);padding:10px 12px;text-align:left;font-weight:600;color:var(--accent)}
+td{padding:8px 12px;border-bottom:1px solid var(--border)}
+tr:hover td{background:rgba(88,166,255,0.03)}
+/* Code blocks */
+pre{
+  background:#0d1117;border:1px solid var(--border);border-radius:8px;
+  padding:14px 18px;overflow-x:auto;font-size:0.82rem;line-height:1.5;
+  font-family:'Cascadia Code','Consolas',monospace;margin:10px 0
+}
+/* Checklist */
+.checklist{list-style:none}
+.checklist li{padding:6px 0}
+.checklist li::before{content:'☐ ';color:var(--text2);margin-right:4px}
+.checklist li.done::before{content:'✅ '}
+/* Footer */
+.footer{
+  text-align:center;padding:24px;color:var(--text2);font-size:0.8rem;
+  border-top:1px solid var(--border);margin-top:32px
+}
+/* Print */
+@media print{
+  body{background:#fff;color:#000;font-size:13px}
+  .section{background:#fff;border:1px solid #ccc;page-break-inside:avoid}
+  .topbar{display:none}
+  pre{background:#f5f5f5;border:1px solid #ccc}
+  @page{margin:1.5cm}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- Top bar -->
+<div class="topbar">
+  <a href="https://bgu253518.github.io/my-app-hub/">← 返回主页</a>
+  <span style="color:var(--text2)">|</span>
+  <a href="gdc-task-system.html">→ GDC 工时管理系统</a>
+</div>
+
+<!-- Cover -->
+<div class="cover">
+  <div class="shield">🛡️</div>
+  <h1>GDC 团队模式 · 服务器搭建与安全管理</h1>
+  <p>从零搭建本地服务器、安全配置、日常维护的完整指南</p>
+  <p style="margin-top:8px;font-size:0.8rem;color:var(--text2)">适用于 Windows 10/11 · 数据 100% 本地存储 · 零第三方依赖</p>
+</div>
+
+<!-- Nav -->
+<div class="nav">
+  <h3>📑 本指南目录</h3>
+  <ol>
+    <li><a href="#s1">初次搭建教程</a> — 从下载到团队使用的完整步骤</li>
+    <li><a href="#s2">安全指引</a> — 数据安全 / 网络安全 / 权限控制 / 备份策略</li>
+    <li><a href="#s3">日常维护</a> — 启动/停止/故障排查/数据迁移</li>
+    <li><a href="#s4">常见问题 FAQ</a></li>
+    <li><a href="#s5">移交 IT 部门指南</a></li>
+  </ol>
+</div>
+
+<!-- ========== 1. 初次搭建 ========== -->
+<div class="section" id="s1">
+<h2>🔧 第一章：初次搭建教程</h2>
+
+<h3>1.1 你需要什么</h3>
+<table>
+  <tr><th>条件</th><th>要求</th><th>说明</th></tr>
+  <tr><td>操作系统</td><td>Windows 10 或更高</td><td>Mac/Linux 也可运行，需自行安装 Python</td></tr>
+  <tr><td>Python</td><td>3.9+（你的电脑已有 3.14）</td><td>服务器运行环境，<code>server.py</code> 的引擎</td></tr>
+  <tr><td>磁盘空间</td><td>100MB 以上</td><td>SQLite 数据库非常轻量，百万条记录仅几十 MB</td></tr>
+  <tr><td>网络</td><td>同一局域网（WiFi）</td><td>团队成员需要在同一个路由器下</td></tr>
+</table>
+
+<h3>1.2 第一步：启动服务器</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-body">
+    <strong>双击 start-server.bat</strong>
+    <p>文件位置在 <code>C:\Users\86152\my-app-hub\start-server.bat</code>（或你 clone 的文件夹）。首次运行会自动安装 Flask 依赖（约 5-10 秒）。</p>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-body">
+    <strong>查看启动信息</strong>
+    <p>终端会显示：</p>
+    <pre>=======================================================
+  GDC 审计工时系统 — 本地服务器已启动
+  数据库: .../gdc_data.db
+  本机访问: http://127.0.0.1:5000
+  团队访问: http://192.168.1.xxx:5000
+  按 Ctrl+C 停止服务器
+=======================================================</pre>
+    <p>记下<strong>「团队访问」</strong>那个地址（如 <code>http://192.168.0.199:5000</code>），这是给团队成员用的。</p>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-body">
+    <strong>验证服务器运行</strong>
+    <p>打开浏览器，访问 <code>http://127.0.0.1:5000/api/health</code>，如果看到 <code>{"status":"ok",...}</code> 说明服务器正常。</p>
+  </div>
+</div>
+
+<div class="info info-green">
+  <strong>✅ 此时服务器已就绪</strong>
+  你的电脑现在是一台小型数据库服务器，同 WiFi 下的人都能访问。
+</div>
+
+<h3>1.3 第二步：切换 GDC 系统到团队模式</h3>
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-body">
+    <strong>打开 GDC 系统页面</strong>
+    <p>访问 <code>https://bgu253518.github.io/my-app-hub/gdc-task-system.html</code></p>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">5</div>
+  <div class="step-body">
+    <strong>切换到团队模式</strong>
+    <p>点击页面右上角的 <strong>「本地模式」</strong> 按钮 → 切换为 <strong>「团队模式」</strong>。旁边的指示灯会先显示「检测中...」，连接成功后变为 🟢 <strong>「已连接」</strong>。</p>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">6</div>
+  <div class="step-body">
+    <strong>开始使用</strong>
+    <p>创建项目、添加任务、填写工时——所有操作都会实时写入你电脑上的 SQLite 数据库。团队成员在你的局域网内打开同一网页、切到团队模式，就能看到共享数据。</p>
+  </div>
+</div>
+
+<div class="info info-yellow">
+  <strong>⚠ 注意：团队成员需要先配置服务器地址</strong>
+  目前默认 API 地址是 <code>http://127.0.0.1:5000</code>（本机）。团队成员需要在浏览器 F12 Console 中执行：<br>
+  <code>API_BASE = 'http://192.168.x.xxx:5000'</code>（替换为你的局域网 IP），然后刷新页面并切到团队模式。
+</div>
+
+<h3>1.4 团队成员连接步骤（简明版）</h3>
+<ol class="checklist">
+  <li>确保和你连接同一个 WiFi</li>
+  <li>打开 GDC 系统页面</li>
+  <li>F12 打开控制台，输入 <code>API_BASE = 'http://你的IP:5000'</code></li>
+  <li>点击右上角切换到「团队模式」</li>
+  <li>指示灯变绿 → 连接成功，开始使用</li>
+</ol>
+</div>
+
+<!-- ========== 2. 安全指引 ========== -->
+<div class="section" id="s2">
+<h2>🔐 第二章：安全指引</h2>
+
+<h3>2.1 数据存储安全</h3>
+<table>
+  <tr><th>安全维度</th><th>实际情况</th><th>风险等级</th></tr>
+  <tr><td>数据存储位置</td><td><code>gdc_data.db</code> 文件在你的电脑上</td><td>🟢 安全</td></tr>
+  <tr><td>数据加密</td><td>SQLite 文件本身未加密（明文存储）</td><td>🟡 中等</td></tr>
+  <tr><td>第三方访问</td><td>数据不经过任何外部服务器</td><td>🟢 安全</td></tr>
+  <tr><td>传输加密</td><td>局域网内 HTTP 明文传输（无 HTTPS）</td><td>🟡 中等</td></tr>
+  <tr><td>访问控制</td><td>无登录认证，局域网内任何人可访问</td><td>🔴 需关注</td></tr>
+  <tr><td>审计日志</td><td>暂无操作日志记录</td><td>🟡 中等</td></tr>
+</table>
+
+<div class="info info-yellow">
+  <strong>🟡 请注意</strong>
+  当前版本定位为「试用/测试阶段」。数据在局域网内是明文传输的，同一 WiFi 下的设备理论上可以访问。正式使用前建议由 IT 部门加固。
+</div>
+
+<h3>2.2 网络安全建议</h3>
+<div class="info info-blue">
+  <strong>🛡️ 安全最佳实践</strong>
+  <ol style="margin:8px 0 0 18px">
+    <li><strong>只在局域网内使用</strong>——不要将 5000 端口暴露到公网</li>
+    <li><strong>使用公司内网</strong>——公司 WiFi 通常有 WPA2/WPA3 加密</li>
+    <li><strong>Windows 防火墙已自动保护</strong>——首次启动时 Windows 会询问是否允许 Python 通过防火墙，点击「允许」即可</li>
+    <li><strong>定期备份数据库</strong>——复制 <code>gdc_data.db</code> 到安全位置</li>
+    <li><strong>不要让服务器长期无人值守运行</strong></li>
+  </ol>
+</div>
+
+<h3>2.3 数据备份策略</h3>
+<div class="step">
+  <div class="step-num">📋</div>
+  <div class="step-body">
+    <strong>手动备份（推荐每周执行）</strong>
+    <p>复制 <code>gdc_data.db</code> 文件到备份文件夹（如 D:\备份\），按日期重命名：<code>gdc_data_2026-05-17.db</code></p>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">🔄</div>
+  <div class="step-body">
+    <strong>自动备份脚本</strong>
+    <p>创建一个 backup.bat：</p>
+    <pre>@echo off
+set BACKUP_DIR=D:\GDC_Backup
+if not exist "%BACKUP_DIR%" mkdir "%BACKUP_DIR%"
+copy "C:\Users\86152\my-app-hub\gdc_data.db" "%BACKUP_DIR%\gdc_%date:~0,10%.db"
+echo 备份完成: %BACKUP_DIR%\gdc_%date:~0,10%.db
+pause</pre>
+  </div>
+</div>
+
+<h3>2.4 权限控制（当前阶段）</h3>
+<p>当前版本没有登录系统，权限控制依赖物理网络隔离：</p>
+<ul style="margin:8px 0 0 18px;color:var(--text2)">
+  <li>只有连上你 WiFi 的人能访问</li>
+  <li>公司 WiFi 通常有密码保护</li>
+  <li>下班后关闭服务器（Ctrl+C），数据绝对不会被访问</li>
+</ul>
+<div class="info info-blue">
+  <strong>🔜 后续可加（移交 IT 后）</strong>
+  用户名密码登录、操作权限分级（只读/编辑/管理员）、操作日志审计、HTTPS 加密传输。
+</div>
+</div>
+
+<!-- ========== 3. 日常维护 ========== -->
+<div class="section" id="s3">
+<h2>🛠️ 第三章：日常维护教程</h2>
+
+<h3>3.1 启动与停止</h3>
+<table>
+  <tr><th>操作</th><th>方法</th><th>说明</th></tr>
+  <tr><td>🚀 启动</td><td>双击 <code>start-server.bat</code></td><td>终端窗口弹出即表示服务器运行中</td></tr>
+  <tr><td>🛑 停止</td><td>按 <code>Ctrl+C</code> 或直接关掉终端窗口</td><td>SQLite 支持 WAL 模式，强制关闭不会损坏数据</td></tr>
+  <tr><td>🔄 重启</td><td>先 Ctrl+C 停止，再双击 start-server.bat</td><td>适用于代码更新后或修改了配置</td></tr>
+</table>
+
+<h3>3.2 日常检查清单</h3>
+<ol class="checklist">
+  <li>每天早上启动服务器</li>
+  <li>打开 <code>http://127.0.0.1:5000/api/health</code> 确认运行正常</li>
+  <li>打开 GDC 网页，切换团队模式，确认指示灯绿色</li>
+  <li>下班前检查是否有未保存的操作</li>
+  <li>每周备份一次 <code>gdc_data.db</code></li>
+</ol>
+
+<h3>3.3 故障排查</h3>
+<table>
+  <tr><th>问题</th><th>可能原因</th><th>解决方法</th></tr>
+  <tr><td>双击 start-server.bat 闪退</td><td>Python 未安装或不在 PATH</td><td>打开 CMD 输入 <code>python --version</code> 检查</td></tr>
+  <tr><td>启动报错 "Address already in use"</td><td>5000 端口被占用</td><td>之前已启动了一个实例，检查是否有未关闭的终端窗口</td></tr>
+  <tr><td>指示灯红色「未连接」</td><td>服务器未启动或 IP 不对</td><td>检查 start-server.bat 是否在运行</td></tr>
+  <tr><td>成员连不上</td><td>不在同一局域网 / 防火墙拦截</td><td>检查是否同 WiFi；Windows 防火墙弹出提示时点「允许」</td></tr>
+  <tr><td>数据显示不一致</td><td>浏览器缓存</td><td>切换团队模式后按 F5 刷新</td></tr>
+  <tr><td>数据库文件越来越大</td><td>正常现象</td><td>SQLite 有自动回收机制，通常不需要手动清理</td></tr>
+</table>
+
+<h3>3.4 数据迁移</h3>
+<div class="info info-blue">
+  <strong>📦 迁移到新电脑</strong>
+  <ol style="margin:8px 0 0 18px">
+    <li>复制 <code>gdc_data.db</code> + <code>server.py</code> + <code>start-server.bat</code> 到新电脑同一文件夹</li>
+    <li>在新电脑安装 Python 3.9+</li>
+    <li>双击 start-server.bat（会自动安装依赖）</li>
+    <li>完成——所有历史数据都在</li>
+  </ol>
+</div>
+<div class="info info-blue">
+  <strong>📤 迁移到正式数据库（MySQL/PostgreSQL）</strong>
+  <p>SQLite 数据库文件可直接用工具导出为 CSV 或 SQL 脚本，IT 部门可据此导入到任何关系型数据库。<code>gdc_data.db</code> 包含 4 张表（projects/tasks/time_entries/allocation_rules），结构清晰。</p>
+</div>
+
+<h3>3.5 升级服务器代码</h3>
+<p>当 GitHub 上有更新时：</p>
+<ol style="margin:8px 0 0 18px;color:var(--text2)">
+  <li>停止服务器（Ctrl+C）</li>
+  <li>下载最新的 <code>server.py</code> 覆盖原文件</li>
+  <li>重新启动服务器</li>
+  <li>数据库文件 <code>gdc_data.db</code> 不受影响，数据不会丢失</li>
+</ol>
+</div>
+
+<!-- ========== 4. FAQ ========== -->
+<div class="section" id="s4">
+<h2>❓ 第四章：常见问题 FAQ</h2>
+
+<details style="margin:12px 0">
+<summary style="cursor:pointer;font-weight:600;color:var(--accent)">Q: 我的数据会被别人看到吗？</summary>
+<p style="margin:8px 0 0 12px;color:var(--text2)">
+  🔒 不会。数据存在你电脑的 <code>gdc_data.db</code> 文件中。只有连上你同一局域网且知道 IP 的人才能访问。你下班关掉服务器后，任何人都无法访问。
+</p>
+</details>
+
+<details style="margin:12px 0">
+<summary style="cursor:pointer;font-weight:600;color:var(--accent)">Q: 我电脑关了，团队成员还能用吗？</summary>
+<p style="margin:8px 0 0 12px;color:var(--text2)">
+  ❌ 不能。服务器在你电脑上，你电脑关机 = 服务器停止 = 团队模式不可用。不过成员可以切回「本地模式」继续使用 localStorage 存储的个人数据。
+</p>
+</details>
+
+<details style="margin:12px 0">
+<summary style="cursor:pointer;font-weight:600;color:var(--accent)">Q: 数据库文件丢了怎么办？</summary>
+<p style="margin:8px 0 0 12px;color:var(--text2)">
+  ⚠ 如果没做备份，数据无法恢复。这就是为什么建议<strong>每周备份一次</strong> <code>gdc_data.db</code>。
+</p>
+</details>
+
+<details style="margin:12px 0">
+<summary style="cursor:pointer;font-weight:600;color:var(--accent)">Q: 能同时多少人使用？</summary>
+<p style="margin:8px 0 0 12px;color:var(--text2)">
+  SQLite 支持多个读操作并发，但写入是串行的。对于 5-15 人的审计团队日常使用完全够用。如果超过 30 人同时频繁写入，建议升级到 PostgreSQL。
+</p>
+</details>
+
+<details style="margin:12px 0">
+<summary style="cursor:pointer;font-weight:600;color:var(--accent)">Q: 团队模式下需要联网吗？</summary>
+<p style="margin:8px 0 0 12px;color:var(--text2)">
+  需要局域网连接（WiFi），但<strong>不需要互联网</strong>。所有数据在局域网内传输，不经过外网。
+</p>
+</details>
+
+<details style="margin:12px 0">
+<summary style="cursor:pointer;font-weight:600;color:var(--accent)">Q: 本地模式和团队模式的数据互通吗？</summary>
+<p style="margin:8px 0 0 12px;color:var(--text2)">
+  ❌ 不互通。本地模式数据在浏览器 localStorage 中；团队模式数据在服务器的 <code>gdc_data.db</code> 中。它们是两套独立的数据存储。切换模式后看到的是不同数据。
+</p>
+</details>
+</div>
+
+<!-- ========== 5. 移交IT ========== -->
+<div class="section" id="s5">
+<h2>🏢 第五章：移交 IT 部门指南</h2>
+
+<p>当你决定将这套系统正式推广，以下是 IT 部门需要的信息：</p>
+
+<h3>5.1 技术栈总览</h3>
+<table>
+  <tr><th>组件</th><th>技术</th><th>文件</th></tr>
+  <tr><td>前端</td><td>纯 HTML/CSS/JS</td><td>gdc-task-system.html</td></tr>
+  <tr><td>后端 API</td><td>Python Flask</td><td>server.py（约 150 行）</td></tr>
+  <tr><td>数据库</td><td>SQLite 3</td><td>gdc_data.db（自动创建）</td></tr>
+  <tr><td>启动脚本</td><td>Windows Batch</td><td>start-server.bat</td></tr>
+</table>
+
+<h3>5.2 IT 部门可做的加固</h3>
+<ol style="margin:8px 0 0 18px;color:var(--text2)">
+  <li><strong>添加认证</strong>——使用 Flask-Login 或 JWT 实现用户名密码登录</li>
+  <li><strong>升级数据库</strong>——将 SQLite 替换为 PostgreSQL/MySQL（server.py 只需改一行连接配置）</li>
+  <li><strong>HTTPS</strong>——部署 Nginx 反向代理 + SSL 证书</li>
+  <li><strong>部署到服务器</strong>——将 server.py 部署到公司内网服务器，保持 7×24 运行</li>
+  <li><strong>操作日志</strong>——在 API 层增加操作审计日志</li>
+  <li><strong>权限分级</strong>——实现 RBAC 权限模型（管理员/组长/成员）</li>
+  <li><strong>定期自动备份</strong>——用 Windows 计划任务或 cron job 定时备份数据库</li>
+</ol>
+
+<h3>5.3 数据库表结构（供 IT 参考）</h3>
+<pre>-- 项目表
+CREATE TABLE projects (
+    id TEXT PRIMARY KEY, code TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL, client TEXT DEFAULT '',
+    created_at TEXT DEFAULT ''
+);
+
+-- 任务表（关联项目，级联删除）
+CREATE TABLE tasks (
+    id TEXT PRIMARY KEY, name TEXT NOT NULL, type TEXT NOT NULL,
+    account TEXT DEFAULT '', unique_code TEXT NOT NULL UNIQUE,
+    project_id TEXT REFERENCES projects(id) ON DELETE CASCADE
+);
+
+-- 工时记录表（关联任务，级联删除）
+CREATE TABLE time_entries (
+    id TEXT PRIMARY KEY, task_id TEXT NOT NULL,
+    member TEXT NOT NULL, date TEXT NOT NULL,
+    hours REAL NOT NULL, notes TEXT DEFAULT '',
+    FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
+);
+
+-- 分摊规则表
+CREATE TABLE allocation_rules (
+    id TEXT PRIMARY KEY, task_id TEXT NOT NULL,
+    project_id TEXT NOT NULL, percent REAL NOT NULL,
+    FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+);</pre>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  <p><strong>GDC 审计任务工时管理系统</strong> · 团队模式 v1.0</p>
+  <p style="margin-top:4px">数据 100% 本地存储 · 不经过任何第三方服务器 · SQLite + Flask 轻量架构</p>
+  <p style="margin-top:8px">
+    <a href="https://bgu253518.github.io/my-app-hub/" style="color:var(--accent)">返回首页</a> ·
+    <a href="https://github.com/Bgu253518/my-app-hub" style="color:var(--accent)">GitHub 源码</a>
+  </p>
+  <p style="margin-top:4px;color:#666">按 Ctrl+P 可导出为 PDF 离线手册</p>
+</div>
+
+</div><!-- /wrap -->
+</body>
+</html>
