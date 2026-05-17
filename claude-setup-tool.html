@@ -340,15 +340,15 @@
   </div>
 
   <button class="btn-generate" id="btnGenerate">生成配置脚本</button>
-  <button class="btn-download" id="btnDownload">下载 setup.bat</button>
+  <button class="btn-download" id="btnDownload">下载 setup.ps1</button>
 
   <div class="steps">
     <strong>使用步骤：</strong>
     <ol>
       <li>选择服务商，填写 API 密钥</li>
       <li>点击「生成配置脚本」，预览确认无误</li>
-      <li>点击「下载 setup.bat」保存到本地</li>
-      <li>双击 <code>setup.bat</code> 即可自动配置（无需管理员权限）</li>
+      <li>点击「下载 setup.ps1」保存到本地</li>
+      <li>在下载目录打开 PowerShell，执行：<code>.\setup.ps1</code></li>
       <li>关闭当前终端，重新打开终端后运行 <code>claude</code> 即可</li>
     </ol>
   </div>
@@ -511,56 +511,59 @@
     var smallModel = smallModelSelectEl.value || p.defaultSmall;
     var displayKey = apiKey.substring(0, 6) + '****' + apiKey.substring(apiKey.length - 4);
 
-    // 生成 .bat 批处理文件，双击即可运行，无需 PowerShell 执行策略
-    var script = '@echo off\r\n';
-    script += 'echo.\r\n';
-    script += 'echo   === Claude Code 配置工具 ===\r\n';
-    script += 'echo   服务商: ' + p.label + '\r\n';
-    script += 'echo   接口地址: ' + baseUrl + '\r\n';
-    script += 'echo.\r\n';
-    script += 'echo.\r\n';
-    script += 'echo [1/4] 正在设置 ANTHROPIC_BASE_URL...\r\n';
-    script += 'setx ANTHROPIC_BASE_URL "' + baseUrl + '"\r\n';
-    script += 'echo.\r\n';
-    script += 'echo [2/4] 正在设置 ANTHROPIC_API_KEY...\r\n';
-    script += 'setx ANTHROPIC_API_KEY "' + apiKey + '"\r\n';
-    script += 'echo.\r\n';
-    script += 'echo [3/4] 正在设置 ANTHROPIC_MODEL...\r\n';
-    script += 'setx ANTHROPIC_MODEL "' + model + '"\r\n';
-    script += 'echo.\r\n';
+    var script = '# ============================================\n';
+    script += '#  Claude Code 一键配置脚本 (PowerShell)\n';
+    script += '#  服务商: ' + p.label + '\n';
+    script += '#  生成时间: ' + new Date().toLocaleString('zh-CN') + '\n';
+    script += '# ============================================\n\n';
+
+    script += 'Write-Host ""\n';
+    script += 'Write-Host "  === Claude Code 配置工具 ===" -ForegroundColor Cyan\n';
+    script += 'Write-Host "  服务商: ' + p.label + '"\n';
+    script += 'Write-Host "  接口地址: ' + baseUrl + '"\n';
+    script += 'Write-Host ""\n\n';
+
+    script += '# -- 用户级环境变量 --------------------------\n';
+    script += 'Write-Host "[1/4] 正在设置 ANTHROPIC_BASE_URL..." -ForegroundColor Yellow\n';
+    script += '[Environment]::SetEnvironmentVariable("ANTHROPIC_BASE_URL", "' + baseUrl + '", "User")\n\n';
+
+    script += 'Write-Host "[2/4] 正在设置 ANTHROPIC_API_KEY..." -ForegroundColor Yellow\n';
+    script += '[Environment]::SetEnvironmentVariable("ANTHROPIC_API_KEY", "' + apiKey + '", "User")\n\n';
+
+    script += 'Write-Host "[3/4] 正在设置 ANTHROPIC_MODEL..." -ForegroundColor Yellow\n';
+    script += '[Environment]::SetEnvironmentVariable("ANTHROPIC_MODEL", "' + model + '", "User")\n\n';
+
     if (smallModel) {
-      script += 'echo [4/4] 正在设置 ANTHROPIC_SMALL_FAST_MODEL...\r\n';
-      script += 'setx ANTHROPIC_SMALL_FAST_MODEL "' + smallModel + '"\r\n';
-      script += 'echo.\r\n';
+      script += 'Write-Host "[4/4] 正在设置 ANTHROPIC_SMALL_FAST_MODEL..." -ForegroundColor Yellow\n';
+      script += '[Environment]::SetEnvironmentVariable("ANTHROPIC_SMALL_FAST_MODEL", "' + smallModel + '", "User")\n\n';
     } else {
-      script += 'echo [4/4] 跳过 ANTHROPIC_SMALL_FAST_MODEL（未指定）\r\n';
-      script += 'echo.\r\n';
+      script += 'Write-Host "[4/4] 跳过 ANTHROPIC_SMALL_FAST_MODEL（未指定）" -ForegroundColor Gray\n\n';
     }
-    script += 'echo.\r\n';
-    script += 'echo   ========================================\r\n';
-    script += 'echo   配置完成!\r\n';
-    script += 'echo   请关闭当前终端并打开新终端，运行 claude\r\n';
-    script += 'echo   ========================================\r\n';
-    script += 'echo.\r\n';
-    script += 'pause\r\n';
+
+    script += 'Write-Host ""\n';
+    script += 'Write-Host "  ========================================" -ForegroundColor Green\n';
+    script += 'Write-Host "  配置完成!" -ForegroundColor Green\n';
+    script += 'Write-Host "  请关闭当前终端并打开新终端，运行 claude" -ForegroundColor Green\n';
+    script += 'Write-Host "  ========================================" -ForegroundColor Green\n';
+    script += 'Write-Host ""\n';
+    script += 'Read-Host "按 Enter 键退出"\n';
 
     generatedScript = script;
 
-    // 预览内容（隐藏完整 API Key）
-    var preview = '@echo off\r\n';
-    preview += 'echo.\r\n';
-    preview += 'echo   === Claude Code 配置工具 ===\r\n';
-    preview += 'echo   服务商: ' + p.label + '\r\n';
-    preview += 'echo   接口地址: ' + baseUrl + '\r\n';
-    preview += 'echo   API 密钥: ' + displayKey + '\r\n';
-    preview += 'echo.\r\n';
-    preview += 'setx ANTHROPIC_BASE_URL "' + baseUrl + '"\r\n';
-    preview += 'setx ANTHROPIC_API_KEY "' + displayKey + '"\r\n';
-    preview += 'setx ANTHROPIC_MODEL "' + model + '"\r\n';
+    var preview = '# ============================================\n';
+    preview += '#  Claude Code 一键配置脚本 (PowerShell)\n';
+    preview += '#  服务商: ' + p.label + '\n';
+    preview += '#  接口地址: ' + baseUrl + '\n';
+    preview += '#  API 密钥: ' + displayKey + '\n';
+    preview += '#  模型: ' + model + (smallModel ? ' / ' + smallModel : '') + '\n';
+    preview += '#  生成时间: ' + new Date().toLocaleString('zh-CN') + '\n';
+    preview += '# ============================================\n\n';
+    preview += '[Environment]::SetEnvironmentVariable("ANTHROPIC_BASE_URL", "' + baseUrl + '", "User")\n';
+    preview += '[Environment]::SetEnvironmentVariable("ANTHROPIC_API_KEY", "' + displayKey + '", "User")\n';
+    preview += '[Environment]::SetEnvironmentVariable("ANTHROPIC_MODEL", "' + model + '", "User")\n';
     if (smallModel) {
-      preview += 'setx ANTHROPIC_SMALL_FAST_MODEL "' + smallModel + '"\r\n';
+      preview += '[Environment]::SetEnvironmentVariable("ANTHROPIC_SMALL_FAST_MODEL", "' + smallModel + '", "User")\n';
     }
-    preview += 'pause\r\n';
 
     scriptPreviewEl.textContent = preview;
     btnDownload.classList.add('show');
@@ -576,12 +579,12 @@
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
-    a.download = 'setup.bat';
+    a.download = 'setup.ps1';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast('下载完成！双击 setup.bat 即可配置');
+    showToast('下载完成！在下载目录打开 PowerShell 执行 .\\setup.ps1');
   }
 
   providerEl.addEventListener('change', updateProviderInfo);

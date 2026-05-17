@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TB 自动上数器 — 顾力菡·应用工坊</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+<style>
+:root {
+  --bg-deep: #0a0a14; --bg-card: rgba(22,22,44,0.6); --glass-border: rgba(255,255,255,0.08);
+  --text-primary: #e8e8f0; --text-secondary: #9999b0;
+  --accent-1: #7c5cfc; --accent-2: #5cfca0; --accent-3: #fc5c9c; --radius: 14px; --radius-sm: 8px;
+}
+body {
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background: linear-gradient(160deg,#0a0a14 0%,#12122a 30%,#16163a 60%,#0d0d24 100%);
+  color: var(--text-primary); min-height:100vh; line-height:1.6;
+}
+body::before {
+  content:''; position:fixed; inset:0;
+  background: radial-gradient(ellipse at 20% 20%, rgba(124,92,252,0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 60%, rgba(252,92,156,0.04) 0%, transparent 50%);
+  pointer-events:none; z-index:0;
+}
+::-webkit-scrollbar { width:5px; } ::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(124,92,252,0.25); border-radius:3px; }
+
+.header {
+  position:sticky; top:0; z-index:50; background:rgba(10,10,20,0.85); backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--glass-border); padding:0 20px; height:56px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.header .brand { font-size:16px; font-weight:700; }
+.header a { color:var(--text-secondary); text-decoration:none; font-size:13px; }
+.header a:hover { color:var(--text-primary); }
+.main { position:relative; z-index:1; max-width:1500px; margin:0 auto; padding:20px; }
+
+.card {
+  background:var(--bg-card); border:1px solid var(--glass-border);
+  border-radius:var(--radius); padding:20px; margin-bottom:16px; backdrop-filter:blur(10px);
+}
+.card-title { font-size:15px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.card-hint { font-size:12px; color:var(--text-secondary); margin-bottom:12px; }
+
+.btn {
+  display:inline-flex; align-items:center; gap:4px; padding:7px 14px; border-radius:6px;
+  font-size:12px; font-weight:600; cursor:pointer; border:1px solid var(--glass-border);
+  background:rgba(255,255,255,0.05); color:var(--text-primary); transition:all 0.2s; white-space:nowrap;
+}
+.btn:hover { background:rgba(255,255,255,0.1); }
+.btn-primary { background:linear-gradient(135deg,#7c5cfc,#5ccafc); border:none; color:#fff; }
+.btn-primary:hover { opacity:0.9; transform:translateY(-1px); box-shadow:0 4px 16px rgba(124,92,252,0.3); }
+.btn-primary:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+.btn-danger { border-color:rgba(252,92,156,0.3); color:var(--accent-3); }
+.btn-success { border-color:rgba(92,252,160,0.3); color:var(--accent-2); }
+.btn-xs { padding:3px 8px; font-size:10px; }
+.btn-sm { padding:5px 10px; font-size:11px; }
+
+input,select,textarea {
+  background:rgba(255,255,255,0.05); border:1px solid var(--glass-border);
+  border-radius:6px; padding:7px 10px; color:var(--text-primary); font-size:12px; outline:none;
+}
+input:focus,select:focus,textarea:focus { border-color:var(--accent-1); }
+select option { background:#1a1a2e; color:#e8e8f0; }
+input[type="range"] { accent-color: var(--accent-1); padding: 0; }
+
+.steps { display:flex; gap:0; margin-bottom:20px; }
+.step {
+  flex:1; text-align:center; padding:10px 8px; cursor:pointer;
+  background:rgba(255,255,255,0.03); border:1px solid var(--glass-border);
+  font-size:12px; color:var(--text-secondary); transition:all 0.2s;
+}
+.step:first-child { border-radius:var(--radius) 0 0 var(--radius); }
+.step:last-child { border-radius:0 var(--radius) var(--radius) 0; }
+.step.active { background:rgba(124,92,252,0.15); border-color:var(--accent-1); color:#fff; font-weight:600; }
+.step.done { background:rgba(92,252,160,0.08); border-color:rgba(92,252,160,0.3); color:var(--accent-2); }
+
+.table-wrap { max-height:450px; overflow:auto; border:1px solid var(--glass-border); border-radius:var(--radius-sm); }
+.table-wrap table { border-collapse:collapse; font-size:12px; width:max-content; min-width:100%; }
+.table-wrap th, .table-wrap td { border:1px solid rgba(255,255,255,0.1); padding:5px 8px; white-space:nowrap; }
+.table-wrap th { background:rgba(124,92,252,0.15); font-weight:600; position:sticky; top:0; z-index:1; text-align:center; }
+.table-wrap td { background:rgba(0,0,0,0.2); }
+.table-wrap td.filled { background:rgba(92,252,160,0.12) !important; }
+.table-wrap td.skipped { background:rgba(255,255,255,0.03); color:var(--text-secondary); }
+.table-wrap td.unmatched { background:rgba(252,92,156,0.1) !important; }
+.table-wrap td.formula { background:rgba(124,92,252,0.08) !important; color:var(--accent-1); font-style:italic; }
+
+.fuzzy-suggest { padding:4px 8px; background:rgba(124,92,252,0.08); border:1px solid rgba(124,92,252,0.2); border-radius:4px; cursor:pointer; font-size:11px; }
+.fuzzy-suggest:hover { background:rgba(124,92,252,0.2); }
+
+.toast {
+  position:fixed; bottom:20px; right:20px; z-index:100;
+  background:rgba(22,22,44,0.95); border:1px solid var(--glass-border);
+  padding:10px 18px; border-radius:var(--radius-sm); font-size:12px;
+  backdrop-filter:blur(12px); transform:translateY(100px); opacity:0; transition:all 0.3s;
+}
+.toast.show { transform:translateY(0); opacity:1; }
+
+.hidden { display:none !important; }
+.flex-center { display:flex; align-items:center; gap:8px; }
+.gap2 { display:flex; gap:8px; flex-wrap:wrap; }
+.mt2 { margin-top:8px; } .mt3 { margin-top:12px; } .mb2 { margin-bottom:8px; }
+.text-sm { font-size:12px; } .text-xs { font-size:10px; }
+.text-secondary { color:var(--text-secondary); }
+.font-mono { font-family:monospace; }
+
+@media (max-width:768px) { .main { padding:12px; } .steps { flex-wrap:wrap; } .step { flex:auto; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="brand">📊 TB 自动上数器</span>
+  <a href="index.html">← 返回应用工坊</a>
+</div>
+
+<div class="main">
+
+  <!-- Steps -->
+  <div class="steps">
+    <div class="step active" data-st="1">① 映射与科目余额表</div>
+    <div class="step" data-st="2">② TB 配置</div>
+    <div class="step" data-st="3">③ 自动上数</div>
+    <div class="step" data-st="4">④ 校验导出</div>
+  </div>
+
+  <!-- ====== Step 1: Mapping + Balance Sheet ====== -->
+  <div id="s1">
+    <!-- Client template selector -->
+    <div class="card">
+      <div class="card-title">📁 科目映射模板</div>
+      <div class="flex-center gap2 mb2" style="flex-wrap:wrap">
+        <span class="text-sm">当前客户:</span>
+        <select id="clientSel" onchange="switchClient()" style="min-width:150px"><option value="__new__">+ 新建客户模板</option></select>
+        <button class="btn btn-xs btn-primary" onclick="newClient()">➕ 新建</button>
+        <button class="btn btn-xs" onclick="addMappingRow()">➕ 添加行</button>
+        <label class="btn btn-xs" style="cursor:pointer">📥 导入<input type="file" accept=".xlsx,.xls" onchange="importMapping(this)" class="hidden"></label>
+        <button class="btn btn-xs" onclick="exportMapping()">📤 导出</button>
+      </div>
+      <div class="table-wrap" id="mappingTableWrap">
+        <table>
+          <thead><tr><th>客户科目代码</th><th>客户科目名称</th><th>标准科目代码</th><th>标准科目名称</th><th>科目性质</th><th>借贷方向</th><th>操作</th></tr></thead>
+          <tbody id="mappingBody"><tr><td colspan="7" class="text-secondary">请新建客户模板或选择已有模板</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Import balance sheet -->
+    <div class="card">
+      <div class="card-title">📂 导入客户科目余额表</div>
+      <div class="gap2 mb2">
+        <label class="btn btn-sm" style="cursor:pointer">📤 上传余额表 Excel<input type="file" accept=".xlsx,.xls" onchange="loadBalanceSheet(this)" class="hidden"></label>
+        <span class="text-sm text-secondary" id="bsInfo">未上传</span>
+      </div>
+      <div id="bsConfig" class="hidden mt2">
+        <div class="flex-center gap2 mb2" style="flex-wrap:wrap">
+          <span class="text-sm">科目代码:</span><select id="bsCodeCol"></select>
+          <span class="text-sm">科目名称:</span><select id="bsNameCol"></select>
+          <span class="text-sm">期初余额:</span><select id="bsOpenCol"></select>
+          <span class="text-sm">借方发生:</span><select id="bsDrCol"><option value="-1">无</option></select>
+          <span class="text-sm">贷方发生:</span><select id="bsCrCol"><option value="-1">无</option></select>
+          <span class="text-sm">期末余额:</span><select id="bsEndCol"></select>
+          <span class="text-sm">方向:</span><select id="bsDirCol"><option value="-1">无</option></select>
+          <button class="btn btn-xs btn-primary" onclick="parseBS()">解析</button>
+        </div>
+        <div class="table-wrap" style="max-height:220px" id="bsPreview"></div>
+      </div>
+    </div>
+    <div class="flex-center">
+      <button class="btn btn-primary" onclick="goStep(2)">下一步：TB 配置 →</button>
+    </div>
+  </div>
+
+  <!-- ====== Step 2: TB Config ====== -->
+  <div id="s2" class="hidden">
+    <div class="card">
+      <div class="card-title">📋 TB 模板</div>
+      <div class="gap2 mb2">
+        <span class="text-sm">选项:</span>
+        <button class="btn btn-sm btn-primary" id="tbOptUpload" onclick="setTBMode('upload')">A. 上传已有 TB 底稿</button>
+        <button class="btn btn-sm" id="tbOptGen" onclick="setTBMode('gen')">B. 自动生成极简 TB 表</button>
+      </div>
+      <div id="tbUploadArea" class="hidden mt2">
+        <label class="btn btn-sm" style="cursor:pointer">📤 上传 TB Excel<input type="file" accept=".xlsx,.xls" onchange="loadTB(this)" class="hidden"></label>
+        <span class="text-sm text-secondary ml-2" id="tbInfo">未上传</span>
+        <div id="tbColConfig" class="hidden mt2 flex-center gap2">
+          <span class="text-sm">科目代码列:</span><select id="tbCodeCol"></select>
+          <span class="text-sm">科目名称列:</span><select id="tbNameCol"></select>
+          <span class="text-sm">期初数列:</span><select id="tbOpenCol"></select>
+          <span class="text-sm">本期填数列:</span><select id="tbFillCol" multiple style="min-width:120px;height:70px"></select>
+          <button class="btn btn-xs btn-primary" onclick="parseTB()">解析 TB</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📋 TB 预览</div>
+      <div class="table-wrap" id="tbPreview"></div>
+    </div>
+    <div class="flex-center gap2">
+      <button class="btn" onclick="goStep(1)">← 上一步</button>
+      <button class="btn btn-primary" onclick="goStep(3)">下一步：自动上数 →</button>
+    </div>
+  </div>
+
+  <!-- ====== Step 3: Auto Fill ====== -->
+  <div id="s3" class="hidden">
+    <div class="card">
+      <div class="card-title">📝 自动上数</div>
+      <div class="flex-center gap2 mb2">
+        <button class="btn btn-primary" onclick="executeAutoFill()">🚀 执行自动上数</button>
+        <span class="text-sm text-secondary">根据映射模板匹配科目，填入数值，跳过公式单元格</span>
+      </div>
+      <div id="fillResult" class="hidden mt2"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">⚠ 未匹配科目</div>
+      <div id="unmatchedPanel">
+        <p class="text-sm text-secondary">执行上数后此处显示未匹配的客户科目及模糊匹配建议</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📋 TB 预览（上数后）</div>
+      <div class="table-wrap" id="tbPreview2"></div>
+    </div>
+    <div class="flex-center gap2">
+      <button class="btn" onclick="goStep(2)">← 上一步</button>
+      <button class="btn btn-primary" onclick="goStep(4)">下一步：校验导出 →</button>
+    </div>
+  </div>
+
+  <!-- ====== Step 4: Verify & Export ====== -->
+  <div id="s4" class="hidden">
+    <div class="card">
+      <div class="card-title">✅ 自动校验</div>
+      <div class="flex-center gap2 mb2">
+        <button class="btn btn-primary" onclick="runVerify()">🔍 执行校验</button>
+      </div>
+      <div id="verifyResult"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📤 导出</div>
+      <div class="gap2">
+        <button class="btn btn-primary" onclick="downloadTB()">📥 下载填好的 TB (.xlsx)</button>
+        <button class="btn" onclick="downloadUnmatched()">📊 下载未匹配清单 (.xlsx)</button>
+        <button class="btn" onclick="downloadVerify()">📋 下载校验报告 (.xlsx)</button>
+      </div>
+    </div>
+    <div class="flex-center">
+      <button class="btn" onclick="goStep(3)">← 上一步</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== TOAST ====================
+function toast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.className='toast show'; clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),2500); }
+
+// ==================== NAV ====================
+function goStep(n){
+  ['s1','s2','s3','s4'].forEach((id,i)=>document.getElementById(id).classList.toggle('hidden',i+1!==n));
+  document.querySelectorAll('.step').forEach((s,i)=>{ s.classList.remove('active','done'); if(i+1<n)s.classList.add('done'); if(i+1===n)s.classList.add('active'); });
+}
+
+// ==================== STORAGE ====================
+const STORE_KEY = 'tb_autofill_data';
+function loadStore(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)||'{}'); }catch{ return {}; } }
+function saveStore(v){ localStorage.setItem(STORE_KEY, JSON.stringify(v)); }
+
+// ==================== STATE ====================
+let store = loadStore();
+if(!store.clients) store.clients = {}; // {clientName: {mappings:[{clientCode,clientName,stdCode,stdName,nature,direction}], balanceSheet:{rows:[],colMap:{}}}}
+let state = {
+  currentClient: '',
+  mappings: [],           // current client mappings
+  bsRows: [],            // balance sheet rows: [{code,name,openBal,drAmt,crAmt,endBal,direction}]
+  bsColMap: {},          // {code:-1, name:-1, openBal:-1, drAmt:-1, crAmt:-1, endBal:-1, direction:-1}
+  tbWb: null,            // TB workbook (SheetJS) or null if generated
+  tbMode: 'gen',         // 'upload' | 'gen'
+  tbSheetIdx: 0,
+  tbCodeCol: -1, tbNameCol: -1, tbOpenCol: -1, tbFillCols: [],
+  tbData: [],            // parsed TB rows for preview
+  fillResults: { filled:0, skipped:0, unmatched:[], formulaSkipped:0 },
+  verifyResults: { drTotal:0, crTotal:0, diff:0 }
+};
+
+function saveCurrentMappings(){
+  if(!state.currentClient) return;
+  store.clients[state.currentClient] = { mappings: state.mappings, bsColMap: state.bsColMap, bsRows: state.bsRows };
+  saveStore(store);
+}
+
+// ==================== CLIENT MANAGEMENT ====================
+function refreshClientList(){
+  const sel = document.getElementById('clientSel');
+  const names = Object.keys(store.clients).sort();
+  sel.innerHTML = names.map(n=>`<option value="${htmlEscape(n)}">${htmlEscape(n)}</option>`).join('');
+  if(names.length===0) sel.innerHTML = '<option value="__new__">+ 新建客户模板</option>';
+  else sel.innerHTML = '<option value="">选择客户...</option>' + sel.innerHTML + '<option value="__new__">+ 新建客户模板</option>';
+}
+
+function switchClient(){
+  const name = document.getElementById('clientSel').value;
+  if(name==='__new__'){ newClient(); return; }
+  if(!name){ state.currentClient=''; state.mappings=[]; renderMapping(); return; }
+  state.currentClient = name;
+  const c = store.clients[name] || { mappings:[], bsColMap:{}, bsRows:[] };
+  state.mappings = c.mappings || [];
+  state.bsColMap = c.bsColMap || {};
+  state.bsRows = c.bsRows || [];
+  renderMapping();
+}
+
+function newClient(){
+  const name = prompt('请输入客户名称：');
+  if(!name||!name.trim()) return;
+  const cn = name.trim();
+  if(store.clients[cn]){ toast('客户已存在'); return; }
+  store.clients[cn] = { mappings:[], bsColMap:{}, bsRows:[] };
+  saveStore(store);
+  state.currentClient = cn;
+  state.mappings = []; state.bsRows = []; state.bsColMap = {};
+  refreshClientList();
+  document.getElementById('clientSel').value = cn;
+  renderMapping();
+  toast('✓ 客户模板已创建：'+cn);
+}
+
+// ==================== MAPPING ====================
+function renderMapping(){
+  const tbody = document.getElementById('mappingBody');
+  if(state.mappings.length===0){
+    tbody.innerHTML='<tr><td colspan="7" class="text-secondary">暂无映射行，点击「添加行」或「导入」</td></tr>';
+    return;
+  }
+  tbody.innerHTML = state.mappings.map((m,i)=>`
+    <tr>
+      <td><input value="${htmlEscape(m.clientCode||'')}" data-mi="${i}" data-f="clientCode" style="width:100px"></td>
+      <td><input value="${htmlEscape(m.clientName||'')}" data-mi="${i}" data-f="clientName" style="width:150px"></td>
+      <td><input value="${htmlEscape(m.stdCode||'')}" data-mi="${i}" data-f="stdCode" style="width:100px"></td>
+      <td><input value="${htmlEscape(m.stdName||'')}" data-mi="${i}" data-f="stdName" style="width:150px"></td>
+      <td><select data-mi="${i}" data-f="nature" style="width:80px">
+        ${['资产','负债','权益','收入','费用','成本'].map(n=>`<option value="${n}" ${m.nature===n?'selected':''}>${n}</option>`).join('')}
+      </select></td>
+      <td><select data-mi="${i}" data-f="direction" style="width:60px">
+        <option value="借" ${m.direction==='借'?'selected':''}>借</option>
+        <option value="贷" ${m.direction==='贷'?'selected':''}>贷</option>
+      </select></td>
+      <td><button class="btn btn-xs btn-danger" onclick="delMapping(${i})">🗑</button></td>
+    </tr>
+  `).join('');
+  tbody.querySelectorAll('input,select').forEach(el=>{
+    el.addEventListener('change',function(){
+      const i=+this.dataset.mi, f=this.dataset.f;
+      if(state.mappings[i]){ state.mappings[i][f]=this.value; saveCurrentMappings(); }
+    });
+  });
+}
+
+function addMappingRow(){
+  state.mappings.push({clientCode:'',clientName:'',stdCode:'',stdName:'',nature:'资产',direction:'借'});
+  saveCurrentMappings(); renderMapping(); toast('已添加行');
+}
+
+function delMapping(i){ state.mappings.splice(i,1); saveCurrentMappings(); renderMapping(); toast('已删除'); }
+
+function importMapping(input){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload=function(e){
+    const wb = XLSX.read(e.target.result,{type:'array'});
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1});
+    if(rows.length<2){ toast('数据为空'); return; }
+    const h=rows[0]; const map={客户科目代码:'clientCode',客户科目名称:'clientName',标准科目代码:'stdCode',标准科目名称:'stdName',科目性质:'nature',借贷方向:'direction'};
+    const hi={}; h.forEach((c,i)=>{ if(map[c]) hi[map[c]]=i; });
+    let added=0;
+    for(let i=1;i<rows.length;i++){
+      const r=rows[i]; if(!Array.isArray(r)) continue;
+      const m={clientCode:'',clientName:'',stdCode:'',stdName:'',nature:'资产',direction:'借'};
+      Object.entries(hi).forEach(([k,idx])=>{ m[k]=String(r[idx]||'').trim(); });
+      if(m.clientCode||m.stdCode){ state.mappings.push(m); added++; }
+    }
+    saveCurrentMappings(); renderMapping(); toast(`✓ 已导入 ${added} 条映射`);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function exportMapping(){
+  if(state.mappings.length===0){ toast('无映射数据'); return; }
+  const rows=[['客户科目代码','客户科目名称','标准科目代码','标准科目名称','科目性质','借贷方向']];
+  state.mappings.forEach(m=>rows.push([m.clientCode,m.clientName,m.stdCode,m.stdName,m.nature,m.direction]));
+  const ws=XLSX.utils.aoa_to_sheet(rows); const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'科目映射'); XLSX.writeFile(wb,`TB映射_${state.currentClient||'未命名'}.xlsx`);
+  toast('✓ 已导出');
+}
+
+// ==================== BALANCE SHEET ====================
+function loadBalanceSheet(input){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload=function(e){
+    const wb = XLSX.read(e.target.result,{type:'array'});
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet,{header:1});
+    if(rows.length<2){ toast('数据为空'); return; }
+    document.getElementById('bsInfo').textContent = file.name+' ('+(rows.length-1)+' 行)';
+    const nCols = Math.max(...rows.map(r=>Array.isArray(r)?r.length:0));
+    const headerRow = rows[0];
+    // Auto-detect columns
+    const autoDetect = {};
+    const headerTexts = Array.from({length:nCols},(_,i)=>String(Array.isArray(headerRow)?headerRow[i]||'':''));
+    headerTexts.forEach((h,i)=>{
+      if(/代码|科目代码|code/i.test(h)) autoDetect.code = i;
+      if(/名称|科目名称|name/i.test(h)) autoDetect.name = i;
+      if(/期初|年初|opening/i.test(h)) autoDetect.openBal = i;
+      if(/借方|debit|dr/i.test(h)) autoDetect.drAmt = i;
+      if(/贷方|credit|cr/i.test(h)) autoDetect.crAmt = i;
+      if(/期末|ending|closing|余额(?!表)/i.test(h)) autoDetect.endBal = i;
+      if(/方向|借贷/i.test(h)) autoDetect.direction = i;
+    });
+    const opts = headerTexts.map((h,i)=>`<option value="${i}" ${h?`title="${htmlEscape(h)}"`:''}>${h?htmlEscape(h.slice(0,15)):'列'+(i+1)}</option>`).join('');
+    ['bsCodeCol','bsNameCol','bsOpenCol','bsEndCol'].forEach(id=>{ document.getElementById(id).innerHTML=opts; });
+    ['bsDrCol','bsCrCol','bsDirCol'].forEach(id=>{ const s=document.getElementById(id); s.innerHTML='<option value="-1">无</option>'+opts; });
+    if(autoDetect.code!==undefined) document.getElementById('bsCodeCol').value=autoDetect.code;
+    if(autoDetect.name!==undefined) document.getElementById('bsNameCol').value=autoDetect.name;
+    if(autoDetect.openBal!==undefined) document.getElementById('bsOpenCol').value=autoDetect.openBal;
+    if(autoDetect.drAmt!==undefined) document.getElementById('bsDrCol').value=autoDetect.drAmt;
+    if(autoDetect.crAmt!==undefined) document.getElementById('bsCrCol').value=autoDetect.crAmt;
+    if(autoDetect.endBal!==undefined) document.getElementById('bsEndCol').value=autoDetect.endBal;
+    if(autoDetect.direction!==undefined) document.getElementById('bsDirCol').value=autoDetect.direction;
+    document.getElementById('bsConfig').classList.remove('hidden');
+    window._bsRowsRaw = rows.slice(1).filter(r=>Array.isArray(r)&&r.some(c=>c!==undefined&&c!==null&&c!==''));
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseBS(){
+  if(!window._bsRowsRaw){ toast('请先上传余额表'); return; }
+  const cols = {
+    code: +document.getElementById('bsCodeCol').value,
+    name: +document.getElementById('bsNameCol').value,
+    openBal: +document.getElementById('bsOpenCol').value,
+    drAmt: +document.getElementById('bsDrCol').value,
+    crAmt: +document.getElementById('bsCrCol').value,
+    endBal: +document.getElementById('bsEndCol').value,
+    direction: +document.getElementById('bsDirCol').value
+  };
+  state.bsColMap = cols;
+  state.bsRows = window._bsRowsRaw.map(r=>({
+    code: String(r[cols.code]||'').trim(),
+    name: String(r[cols.name]||'').trim(),
+    openBal: parseNum(r[cols.openBal]),
+    drAmt: cols.drAmt>=0 ? parseNum(r[cols.drAmt]) : 0,
+    crAmt: cols.crAmt>=0 ? parseNum(r[cols.crAmt]) : 0,
+    endBal: parseNum(r[cols.endBal]),
+    direction: cols.direction>=0 ? String(r[cols.direction]||'').trim() : ''
+  })).filter(d=>d.code||d.name);
+  document.getElementById('bsPreview').innerHTML = `<table><thead><tr><th>科目代码</th><th>科目名称</th><th>期初余额</th><th>借方发生</th><th>贷方发生</th><th>期末余额</th><th>方向</th></tr></thead><tbody>`+
+    state.bsRows.slice(0,20).map(d=>`<tr><td>${htmlEscape(d.code)}</td><td>${htmlEscape(d.name)}</td><td class="font-mono">${fmtNum(d.openBal)}</td><td class="font-mono">${fmtNum(d.drAmt)}</td><td class="font-mono">${fmtNum(d.crAmt)}</td><td class="font-mono">${fmtNum(d.endBal)}</td><td>${htmlEscape(d.direction)}</td></tr>`).join('')+
+    (state.bsRows.length>20?`<tr><td colspan="7" class="text-secondary">... 共 ${state.bsRows.length} 条</td></tr>`:'')+'</tbody></table>';
+  saveCurrentMappings();
+  toast(`✓ 已解析 ${state.bsRows.length} 条科目`);
+}
+
+function parseNum(v){
+  if(v===undefined||v===null||v==='') return 0;
+  if(typeof v==='number') return v;
+  return parseFloat(String(v).replace(/[,\s]/g,''))||0;
+}
+
+function fmtNum(n){ return isNaN(n)?'-':n.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+// ==================== TB ====================
+function setTBMode(mode){
+  state.tbMode = mode;
+  document.getElementById('tbOptUpload').className = 'btn btn-sm'+(mode==='upload'?' btn-primary':'');
+  document.getElementById('tbOptGen').className = 'btn btn-sm'+(mode==='gen'?' btn-primary':'');
+  document.getElementById('tbUploadArea').classList.toggle('hidden', mode!=='upload');
+  if(mode==='gen') generateTB();
+}
+
+function generateTB(){
+  // Generate from standard科目 codes in mappings
+  const stdSubjects = [...new Map(state.mappings.filter(m=>m.stdCode).map(m=>[m.stdCode,{code:m.stdCode,name:m.stdName||'',nature:m.nature||'资产',direction:m.direction||'借'}])).values()];
+  // If no mappings, use a default set
+  const subjects = stdSubjects.length>0 ? stdSubjects : [
+    {code:'1001',name:'库存现金',nature:'资产',direction:'借'},{code:'1002',name:'银行存款',nature:'资产',direction:'借'},
+    {code:'1122',name:'应收账款',nature:'资产',direction:'借'},{code:'1403',name:'原材料',nature:'资产',direction:'借'},
+    {code:'1601',name:'固定资产',nature:'资产',direction:'借'},{code:'2001',name:'短期借款',nature:'负债',direction:'贷'},
+    {code:'2202',name:'应付账款',nature:'负债',direction:'贷'},{code:'4001',name:'实收资本',nature:'权益',direction:'贷'},
+    {code:'5001',name:'主营业务收入',nature:'收入',direction:'贷'},{code:'6001',name:'主营业务成本',nature:'成本',direction:'借'},
+  ];
+  state.tbData = subjects.map((s,i)=>({row:i,code:s.code,name:s.name,nature:s.nature,direction:s.direction,openBal:0,fillVal:'',hasFormula:false}));
+  state.tbWb = null; state.tbCodeCol = 0; state.tbNameCol = 1; state.tbOpenCol = -1; state.tbFillCols = [3];
+  renderTBPreview('tbPreview');
+  toast('已自动生成 TB 表（'+subjects.length+'行）');
+}
+
+function loadTB(input){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload=function(e){
+    state.tbWb = XLSX.read(e.target.result,{type:'array',cellFormula:true,cellStyles:true});
+    document.getElementById('tbInfo').textContent = file.name+' ('+state.tbWb.SheetNames.length+' Sheets)';
+    // Build column selects from first sheet
+    const sheet = state.tbWb.Sheets[state.tbWb.SheetNames[0]];
+    const ref = XLSX.utils.decode_range(sheet['!ref']||'A1');
+    const nCols = ref.e.c+1;
+    const hr = ref.s.r;
+    const headerRow = [];
+    for(let c=0;c<nCols;c++){
+      const cell = sheet[XLSX.utils.encode_cell({r:hr,c})];
+      headerRow.push(cell ? String(cell.w||cell.v||'') : '');
+    }
+    const opts = headerRow.map((h,i)=>`<option value="${i}">${h?htmlEscape(h.slice(0,18)):'列'+(i+1)}</option>`).join('');
+    ['tbCodeCol','tbNameCol','tbOpenCol'].forEach(id=>{ document.getElementById(id).innerHTML=opts; });
+    document.getElementById('tbFillCol').innerHTML = headerRow.map((h,i)=>`<option value="${i}">${h?htmlEscape(h.slice(0,18)):'列'+(i+1)}</option>`).join('');
+    document.getElementById('tbColConfig').classList.remove('hidden');
+    // Auto detect
+    if(/代码|code/.test(headerRow[0]||'')) document.getElementById('tbCodeCol').value='0';
+    if(/名称|name/.test(headerRow[1]||'')) document.getElementById('tbNameCol').value='1';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseTB(){
+  if(!state.tbWb){ toast('请先上传TB'); return; }
+  state.tbCodeCol = +document.getElementById('tbCodeCol').value;
+  state.tbNameCol = +document.getElementById('tbNameCol').value;
+  state.tbOpenCol = +document.getElementById('tbOpenCol').value;
+  state.tbFillCols = Array.from(document.getElementById('tbFillCol').selectedOptions).map(o=>+o.value);
+  state.tbSheetIdx = 0;
+
+  const sheet = state.tbWb.Sheets[state.tbWb.SheetNames[0]];
+  const ref = XLSX.utils.decode_range(sheet['!ref']||'A1');
+  state.tbData = [];
+  for(let r=ref.s.r+1;r<=ref.e.r;r++){
+    const codeCell = sheet[XLSX.utils.encode_cell({r,c:state.tbCodeCol})];
+    const nameCell = sheet[XLSX.utils.encode_cell({r,c:state.tbNameCol})];
+    if(!codeCell&&!nameCell) continue;
+    const code = String(codeCell?.w||codeCell?.v||'').trim();
+    const name = String(nameCell?.w||nameCell?.v||'').trim();
+    if(!code&&!name) continue;
+    const fillCells = {};
+    let hasAnyFormula = false;
+    state.tbFillCols.forEach(fc=>{
+      const addr = XLSX.utils.encode_cell({r,c:fc});
+      const cell = sheet[addr];
+      fillCells[fc] = { val: cell?.w||cell?.v||'', formula: !!cell?.f, raw: cell };
+      if(cell?.f) hasAnyFormula = true;
+    });
+    const openCell = state.tbOpenCol>=0 ? sheet[XLSX.utils.encode_cell({r,c:state.tbOpenCol})] : null;
+    state.tbData.push({
+      row:r, code, name,
+      openBal: openCell ? parseNum(openCell.w||openCell.v) : 0,
+      fillCells, hasFormula: hasAnyFormula,
+      nature: '', direction: ''
+    });
+  }
+  renderTBPreview('tbPreview');
+  toast(`✓ 解析了 ${state.tbData.length} 行 TB 数据`);
+}
+
+function renderTBPreview(targetId){
+  const el = document.getElementById(targetId);
+  if(state.tbData.length===0){ el.innerHTML='<p class="text-sm text-secondary p-4">暂无 TB 数据</p>'; return; }
+  const fillCols = state.tbFillCols.length>0 ? state.tbFillCols : [3];
+  const colHeaders = ['科目代码','科目名称','科目性质','方向','期初数'];
+  fillCols.forEach((fc,i)=>colHeaders.push('本期数'+(fillCols.length>1?i+1:'')));
+  let html = '<table><thead><tr>'+colHeaders.map(h=>`<th>${h}</th>`).join('')+'</thead><tbody>';
+  state.tbData.forEach((d,i)=>{
+    html += '<tr>';
+    html += `<td>${htmlEscape(d.code)}</td><td>${htmlEscape(d.name)}</td><td>${htmlEscape(d.nature)}</td><td>${htmlEscape(d.direction)}</td>`;
+    html += `<td class="font-mono">${fmtNum(d.openBal)}</td>`;
+    fillCols.forEach(fc=>{
+      const fcData = d.fillCells[fc];
+      let cls='',display='';
+      if(fcData){
+        if(fcData.formula){ cls='formula'; display=fcData.val||'[公式]'; }
+        else if(fcData.val!==''&&fcData.val!==undefined){ cls='filled'; display=fcData.val; }
+        else { display=''; }
+      }
+      html += `<td class="font-mono ${cls}">${display}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+// ==================== AUTO FILL ====================
+function similarity(a,b){
+  if(!a||!b) return 0;
+  const la=a.toLowerCase(), lb=b.toLowerCase();
+  let matches=0, longer=Math.max(la.length,lb.length);
+  for(let i=0;i<Math.min(la.length,lb.length);i++) if(la[i]===lb[i]) matches++;
+  return longer>0?matches/longer:0;
+}
+
+function executeAutoFill(){
+  if(state.bsRows.length===0){ toast('请先导入科目余额表'); return; }
+  if(state.tbData.length===0){ toast('请先配置TB'); return; }
+  if(state.mappings.length===0){ toast('请先配置科目映射'); return; }
+
+  let filled=0, skipped=0, formulaSkipped=0;
+  const unmatched = [];
+
+  // Build lookup: clientCode → {stdCode, nature, direction}
+  const mapByClientCode = {};
+  state.mappings.forEach(m=>{ if(m.clientCode) mapByClientCode[m.clientCode]=m; });
+
+  // Build TB code index: stdCode → row index
+  // Fill TB nature/direction from mappings too
+  state.tbData.forEach((tbd,i)=>{
+    const m=state.mappings.find(mm=>mm.stdCode===tbd.code);
+    if(m){ tbd.nature=m.nature||''; tbd.direction=m.direction||'借'; }
+  });
+
+  state.bsRows.forEach(bs=>{
+    const map = mapByClientCode[bs.code];
+    if(!map||!map.stdCode){ unmatched.push({...bs,reason:'映射表未找到该客户科目代码'}); return; }
+
+    // Find in TB
+    const tbIdx = state.tbData.findIndex(tbd=>tbd.code===map.stdCode);
+    if(tbIdx<0){ unmatched.push({...bs,reason:`TB表中未找到标准科目代码 ${map.stdCode}`}); return; }
+
+    const tbRow = state.tbData[tbIdx];
+    const nature = map.nature||'资产';
+    const direction = map.direction||'借';
+
+    // Determine fill value
+    let fillVal;
+    if(['资产','负债','权益'].includes(nature)){
+      fillVal = bs.endBal;
+    } else {
+      // 收入/费用/成本 → use period movement
+      fillVal = bs.drAmt + bs.crAmt; // This is simplified; actual would distinguish
+      // Actually: 收入类(贷方)看贷方发生额, 费用成本类(借方)看借方发生额
+      if(nature==='收入') fillVal = bs.crAmt;
+      else fillVal = bs.drAmt;
+    }
+    // Sign adjustment based on direction
+    // Asset normally debit → positive; Liability normally credit → positive as credit
+    // In TB, credit balances often shown as negative when in debit column
+    // Simplified: if BS direction opposite to standard, negate
+    if(bs.direction && direction && bs.direction!==direction){
+      if(direction==='借'&&bs.direction==='贷') fillVal = -Math.abs(fillVal);
+      if(direction==='贷'&&bs.direction==='借') fillVal = Math.abs(fillVal);
+    }
+
+    let filledThis = false;
+    state.tbFillCols.forEach(fc=>{
+      const fcData = tbRow.fillCells[fc];
+      if(!fcData){ return; }
+      if(fcData.formula){ formulaSkipped++; return; }
+      fcData.val = fmtNum(fillVal);
+      fcData.filled = true;
+      filledThis = true;
+    });
+    if(filledThis) filled++;
+    else if(formulaSkipped>0) skipped++;
+  });
+
+  state.fillResults = { filled, skipped, unmatched, formulaSkipped };
+  document.getElementById('fillResult').classList.remove('hidden');
+  document.getElementById('fillResult').innerHTML = `
+    <div style="color:var(--accent-2)">✅ 上数完成：填入 ${filled} 条科目 | 跳过 ${skipped} 条（公式保护）| 未匹配 <span style="color:var(--accent-3)">${unmatched.length}</span> 条</div>`;
+
+  // Show unmatched with fuzzy suggestions
+  const up = document.getElementById('unmatchedPanel');
+  if(unmatched.length>0){
+    const allStd = [...new Set(state.mappings.filter(m=>m.stdCode).map(m=>({code:m.stdCode,name:m.stdName||''})))];
+    up.innerHTML = unmatched.map(u=>{
+      const scores = allStd.map(s=>({...s,score:similarity(u.name,s.name)})).sort((a,b)=>b.score-a.score).slice(0,3).filter(x=>x.score>0.15);
+      return `<div class="text-sm mb2" style="padding:8px;background:rgba(252,92,156,0.05);border:1px solid rgba(252,92,156,0.15);border-radius:6px">
+        <span style="color:var(--accent-3)">⚠ ${htmlEscape(u.code)} ${htmlEscape(u.name)}</span> — ${u.reason}
+        ${scores.length>0?`<div class="mt2 text-xs text-secondary">模糊建议：`+scores.map(s=>`<span class="fuzzy-suggest" onclick="quickMap('${htmlEscape(u.code)}','${htmlEscape(s.code)}','${htmlEscape(s.name)}')">${htmlEscape(s.code)} ${htmlEscape(s.name)} (${Math.round(s.score*100)}%)</span>`).join(' ')+'</div>':''}
+      </div>`;
+    }).join('');
+  } else {
+    up.innerHTML = '<p class="text-sm" style="color:var(--accent-2)">✅ 所有科目均已匹配</p>';
+  }
+
+  renderTBPreview('tbPreview2');
+  saveCurrentMappings();
+  toast(`✓ 上数完成：${filled}填,${skipped}跳,${unmatched.length}未匹`);
+}
+
+function quickMap(clientCode, stdCode, stdName){
+  state.mappings.push({clientCode,clientName:'',stdCode,stdName,nature:'资产',direction:'借'});
+  saveCurrentMappings(); renderMapping();
+  toast('已添加映射：'+clientCode+' → '+stdCode);
+  // Re-run fill
+  executeAutoFill();
+}
+
+// ==================== VERIFY ====================
+function runVerify(){
+  let drTotal=0, crTotal=0;
+  state.tbData.forEach(tbd=>{
+    state.tbFillCols.forEach(fc=>{
+      const fcData = tbd.fillCells[fc];
+      if(!fcData||!fcData.filled) return;
+      const val = parseNum(fcData.val);
+      if(tbd.direction==='借') drTotal+=val;
+      else crTotal+=val;
+    });
+  });
+  // Additionally, sum up from BS direction
+  // Simplified TB check: total debits should equal total credits
+  const diff = Math.abs(drTotal-crTotal);
+  state.verifyResults = { drTotal, crTotal, diff };
+
+  document.getElementById('verifyResult').innerHTML = `
+    <div class="card" style="padding:16px">
+      <table style="width:100%;max-width:400px;font-size:13px">
+        <tr><td>借方合计</td><td class="font-mono" style="text-align:right">${fmtNum(drTotal)}</td></tr>
+        <tr><td>贷方合计</td><td class="font-mono" style="text-align:right">${fmtNum(crTotal)}</td></tr>
+        <tr style="font-weight:700;${diff>0.01?'color:var(--accent-3)':'color:var(--accent-2)'}">
+          <td>差额</td><td class="font-mono" style="text-align:right">${fmtNum(diff)}</td></tr>
+      </table>
+      <div class="mt2 text-sm" style="color:${diff>0.01?'var(--accent-3)':'var(--accent-2)'}">
+        ${diff>0.01?'❌ 借贷不平衡！请检查上数数据':'✅ 借贷平衡'}
+      </div>
+    </div>`;
+  toast('校验完成');
+}
+
+// ==================== EXPORT ====================
+function downloadTB(){
+  if(state.tbWb){
+    // Write filled values back into workbook
+    const sheet = state.tbWb.Sheets[state.tbWb.SheetNames[state.tbSheetIdx]];
+    state.tbData.forEach(tbd=>{
+      state.tbFillCols.forEach(fc=>{
+        const fcData = tbd.fillCells[fc];
+        if(!fcData||!fcData.filled) return;
+        const addr = XLSX.utils.encode_cell({r:tbd.row,c:fc});
+        const val = parseNum(fcData.val);
+        if(!sheet[addr]) sheet[addr]={};
+        sheet[addr].v = val;
+        sheet[addr].w = fmtNum(val);
+        sheet[addr].t = 'n';
+        if(!sheet[addr].f) delete sheet[addr].f;
+      });
+    });
+    XLSX.writeFile(state.tbWb, `TB_上数后_${state.currentClient||'未命名'}_${new Date().toISOString().slice(0,10)}.xlsx`,{cellFormula:true,cellStyles:true});
+  } else {
+    // Generated TB
+    const rows = [['科目代码','科目名称','科目性质','方向','期初数','本期数']];
+    state.tbData.forEach(tbd=>{
+      const fillVal = state.tbFillCols.length>0 && tbd.fillCells[state.tbFillCols[0]] ? tbd.fillCells[state.tbFillCols[0]].val : '';
+      rows.push([tbd.code,tbd.name,tbd.nature,tbd.direction,fmtNum(tbd.openBal),fillVal||'']);
+    });
+    const ws=XLSX.utils.aoa_to_sheet(rows); const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'TB');
+    XLSX.writeFile(wb,`TB_上数后_${state.currentClient||'未命名'}_${new Date().toISOString().slice(0,10)}.xlsx`);
+  }
+  toast('✓ 已下载');
+}
+
+function downloadUnmatched(){
+  const u = state.fillResults.unmatched||[];
+  if(u.length===0){ toast('无未匹配科目'); return; }
+  const rows=[['客户科目代码','客户科目名称','期末余额','未匹配原因']];
+  u.forEach(r=>rows.push([r.code,r.name,fmtNum(r.endBal||0),r.reason]));
+  const ws=XLSX.utils.aoa_to_sheet(rows); const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'未匹配清单'); XLSX.writeFile(wb,'TB未匹配清单.xlsx');
+  toast('✓ 已下载');
+}
+
+function downloadVerify(){
+  const v=state.verifyResults;
+  const rows=[['项目','金额'],['借方合计',fmtNum(v.drTotal)],['贷方合计',fmtNum(v.crTotal)],['差额',fmtNum(v.diff)],[v.diff>0.01?'借贷不平衡':'借贷平衡','']];
+  const ws=XLSX.utils.aoa_to_sheet(rows); const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'校验报告'); XLSX.writeFile(wb,'TB校验报告.xlsx');
+  toast('✓ 已下载');
+}
+
+// ==================== HELPERS ====================
+function htmlEscape(s){ const d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; }
+
+// ==================== INIT ====================
+refreshClientList();
+if(Object.keys(store.clients).length>0){
+  const first = Object.keys(store.clients).sort()[0];
+  state.currentClient = first;
+  document.getElementById('clientSel').value = first;
+  switchClient();
+}
+</script>
+</body>
+</html>
