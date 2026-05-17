@@ -1444,7 +1444,7 @@ textarea:focus-visible,
 
 <script>
 /* ============ Configuration ============ */
-const DATA_URL = 'apps.json?v=2';
+const DATA_URL = 'apps.json?v=4';
 // 密码（base64 编码，运行时解码后直接对比，避免编码问题）
 const _k = 'R2xoQDI1MzUxOA==';
 
@@ -1865,6 +1865,7 @@ function openToolPanel(appId) {
   if (appId === 'tb-autofill') { window.open('tb-autofill.html', '_self'); return; }
   if (appId === 'help') { window.open('help.html', '_self'); return; }
   if (appId === 'audit-sampling') { window.open('audit-sampling.html', '_self'); return; }
+  if (appId === 'gdc-task-system') { window.open('gdc-task-system.html', '_self'); return; }
   currentToolType = appId === 'pdf-tool' ? 'pdf' : appId === 'ai-todo' ? 'todo' : appId === 'rou-calc' ? 'rou' : 'aging';
 
   // Reset state
