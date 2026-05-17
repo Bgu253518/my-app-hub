@@ -329,6 +329,7 @@ input:checked + .toggle-slider::after { left: 23px; }
     <div style="margin-top:16px;font-size:12px;color:var(--text2)">
       通知权限状态：<span id="notif-perm-status" style="color:var(--warn)">检查中...</span>
       <button class="btn btn-sm" onclick="requestNotifPerm()" style="margin-left:8px">请求权限</button>
+      <button class="btn btn-sm" onclick="testNotification()" style="margin-left:4px">🧪 测试提醒</button>
     </div>
     <div style="margin-top:16px">
       <button class="btn btn-sm btn-danger" onclick="if(confirm('确定要删除所有待办数据？此操作不可恢复。')){todos=[];doneTodos=[];save();render();closeSettings();}">🗑️ 清除所有数据</button>
@@ -627,10 +628,80 @@ function switchTab(tab, btn) {
 }
 
 // ==================== AI PARSE ====================
+// 检测邮件格式，提取纯净正文（跳过邮件头/签名/免责声明）
+function extractEmailBody(text) {
+  // 常见邮件头标识
+  var emailHeaders = /^(From|To|CC|BCC|Subject|Date|Sent|发件人|收件人|抄送|密送|主题|日期|发送时间|回复|Reply|Forward|转发)[：:]\s*/im;
+  var lines = text.split(/\n/);
+  var bodyLines = [];
+  var headerEnded = false;
+  var signatureStarted = false;
+  var emptyLineCount = 0;
+
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    var trimmed = line.trim();
+
+    // 检测邮件头
+    if (!headerEnded) {
+      if (emailHeaders.test(trimmed) || /^(Message-ID|In-Reply-To|References|Content-Type|MIME|Received|X-|DKIM|SPF|Return-Path|List-|Precedence|Thread-|Authentication-Results)[:\s]/i.test(trimmed)) {
+        continue; // 跳过邮件头
+      }
+      if (trimmed === '' || /^[>|]/.test(trimmed)) {
+        headerEnded = true; // 空行或引用行 = 正文开始
+        if (trimmed === '') continue;
+      } else {
+        headerEnded = true; // 非头行，正文开始
+      }
+    }
+
+    // 检测签名分隔符
+    if (/^--\s*$/.test(trimmed) || /^__+\s*$/.test(trimmed) || /^={5,}\s*$/.test(trimmed)) {
+      signatureStarted = true;
+      continue;
+    }
+
+    // 检测常见签名块
+    if (signatureStarted) continue;
+    if (/^(Best|Regards|Cheers|Thanks|Sincerely|Yours|祝好|此致|敬礼|谢谢|顺颂)/i.test(trimmed) && trimmed.length < 30) {
+      signatureStarted = true;
+      continue;
+    }
+
+    // 跳过常见免责声明
+    if (/^(DISCLAIMER|CONFIDENTIALITY|免责声明|本邮件|This (email|message)| Privileged| confidential)/im.test(trimmed)) {
+      signatureStarted = true;
+      continue;
+    }
+
+    // 跳过纯引用行
+    if (/^>\s/.test(trimmed) || / wrote:$/.test(trimmed) || /^On .* wrote:$/.test(trimmed)) {
+      continue;
+    }
+
+    // 跳过纯分隔线
+    if (/^[-=_*]{3,}\s*$/.test(trimmed)) continue;
+
+    // 收集正文行
+    if (trimmed !== '') {
+      emptyLineCount = 0;
+      bodyLines.push(trimmed);
+    } else if (!signatureStarted && bodyLines.length > 0) {
+      emptyLineCount++;
+      if (emptyLineCount <= 2) bodyLines.push(''); // 保留少量空行用于分段
+    }
+  }
+
+  return bodyLines.length > 0 ? bodyLines.join('\n') : text;
+}
+
 function parseLocally(text) {
+  // 先尝试识别邮件格式，提取正文
+  var body = extractEmailBody(text);
+
   // Regex-based fallback parser
   var results = [];
-  var lines = text.split(/[\n;；]/);
+  var lines = body.split(/[\n;；]/);
   var priorityMap = { '高': 'high', 'high': 'high', '!': 'high', '!!': 'high', '紧急': 'high', '中': 'medium', 'medium': 'medium', '低': 'low', 'low': 'low' };
 
   lines.forEach(function(line) {
@@ -892,6 +963,32 @@ function requestNotifPerm() {
   });
 }
 
+function testNotification() {
+  if (!Notification) { showToast('❌ 此浏览器不支持桌面通知'); return; }
+  if (Notification.permission !== 'granted') {
+    showToast('⚠ 请先点击「请求权限」授权通知');
+    Notification.requestPermission().then(function(p) {
+      notifPermission = p;
+      updateNotifPermStatus();
+      if (p === 'granted') testNotification();
+    });
+    return;
+  }
+  try {
+    var sampleTodos = todos.length > 0 ? todos.slice(0, 3).map(function(t) { return t.text; }) : ['示例任务：完成项目报告', '示例任务：回复客户邮件', '示例任务：审核底稿'];
+    var notification = new Notification('🧪 测试提醒 — 智能待办', {
+      body: '当前待办：\n' + sampleTodos.join('\n') + (todos.length > 3 ? '\n  ...还有 ' + (todos.length - 3) + ' 项' : ''),
+      icon: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#3fb950"/><text x="32" y="44" font-size="36" text-anchor="middle" fill="white">✅</text></svg>'),
+      tag: 'smart-todo-test',
+      requireInteraction: true
+    });
+    notification.onclick = function() { window.focus(); notification.close(); };
+    showToast('✅ 测试通知已发送！请查看屏幕右下角');
+  } catch(e) {
+    showToast('❌ 发送通知失败：' + e.message);
+  }
+}
+
 function checkReminders() {
   if (!settings.notifyEnabled) return;
   if (notifPermission !== 'granted') return;
@@ -921,8 +1018,25 @@ function checkReminders() {
   lastReminderCheck = now.getTime();
 
   try {
+    // 构建有意义的提醒内容：列出临近/逾期任务
+    var urgentList = [];
+    var normalList = [];
+    todos.forEach(function(t) {
+      if (isOverdue(t.dueDate)) urgentList.push('🔴 ' + t.text);
+      else if (isUrgent(t.dueDate)) urgentList.push('🟡 ' + t.text);
+      else normalList.push(t.text);
+    });
+    var bodyText = '';
+    if (urgentList.length > 0) {
+      bodyText = '⚠ 紧急：\n' + urgentList.slice(0, 3).join('\n');
+      if (urgentList.length > 3) bodyText += '\n  ...还有 ' + (urgentList.length - 3) + ' 项';
+    } else {
+      bodyText = '📋 ' + todos.length + ' 项待办：\n' + normalList.slice(0, 3).join('\n');
+      if (normalList.length > 3) bodyText += '\n  ...还有 ' + (normalList.length - 3) + ' 项';
+    }
+
     var notification = new Notification('📋 待办提醒', {
-      body: '您有 ' + todos.length + ' 项未完成事项' + (todos.filter(function(t) { return isUrgent(t.dueDate) || isOverdue(t.dueDate); }).length > 0 ? '，其中包含临近/逾期事项' : ''),
+      body: bodyText,
       icon: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#7c5cfc"/><text x="32" y="44" font-size="36" text-anchor="middle" fill="white">📋</text></svg>'),
       tag: 'smart-todo-reminder',
       requireInteraction: false
