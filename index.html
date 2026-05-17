@@ -1848,24 +1848,30 @@ function openToolPanel(appId) {
   const app = apps.find(a => a.id === appId);
   if (!app) return;
 
+  // 独立页面的工具：先跳转，不显示面板（避免闪现 PDF 拖拽区）
+  const externalPages = {
+    'rou-calc': 'rou-calculator.html',
+    'img-compressor': 'image-toolbox.html',
+    'data-cleaner': 'data-cleaner.html',
+    'file-renamer': 'file-renamer.html',
+    'claude-config': 'claude-setup-tool.html',
+    'offline-ai': 'offline-ai.html',
+    'smart-todo': 'smart-todo.html',
+    'audit-hub': 'audit-hub.html',
+    'word-checkbench': 'word-checkbench.html',
+    'bkd-rollforward': 'bkd-rollforward.html',
+    'tb-autofill': 'tb-autofill.html',
+    'help': 'help.html',
+    'audit-sampling': 'audit-sampling.html',
+    'gdc-task-system': 'gdc-task-system.html'
+  };
+  if (externalPages[appId]) { window.open(externalPages[appId], '_self'); return; }
+
+  // 内联工具：显示面板
   const panel = document.getElementById('tool-panel');
   document.getElementById('tool-title').textContent = app.icon + ' ' + app.name;
   panel.classList.add('open');
   document.body.style.overflow = 'hidden';
-  if (appId === 'rou-calc') { window.open('rou-calculator.html', '_self'); return; }
-  if (appId === 'img-compressor') { window.open('image-toolbox.html', '_self'); return; }
-  if (appId === 'data-cleaner') { window.open('data-cleaner.html', '_self'); return; }
-  if (appId === 'file-renamer') { window.open('file-renamer.html', '_self'); return; }
-  if (appId === 'claude-config') { window.open('claude-setup-tool.html', '_self'); return; }
-  if (appId === 'offline-ai') { window.open('offline-ai.html', '_self'); return; }
-  if (appId === 'smart-todo') { window.open('smart-todo.html', '_self'); return; }
-  if (appId === 'audit-hub') { window.open('audit-hub.html', '_self'); return; }
-  if (appId === 'word-checkbench') { window.open('word-checkbench.html', '_self'); return; }
-  if (appId === 'bkd-rollforward') { window.open('bkd-rollforward.html', '_self'); return; }
-  if (appId === 'tb-autofill') { window.open('tb-autofill.html', '_self'); return; }
-  if (appId === 'help') { window.open('help.html', '_self'); return; }
-  if (appId === 'audit-sampling') { window.open('audit-sampling.html', '_self'); return; }
-  if (appId === 'gdc-task-system') { window.open('gdc-task-system.html', '_self'); return; }
   currentToolType = appId === 'pdf-tool' ? 'pdf' : appId === 'ai-todo' ? 'todo' : appId === 'rou-calc' ? 'rou' : 'aging';
 
   // Reset state
