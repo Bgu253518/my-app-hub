@@ -226,11 +226,11 @@
     "shortDesc": "多文件智能合并，自动配置工作表并支持批量重命名",
     "fullDesc": "基于 Python PySimpleGUI 开发的 Excel 工作表智能合并工具。自动扫描选定文件的全部工作表，生成可视化配置表供用户勾选抓取，支持自定义重命名、同名自动编号、保留数据格式。适用于多来源财务报表整合、数据归档等场景。",
     "category": "data",
-    "status": "wip",
+    "status": "done",
     "version": "v1.0.0",
     "icon": "📑",
     "github": "",
-    "download": ""
+    "download": "tools/python tab汇总并重命名.py"
   },
   {
     "id": "file-collector",
@@ -238,11 +238,11 @@
     "shortDesc": "递归提取指定类型文件，按父路径自动重命名",
     "fullDesc": "基于 Python PySimpleGUI 开发的文件提取整理工具。递归遍历源文件夹，根据扩展名过滤（支持文档/图片/音视频/代码/压缩包等60+种格式），将文件复制到目标文件夹并按「父路径-原文件名」格式自动重命名，重名自动编号。适用于分散文件的集中整理和归档。",
     "category": "gui",
-    "status": "wip",
+    "status": "done",
     "version": "v1.0.0",
     "icon": "📂",
     "github": "",
-    "download": ""
+    "download": "tools/python 文件提取.py"
   },
   {
     "id": "smart-filter",
@@ -250,11 +250,11 @@
     "shortDesc": "多条件Excel数据筛选，自动汇总并生成金额验证",
     "fullDesc": "基于 Python pandas 和 PySimpleGUI 开发的数据筛选汇总工具。支持手动输入识别码或从 Excel 导入，可对多个目标文件进行单列或多列组合筛选，自动汇总匹配行并计算金额合计，生成按来源文件/工作表分类的验证表。支持百万行级数据处理、自动拆分大文件、精确/模糊匹配模式切换。",
     "category": "data",
-    "status": "wip",
+    "status": "done",
     "version": "v1.0.0",
     "icon": "🔎",
     "github": "",
-    "download": ""
+    "download": "tools/python 筛选工具.py"
   },
   {
     "id": "batch-unzip",
@@ -262,10 +262,22 @@
     "shortDesc": "智能解压 ZIP/RAR/7z/tar 等格式，自动防重名",
     "fullDesc": "基于 Python 原生库和 Windows Shell 的双引擎解压工具。优先使用 zipfile/tarfile 原生解压，失败时自动调用系统 Shell 解压（兼容 7z/RAR 等格式）。递归扫描源文件夹，逐文件解压到独立文件夹，自动处理重名冲突。支持 ZIP、7z、RAR、tar、gz、bz2 等常见压缩格式。仅限 Windows 系统使用。",
     "category": "gui",
-    "status": "wip",
+    "status": "done",
     "version": "v1.0.0",
     "icon": "🗜️",
     "github": "",
-    "download": ""
+    "download": "tools/python 解压文件.py"
+  },
+  {
+    "id": "img-to-pdf",
+    "name": "图片转PDF工具",
+    "shortDesc": "批量将图片合并为PDF，支持标题标注和中文字体",
+    "fullDesc": "基于 Python PIL 和 reportlab 开发的桌面图片转 PDF 工具。支持 JPG/PNG/BMP/GIF/TIFF 等常见格式，自动按文件名排序生成多页 PDF，每页自动标注图片名称作为标题，支持中文字体渲染。适用于扫描件整理、发票归档、照片合集导出等场景。",
+    "category": "gui",
+    "status": "done",
+    "version": "v1.0.0",
+    "icon": "🖨️",
+    "github": "",
+    "download": "tools/python 图片合并PDF.py"
   }
 ]
