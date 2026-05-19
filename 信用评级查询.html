@@ -268,20 +268,20 @@ async function queryRating(name, apiUrl, apiKey, model) {
 请基于公开信息给出客观分析，不要编造数据。如不确定，请标注"基于公开信息的推测"。`;
 
   try {
-    const resp = await fetch(apiUrl, {
+    const resp = await fetch('/api/chat', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
+        api_url: apiUrl,
+        api_key: apiKey,
         model: model,
         messages: [
           {role: 'system', content: '你是一位专业的信用评级分析师，擅长对企业进行信用评级分析。'},
           {role: 'user', content: prompt}
         ],
-        max_tokens: 1000,
-        temperature: 0.3
+        max_tokens: 1000
       })
     });
     
