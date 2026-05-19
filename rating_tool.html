@@ -257,7 +257,7 @@ function renderResults() {
   document.getElementById('resultCard').style.display = 'block';
 }
 
-async function queryRating(name, apiUrl, apiKey, model) {
+async function queryRating(name, apiUrl, apiKey, model, controller) {
   const prompt = `你是一位专业的信用评级分析师。请对以下企业/银行进行信用评级分析，输出格式如下：
 
 企业名称：${name}
@@ -273,6 +273,7 @@ async function queryRating(name, apiUrl, apiKey, model) {
       headers: {
         'Content-Type': 'application/json'
       },
+      signal: controller ? controller.signal : null,
       body: JSON.stringify({
         api_url: apiUrl,
         api_key: apiKey,
@@ -291,7 +292,19 @@ async function queryRating(name, apiUrl, apiKey, model) {
     }
     
     const data = await resp.json();
+    
+    // 检查代理返回的错误
+    if (data.error) {
+      throw new Error(typeof data.error === 'string' ? data.error : JSON.stringify(data.error));
+    }
+    
+    // 检查API返回是否正常
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error('API返回格式异常: ' + JSON.stringify(data).slice(0, 100));
+    }
+    
     const content = data.choices[0].message.content;
+    if (!content) throw new Error('API返回内容为空');
     
     // 提取评级
     let rating = '';
@@ -333,23 +346,29 @@ async function startQuery() {
   document.getElementById('startBtn').disabled = true;
   isRunning = true;
   
-  // 串行查询
+  // 串行查询（带超时控制）
   for (let i = 0; i < results.length; i++) {
     results[i].status = 'running';
     renderResults();
     
-    const pct = ((i) / results.length * 100).toFixed(0);
+    const pct = Math.round((i + 1) / results.length * 100);
     document.getElementById('progressFill').style.width = pct + '%';
     document.getElementById('progressText').textContent = `正在查询（${i+1}/${results.length}）：${results[i].name}`;
     
     try {
-      const result = await queryRating(results[i].name, apiUrl, apiKey, model);
+      // 45秒超时
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 45000);
+      
+      const result = await queryRating(results[i].name, apiUrl, apiKey, model, controller);
+      clearTimeout(timeoutId);
+      
       results[i].status = 'done';
       results[i].rating = result.rating;
       results[i].detail = result.detail;
     } catch (e) {
       results[i].status = 'error';
-      results[i].error = e.message.slice(0, 80);
+      results[i].error = (e.name === 'AbortError' ? '请求超时（45秒）' : e.message).slice(0, 80);
     }
     
     renderResults();
