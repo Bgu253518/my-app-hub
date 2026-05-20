@@ -205,125 +205,103 @@ tr.row-new:hover td, tr.row-modified:hover td, tr.row-removed:hover td { filter:
 
 <div class="main" id="app">
 
-  <!-- Mode Switch -->
-  <div class="mode-switch">
-    <button class="mode-btn active" data-mode="scan" onclick="switchMode('scan')">📋 扫描模式</button>
-    <button class="mode-btn" data-mode="compare" onclick="switchMode('compare')">🔍 对比模式</button>
-  </div>
-
-  <!-- Scan Mode -->
-  <div id="scan-mode">
-
-    <!-- Folder pick -->
-    <div class="card">
-      <div class="card-title">📁 选择文件夹</div>
-      <div class="pick-zone" onclick="pickFolder()">
-        <div class="icon">📂</div>
-        <div style="font-size:14px;font-weight:600;margin-bottom:4px">点击选择要扫描的文件夹</div>
-        <div class="hint">支持 Chrome / Edge 浏览器 · 会读取文件名称、大小、修改时间等信息</div>
-      </div>
-      <div id="scan-folder-path" style="font-size:12px;color:var(--text-secondary);margin-top:8px;"></div>
-      <div class="form-group" style="margin-top:10px;">
-        <label>📌 文件夹绝对路径（用于生成可点击的超链接）</label>
-        <div class="form-row">
-          <input type="text" id="scan-root-path" placeholder="例如：C:\Users\bgu\Desktop\项目文件" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);border-radius:6px;padding:8px 12px;color:var(--text-primary);font-size:13px;outline:none;">
-          <span style="font-size:11px;color:var(--text-secondary);">留空则路径显示为纯文本</span>
-        </div>
-      </div>
-      <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn btn-primary" onclick="startScan()" id="scan-btn" disabled>▶ 开始扫描</button>
-        <button class="btn btn-ghost" onclick="exportScan()" id="export-btn" disabled>📥 导出 Excel</button>
-        <button class="btn btn-ghost" onclick="resetScan()">🔄 重新选择</button>
-      </div>
-      <div class="progress-wrap" id="scan-progress-wrap" style="display:none"><div class="progress-bar" id="scan-progress-bar"></div></div>
-    </div>
-
-    <!-- Scan Stats -->
-    <div class="card" id="scan-stats-card" style="display:none;">
-      <div class="card-title">📊 扫描统计</div>
-      <div class="stats-grid" id="scan-stats"></div>
-    </div>
-
-    <!-- Scan Table -->
-    <div class="card" id="scan-table-card" style="display:none;">
-      <div class="card-title" style="justify-content:space-between">
-        <span>📄 文件清单</span>
-        <span id="scan-count" style="font-size:12px;color:var(--text-secondary)"></span>
-      </div>
-      <div class="table-wrap" id="scan-table-wrap"></div>
-    </div>
-  </div>
-
-  <!-- Compare Mode -->
-  <div id="compare-mode" style="display:none;">
-
-    <!-- New folder pick -->
-    <div class="card">
-      <div class="card-title">📁 选择新扫描文件夹</div>
-      <div class="pick-zone" onclick="pickCompareFolder()">
-        <div class="icon">📂</div>
-        <div style="font-size:14px;font-weight:600;margin-bottom:4px">点击选择最新版本文件夹</div>
-        <div class="hint">读取当前最新文件状态</div>
-      </div>
-      <div id="compare-folder-path" style="font-size:12px;color:var(--text-secondary);margin-top:8px;"></div>
-      <div class="form-group" style="margin-top:10px;">
-        <label>📌 文件夹绝对路径（用于生成可点击的超链接）</label>
-        <div class="form-row">
-          <input type="text" id="compare-root-path" placeholder="例如：C:\Users\bgu\Desktop\项目文件" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);border-radius:6px;padding:8px 12px;color:var(--text-primary);font-size:13px;outline:none;">
-          <span style="font-size:11px;color:var(--text-secondary);">留空则路径显示为纯文本</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Old baseline upload -->
-    <div class="card">
-      <div class="card-title">📄 上传旧基准表</div>
-      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">上传之前扫描导出的 Excel 文件，与新扫描结果进行对比</div>
-      <input type="file" accept=".xlsx,.xls,.json" id="old-file-input" class="hidden-input" onchange="loadOldFile(event)">
-      <div style="display:flex;gap:10px;">
-        <button class="btn btn-ghost" onclick="document.getElementById('old-file-input').click()">📤 选择旧基准文件</button>
-        <button class="btn btn-ghost" onclick="loadDemoFile()" id="demo-btn">📋 加载演示数据</button>
-      </div>
-      <div id="old-file-info" style="font-size:12px;color:var(--text-secondary);margin-top:8px;"></div>
-    </div>
-
-    <!-- Compare action -->
-    <div class="card" id="compare-action-card" style="display:none;">
-      <div class="card-title">🔍 执行对比</div>
-      <div id="compare-ready" style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;"></div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn btn-primary" onclick="startCompare()" id="compare-btn">🔍 开始对比</button>
-        <button class="btn btn-ghost" onclick="exportCompare()" id="export-compare-btn" disabled>📥 导出对比报告</button>
-        <button class="btn btn-ghost" onclick="resetCompare()">🔄 重置</button>
-      </div>
-      <div class="progress-wrap" id="compare-progress-wrap" style="display:none"><div class="progress-bar" id="compare-progress-bar"></div></div>
-    </div>
-
-    <!-- Compare Results -->
-    <div class="card" id="compare-results-card" style="display:none;">
-      <div class="card-title">📊 对比结果</div>
-      <div class="stats-grid" id="compare-stats"></div>
-    </div>
-
-    <!-- Changes Summary -->
-    <div class="card" id="changes-card" style="display:none;">
-      <div class="card-title">📋 变更清单</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-        <button class="btn btn-ghost active-filter" data-filter="all" onclick="filterChanges('all')">全部</button>
-        <button class="btn btn-ghost" data-filter="new" onclick="filterChanges('new')">🟢 新增</button>
-        <button class="btn btn-ghost" data-filter="modified" onclick="filterChanges('modified')">🟠 已修改</button>
-        <button class="btn btn-ghost" data-filter="removed" onclick="filterChanges('removed')">🔴 已删除</button>
-        <button class="btn btn-ghost" data-filter="unchanged" onclick="filterChanges('unchanged')">⚪ 未变更</button>
-        <span id="filter-count" style="font-size:12px;color:var(--text-secondary);margin-left:auto;align-self:center;"></span>
-      </div>
-      <div class="table-wrap" id="compare-table-wrap"></div>
-    </div>
-  </div>
-
-  <!-- Log -->
+  <!-- 设置：文件夹（匹配 .py 布局） -->
   <div class="card">
-    <div class="card-title">📝 运行日志</div>
-    <div class="log-box" id="log-box">就绪</div>
+    <div class="card-title">⚙️ 设置</div>
+    <div class="form-group">
+      <label>扫描文件夹</label>
+      <div class="form-row">
+        <input type="text" id="folder-path-input" readonly placeholder="点击右侧按钮选择文件夹..."
+          style="flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);border-radius:6px;padding:8px 12px;color:var(--text-primary);font-size:13px;outline:none;cursor:default;">
+        <button class="btn btn-primary" onclick="pickFolder()" id="pick-folder-btn">📁 选择</button>
+      </div>
+      <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">选择后粘贴完整路径可生成 Excel 可点击超链接</div>
+    </div>
+  </div>
+
+  <!-- 对比模式（可选） -->
+  <div class="card">
+    <div class="card-title">🔍 对比模式（可选）</div>
+    <div class="form-group">
+      <label class="checkbox-group" style="margin-bottom:8px;">
+        <input type="checkbox" id="compare-checkbox" onchange="toggleCompare()">
+        <span>加载旧基准表进行对比</span>
+      </label>
+      <div id="compare-upload-area" style="display:none;">
+        <div class="form-row">
+          <input type="text" id="old-file-path" readonly placeholder="选择上次扫描导出的 Excel 文件..."
+            style="flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);border-radius:6px;padding:8px 12px;color:var(--text-primary);font-size:13px;outline:none;cursor:default;">
+          <input type="file" accept=".xlsx,.xls,.json" id="old-file-input" class="hidden-input" onchange="loadOldFile(event)">
+          <button class="btn btn-ghost" onclick="document.getElementById('old-file-input').click()">📤 选择</button>
+          <button class="btn btn-ghost" onclick="loadDemoFile()">📋 演示数据</button>
+        </div>
+        <div id="old-file-info" style="font-size:12px;color:var(--text-secondary);margin-top:6px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 操作按钮 -->
+  <div class="card">
+    <div class="card-title">▶ 操作</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="startScan()" id="scan-btn" disabled>▶ 开始扫描</button>
+      <button class="btn btn-ghost" onclick="exportResults()" id="export-btn" disabled>📥 导出 Excel</button>
+      <button class="btn btn-ghost" onclick="resetAll()">🔄 重置</button>
+    </div>
+    <div class="progress-wrap" id="scan-progress-wrap" style="display:none"><div class="progress-bar" id="scan-progress-bar"></div></div>
+  </div>
+
+  <!-- 扫描统计 -->
+  <div class="card" id="scan-stats-card" style="display:none;">
+    <div class="card-title">📊 扫描统计</div>
+    <div class="stats-grid" id="scan-stats"></div>
+  </div>
+
+  <!-- 对比结果统计 -->
+  <div class="card" id="compare-stats-card" style="display:none;">
+    <div class="card-title">📊 对比结果</div>
+    <div class="stats-grid" id="compare-stats"></div>
+  </div>
+
+  <!-- 文件清单 / 变更清单 -->
+  <div class="card" id="results-card" style="display:none;">
+    <div class="card-title" style="justify-content:space-between">
+      <span id="results-title">📄 文件清单</span>
+      <span id="results-count" style="font-size:12px;color:var(--text-secondary)"></span>
+    </div>
+    <!-- 对比模式下的筛选按钮 -->
+    <div id="filter-bar" style="display:none;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+      <button class="btn btn-ghost active-filter" data-filter="all" onclick="filterChanges('all')">全部</button>
+      <button class="btn btn-ghost" data-filter="new" onclick="filterChanges('new')">🟢 新增</button>
+      <button class="btn btn-ghost" data-filter="modified" onclick="filterChanges('modified')">🟠 已修改</button>
+      <button class="btn btn-ghost" data-filter="removed" onclick="filterChanges('removed')">🔴 已删除</button>
+      <button class="btn btn-ghost" data-filter="unchanged" onclick="filterChanges('unchanged')">⚪ 未变更</button>
+      <span id="filter-count" style="font-size:12px;color:var(--text-secondary);margin-left:auto;align-self:center;"></span>
+    </div>
+    <div class="table-wrap" id="results-table-wrap"></div>
+  </div>
+
+  <!-- 运行日志（匹配 .py） -->
+  <div class="card">
+    <div class="card-title">📋 运行日志</div>
+    <div class="log-box" id="log-box"></div>
+  </div>
+
+  <!-- 路径输入弹窗 -->
+  <div id="path-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;">
+    <div style="background:#1a1a3a;border:1px solid var(--glass-border);border-radius:14px;padding:24px;max-width:520px;width:90%;">
+      <h3 style="margin-bottom:8px;">📌 设置文件夹路径</h3>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">
+        请从资源管理器地址栏复制文件夹路径，粘贴到下方即可在 Excel 中生成蓝色可点击超链接。<br>
+        <span style="color:var(--orange);">也可跳过，仅显示文本路径。</span>
+      </p>
+      <input id="path-modal-input" type="text" placeholder="请按 Ctrl+V 粘贴路径，例如：C:\Users\bgu\Desktop\项目文件"
+        style="width:100%;padding:10px 12px;border:1px solid var(--glass-border);border-radius:6px;background:rgba(255,255,255,0.05);color:var(--text-primary);font-size:14px;outline:none;margin-bottom:16px;box-sizing:border-box;">
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn btn-ghost" onclick="closePathModal(true)">⏭ 跳过</button>
+        <button class="btn btn-primary" onclick="confirmPathModal()">✅ 确认</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -335,6 +313,7 @@ var state = {
   mode: 'scan',
   scanFolderHandle: null,
   scanFolderName: '',
+  scanRootPath: '',    // user-pasted absolute path for HYPERLINK in Excel
   scanFiles: [],      // [{name, relPath, size, type, lastModified, ...}]
   scanResult: null,   // {data, fileTypeMap, stats}
 
@@ -389,14 +368,54 @@ function showToast(msg, duration) {
   t._timer = setTimeout(function(){ t.classList.remove('show'); }, duration || 2500);
 }
 
-// ===== Mode Switch =====
-function switchMode(mode) {
-  state.mode = mode;
-  document.querySelectorAll('.mode-btn').forEach(function(b){
-    b.classList.toggle('active', b.dataset.mode === mode);
-  });
-  document.getElementById('scan-mode').style.display = mode === 'scan' ? '' : 'none';
-  document.getElementById('compare-mode').style.display = mode === 'compare' ? '' : 'none';
+// ===== Compare Toggle =====
+function toggleCompare() {
+  var checked = document.getElementById('compare-checkbox').checked;
+  document.getElementById('compare-upload-area').style.display = checked ? '' : 'none';
+  if (!checked) {
+    state.oldData = null;
+    document.getElementById('old-file-info').textContent = '';
+    document.getElementById('old-file-path').value = '';
+  }
+}
+
+// ===== Path Modal =====
+function openPathModal() {
+  var modal = document.getElementById('path-modal');
+  modal.style.display = 'flex';
+  var input = document.getElementById('path-modal-input');
+  input.value = '';
+  setTimeout(function(){ input.focus(); }, 100);
+  // Try clipboard read
+  try {
+    navigator.clipboard.readText().then(function(text){
+      if (text && (text.indexOf(':\\') > 0 || text.indexOf('\\\\') === 0)) {
+        input.value = text;
+        input.select();
+      }
+    }).catch(function(){});
+  } catch(e) {}
+}
+
+function confirmPathModal() {
+  var val = document.getElementById('path-modal-input').value.trim();
+  if (val) {
+    state.scanRootPath = val;
+    document.getElementById('folder-path-input').value = state.scanFolderName + '  (' + val + ')';
+    log('已设置根路径: ' + val);
+  } else {
+    state.scanRootPath = '';
+  }
+  document.getElementById('path-modal').style.display = 'none';
+}
+
+function closePathModal(skip) {
+  if (skip) {
+    state.scanRootPath = '';
+    document.getElementById('folder-path-input').value = state.scanFolderName;
+    log('已跳过路径设置，Excel 路径将显示为纯文本');
+  }
+  document.getElementById('path-modal').style.display = 'none';
 }
 
 // ===== Folder Picker =====
@@ -409,28 +428,13 @@ async function pickFolder() {
     var handle = await window.showDirectoryPicker();
     state.scanFolderHandle = handle;
     state.scanFolderName = handle.name;
-    document.getElementById('scan-folder-path').textContent = '已选择: ' + handle.name;
+    state.scanRootPath = '';
+    document.getElementById('folder-path-input').value = handle.name;
     document.getElementById('scan-btn').disabled = false;
     log('已选择文件夹: ' + handle.name);
-  } catch (e) {
-    if (e.name !== 'AbortError') {
-      log('选择文件夹失败: ' + e.message, 'error');
-    }
-  }
-}
 
-async function pickCompareFolder() {
-  try {
-    if (!window.showDirectoryPicker) {
-      showToast('您的浏览器不支持文件夹选择功能');
-      return;
-    }
-    var handle = await window.showDirectoryPicker();
-    state.compareFolderHandle = handle;
-    state.compareFolderName = handle.name;
-    document.getElementById('compare-folder-path').textContent = '已选择: ' + handle.name;
-    log('已选择对比文件夹: ' + handle.name);
-    checkCompareReady();
+    // Show path modal for HYPERLINK (non-blocking)
+    setTimeout(openPathModal, 300);
   } catch (e) {
     if (e.name !== 'AbortError') {
       log('选择文件夹失败: ' + e.message, 'error');
@@ -514,11 +518,18 @@ async function startScan() {
     state.scanFiles = files;
     state.scanResult = { data: files, total: files.length };
 
-    // Show stats
+    // Show scan stats (always)
     showScanStats(files);
     showScanTable(files);
 
-    document.getElementById('export-btn').disabled = false;
+    // Auto-compare if old data is loaded
+    if (state.oldData && state.oldData.raw && state.oldData.raw.length > 0) {
+      log('检测到旧基准表，正在对比...', 'info');
+      await runCompare(files);
+    } else {
+      document.getElementById('export-btn').disabled = false;
+    }
+
     progressBar.style.width = '100%';
     showToast('扫描完成! 共 ' + files.length + ' 个文件');
 
@@ -568,8 +579,9 @@ function showScanStats(files) {
 }
 
 function showScanTable(files) {
-  document.getElementById('scan-table-card').style.display = '';
-  document.getElementById('scan-count').textContent = '共 ' + files.length + ' 项';
+  document.getElementById('results-card').style.display = '';
+  document.getElementById('results-title').textContent = '📄 文件清单';
+  document.getElementById('results-count').textContent = '共 ' + files.length + ' 项';
 
   var html = '<table><thead><tr>' +
     '<th>名称</th><th>类型</th><th style="text-align:right">大小(KB)</th><th>修改时间</th><th>路径</th>' +
@@ -586,7 +598,7 @@ function showScanTable(files) {
   });
 
   html += '</tbody></table>';
-  document.getElementById('scan-table-wrap').innerHTML = html;
+  document.getElementById('results-table-wrap').innerHTML = html;
 }
 
 // ===== Excel Helpers =====
@@ -681,7 +693,7 @@ function makeSheetWithMeta(data, columns, pathColKey, rootPath, sheetName) {
 function exportScan() {
   if (!state.scanFiles || !state.scanFiles.length) return;
 
-  var rootInput = document.getElementById('scan-root-path').value.trim();
+  var rootInput = state.scanRootPath;
   var rootPath = rootInput || state.scanFolderName;
   var data = state.scanFiles.map(function(f){
     return {
@@ -770,10 +782,9 @@ function loadOldFile(event) {
       });
 
       state.oldData = { raw: data, filename: file.name, count: data.length };
-      document.getElementById('old-file-info').innerHTML =
-        '已加载: ' + file.name + ' (' + data.length + ' 项)';
+      document.getElementById('old-file-path').value = file.name + ' (' + data.length + ' 项)';
+      document.getElementById('old-file-info').innerHTML = '已加载 ' + data.length + ' 条记录';
       log('已加载旧基准表: ' + file.name + ' (' + data.length + ' 项)', 'info');
-      checkCompareReady();
     } catch (err) {
       log('读取旧文件失败: ' + err.message, 'error');
       showToast('读取失败', 3000);
@@ -814,211 +825,120 @@ function loadDemoFile() {
   });
 
   state.oldData = { raw: data, filename: '演示数据（旧基准）', count: data.length };
-  document.getElementById('old-file-info').innerHTML =
-    '已加载: 演示数据（' + data.length + ' 项）';
-  document.getElementById('demo-btn').style.display = 'none';
+  document.getElementById('old-file-path').value = '演示数据（旧基准） (' + data.length + ' 项)';
+  document.getElementById('old-file-info').innerHTML = '已加载 ' + data.length + ' 条记录（演示数据）';
   log('已加载演示数据（旧基准）', 'info');
-  checkCompareReady();
 }
 
-function checkCompareReady() {
-  var folderReady = !!state.compareFolderHandle;
-  var oldReady = !!state.oldData;
-  var card = document.getElementById('compare-action-card');
-
-  if (folderReady && oldReady) {
-    card.style.display = '';
-    document.getElementById('compare-ready').textContent =
-      '新扫描: ' + state.compareFolderName + ' | 旧基准: ' + state.oldData.filename + ' (' + state.oldData.count + ' 项)';
-    document.getElementById('compare-btn').disabled = false;
-  } else {
-    var parts = [];
-    if (!folderReady) parts.push('请选择新扫描文件夹');
-    if (!oldReady) parts.push('请上传旧基准文件或加载演示数据');
-    card.style.display = 'none';
-  }
-}
-
-async function startCompare() {
-  if (!state.compareFolderHandle || !state.oldData) return;
-
-  var btn = document.getElementById('compare-btn');
-  btn.disabled = true;
-  btn.textContent = '⏳ 扫描对比中...';
-  clearLog();
-
-  var progressWrap = document.getElementById('compare-progress-wrap');
-  var progressBar = document.getElementById('compare-progress-bar');
-  progressWrap.style.display = '';
-
-  try {
-    log('开始扫描新文件夹: ' + state.compareFolderName);
-    var startTime = Date.now();
-
-    // Scan new folder
-    var allEntries = [];
-    for await (var entry of walkDir(state.compareFolderHandle, '')) {
-      allEntries.push(entry);
-    }
-    log('共发现 ' + allEntries.length + ' 个文件');
-
-    var newFiles = [];
-    for (var i = 0; i < allEntries.length; i++) {
-      var ent = allEntries[i];
-      try {
-        var file = await ent.handle.getFile();
-        var sizeKB = Math.round(file.size / 10.24) / 100;
-        var mtime = new Date(file.lastModified);
-
-        newFiles.push({
-          name: file.name,
-          relPath: ent.relPath,
-          parentPath: ent.relPath.indexOf('/') >= 0 ? ent.relPath.substring(0, ent.relPath.lastIndexOf('/')) : '',
-          type: getFileType(file.name),
-          sizeKB: sizeKB,
-          lastModified: formatDate(mtime),
-          latestTime: formatDate(mtime),
-          fullPath: state.compareFolderName + '/' + ent.relPath,
-          _normPath: (state.compareFolderName + '/' + ent.relPath).toLowerCase().replace(/\//g, '\\'),
-        });
-      } catch(e) {}
-
-      if (i % 100 === 0 || i === allEntries.length - 1) {
-        progressBar.style.width = Math.round((i + 1) / allEntries.length * 50) + '%';
-      }
-    }
-
-    state.compareNewFiles = newFiles;
-    progressBar.style.width = '50%';
-    log('新文件夹扫描完成: ' + newFiles.length + ' 个文件');
-
-    // Build old data map
-    var oldMap = {};
-    state.oldData.raw.forEach(function(r){
-      var path = String(r['完整路径'] || '').toLowerCase().replace(/\//g, '\\');
-      oldMap[path] = {
-        name: r['名称'] || '',
-        type: r['文件类型'] || '',
-        sizeKB: parseFloat(r['大小(KB)']) || 0,
-        mtime: String(r['修改时间'] || ''),
-        fullPath: String(r['完整路径'] || ''),
-      };
-    });
-
-    // Build new data map
-    var newMap = {};
-    newFiles.forEach(function(f){
-      newMap[f._normPath] = {
-        name: f.name,
-        type: f.type,
-        sizeKB: f.sizeKB,
-        mtime: f.lastModified,
-        fullPath: f.fullPath,
-      };
-    });
-
-    var oldPaths = Object.keys(oldMap);
-    var newPaths = Object.keys(newMap);
-    var oldPathSet = new Set(oldPaths);
-    var newPathSet = new Set(newPaths);
-
-    // Added: in new but not in old
-    var added = newPaths.filter(function(p){ return !oldPathSet.has(p); });
-    // Removed: in old but not in new
-    var removed = oldPaths.filter(function(p){ return !newPathSet.has(p); });
-    // Common
-    var common = newPaths.filter(function(p){ return oldPathSet.has(p); });
-
-    // Modified vs unchanged: compare size and mtime
-    var modified = [];
-    var unchanged = [];
-    common.forEach(function(p){
-      var o = oldMap[p];
-      var n = newMap[p];
-      var sizeDiff = Math.abs(n.sizeKB - o.sizeKB) > 0.01;
-      var timeDiff = n.mtime !== o.mtime;
-      if (sizeDiff || timeDiff) {
-        modified.push({
-          path: p, name: n.name, type: n.type,
-          oldSize: o.sizeKB, newSize: n.sizeKB,
-          oldMtime: o.mtime, newMtime: n.mtime,
-          fullPath: n.fullPath,
-        });
-      } else {
-        unchanged.push({ path: p, name: n.name, type: n.type, sizeKB: n.sizeKB, mtime: n.mtime, fullPath: n.fullPath });
-      }
-    });
-
-    progressBar.style.width = '85%';
-
-    // Build result data
-    var resultData = [];
-    var stats = {
-      total: newFiles.length,
-      added: added.length,
-      removed: removed.length,
-      modified: modified.length,
-      unchanged: unchanged.length,
+async function runCompare(newFiles) {
+  // Build old data map
+  var oldMap = {};
+  state.oldData.raw.forEach(function(r){
+    var path = String(r['完整路径'] || '').toLowerCase().replace(/\//g, '\\');
+    oldMap[path] = {
+      name: r['名称'] || '',
+      type: r['文件类型'] || '',
+      sizeKB: parseFloat(r['大小(KB)']) || 0,
+      mtime: String(r['修改时间'] || ''),
+      fullPath: String(r['完整路径'] || ''),
     };
+  });
 
-    var statusMap = {};
+  // Build new data map using normalized paths
+  var newMap = {};
+  newFiles.forEach(function(f){
+    var normPath = f.relPath.replace(/\//g, '\\');
+    newMap[normPath.toLowerCase()] = {
+      name: f.name,
+      type: f.type,
+      sizeKB: f.sizeKB,
+      mtime: f.lastModified,
+      fullPath: f.relPath,
+    };
+  });
 
-    added.forEach(function(p){
-      var n = newMap[p];
-      resultData.push({ status: '🟢 新增', name: n.name, type: n.type, sizeKB: n.sizeKB, mtime: n.mtime, path: p });
-      statusMap[p] = 'new';
-    });
-    removed.forEach(function(p){
-      var o = oldMap[p];
-      resultData.push({ status: '🔴 已删除', name: o.name, type: o.type, sizeKB: o.sizeKB, mtime: o.mtime, path: p });
-      statusMap[p] = 'removed';
-    });
-    modified.forEach(function(m){
-      resultData.push({
-        status: '🟠 已修改', name: m.name, type: m.type,
-        sizeKB: m.newSize, oldSize: m.oldSize, newSize: m.newSize,
-        mtime: m.newMtime, oldMtime: m.oldMtime,
-        path: m.path,
+  var oldPaths = Object.keys(oldMap);
+  var newPaths = Object.keys(newMap);
+  var oldPathSet = new Set(oldPaths);
+  var newPathSet = new Set(newPaths);
+
+  var added = newPaths.filter(function(p){ return !oldPathSet.has(p); });
+  var removed = oldPaths.filter(function(p){ return !newPathSet.has(p); });
+  var common = newPaths.filter(function(p){ return oldPathSet.has(p); });
+
+  var modified = [];
+  var unchanged = [];
+  common.forEach(function(p){
+    var o = oldMap[p];
+    var n = newMap[p];
+    var sizeDiff = Math.abs(n.sizeKB - o.sizeKB) > 0.01;
+    var timeDiff = n.mtime !== o.mtime;
+    if (sizeDiff || timeDiff) {
+      modified.push({
+        path: p, name: n.name, type: n.type,
+        oldSize: o.sizeKB, newSize: n.sizeKB,
+        oldMtime: o.mtime, newMtime: n.mtime,
+        fullPath: n.fullPath,
       });
-      statusMap[m.path] = 'modified';
+    } else {
+      unchanged.push({ path: p, name: n.name, type: n.type, sizeKB: n.sizeKB, mtime: n.mtime, fullPath: n.fullPath });
+    }
+  });
+
+  var resultData = [];
+  var stats = {
+    total: newFiles.length,
+    added: added.length,
+    removed: removed.length,
+    modified: modified.length,
+    unchanged: unchanged.length,
+  };
+  var statusMap = {};
+
+  added.forEach(function(p){
+    var n = newMap[p];
+    resultData.push({ status: '🟢 新增', name: n.name, type: n.type, sizeKB: n.sizeKB, mtime: n.mtime, path: n.fullPath });
+    statusMap[p] = 'new';
+  });
+  removed.forEach(function(p){
+    var o = oldMap[p];
+    resultData.push({ status: '🔴 已删除', name: o.name, type: o.type, sizeKB: o.sizeKB, mtime: o.mtime, path: o.fullPath });
+    statusMap[p] = 'removed';
+  });
+  modified.forEach(function(m){
+    resultData.push({
+      status: '🟠 已修改', name: m.name, type: m.type,
+      sizeKB: m.newSize, oldSize: m.oldSize, newSize: m.newSize,
+      mtime: m.newMtime, oldMtime: m.oldMtime,
+      path: m.fullPath,
     });
-    unchanged.forEach(function(u){
-      resultData.push({ status: '⚪ 未变更', name: u.name, type: u.type, sizeKB: u.sizeKB, mtime: u.mtime, path: u.path });
-      statusMap[u.path] = 'unchanged';
-    });
+    statusMap[m.path] = 'modified';
+  });
+  unchanged.forEach(function(u){
+    resultData.push({ status: '⚪ 未变更', name: u.name, type: u.type, sizeKB: u.sizeKB, mtime: u.mtime, path: u.fullPath });
+    statusMap[u.path] = 'unchanged';
+  });
 
-    var elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-    log('对比完成! 新增 ' + stats.added + ', 删除 ' + stats.removed + ', 修改 ' + stats.modified + ', 未变 ' + stats.unchanged, 'info');
-    log('总耗时 ' + elapsed + 's', 'info');
+  log('对比结果: 新增 ' + stats.added + ', 删除 ' + stats.removed + ', 修改 ' + stats.modified + ', 未变 ' + stats.unchanged, 'info');
 
-    state.compareResult = {
-      data: resultData,
-      stats: stats,
-      newData: newFiles,
-      oldData: state.oldData,
-      statusMap: statusMap,
-    };
+  state.compareResult = {
+    data: resultData,
+    stats: stats,
+    newData: newFiles,
+    oldData: state.oldData,
+    statusMap: statusMap,
+  };
 
-    showCompareStats(stats);
-    showCompareTable(resultData, 'all');
-
-    document.getElementById('export-compare-btn').disabled = false;
-    progressBar.style.width = '100%';
-    showToast('对比完成!');
-
-  } catch (e) {
-    log('对比失败: ' + e.message, 'error');
-    showToast('对比失败', 3000);
-  }
-
-  btn.disabled = false;
-  btn.textContent = '🔍 开始对比';
-  setTimeout(function(){ progressWrap.style.display = 'none'; }, 1500);
+  showCompareStats(stats);
+  showCompareTable(resultData, 'all');
+  document.getElementById('export-btn').disabled = false;
 }
 
 function showCompareStats(stats) {
-  document.getElementById('compare-results-card').style.display = '';
-  document.getElementById('changes-card').style.display = '';
+  document.getElementById('compare-stats-card').style.display = '';
+  document.getElementById('results-card').style.display = '';
+  document.getElementById('results-title').textContent = '📋 变更清单';
+  document.getElementById('filter-bar').style.display = 'flex';
   document.getElementById('compare-stats').innerHTML =
     '<div class="stat-card blue"><div class="num">' + stats.total + '</div><div class="label">新扫描总数</div></div>' +
     '<div class="stat-card green"><div class="num">' + stats.added + '</div><div class="label">🟢 新增</div></div>' +
@@ -1069,12 +989,12 @@ function showCompareTable(data, filter) {
   }
 
   html += '</tbody></table>';
-  document.getElementById('compare-table-wrap').innerHTML = html;
+  document.getElementById('results-table-wrap').innerHTML = html;
 }
 
 // ===== Filter Changes =====
 function filterChanges(filter) {
-  document.querySelectorAll('#changes-card .btn-ghost').forEach(function(b){
+  document.querySelectorAll('#filter-bar .btn-ghost').forEach(function(b){
     b.classList.toggle('active-filter', b.dataset.filter === filter);
   });
   if (state.compareResult) {
@@ -1086,15 +1006,12 @@ function filterChanges(filter) {
 function exportCompare() {
   if (!state.compareResult) return;
   var result = state.compareResult;
-  var rootInput = document.getElementById('compare-root-path').value.trim();
-  var rootPath = rootInput || state.compareFolderName;
+  var rootInput = state.scanRootPath;
+  var rootPath = rootInput || state.scanFolderName;
 
-  // Strip folder prefix from path to avoid double-path in HYPERLINK
-  var stripPrefix = state.compareFolderName + '\\';
+  // Paths in compare result are relative; no prefix stripping needed
   function relPathFromCompare(p) {
-    if (typeof p !== 'string') return String(p);
-    var idx = p.toLowerCase().indexOf(stripPrefix.toLowerCase());
-    return idx === 0 ? p.substring(stripPrefix.length) : p;
+    return String(p);
   }
 
   // Build comparison detail sheet
@@ -1185,37 +1102,43 @@ function exportCompare() {
   showToast('导出成功!');
 }
 
+// ===== Unified Export =====
+function exportResults() {
+  if (state.compareResult) {
+    exportCompare();
+  } else if (state.scanFiles && state.scanFiles.length) {
+    exportScan();
+  }
+}
+
 // ===== Reset =====
-function resetScan() {
+function resetAll() {
   state.scanFolderHandle = null;
   state.scanFolderName = '';
+  state.scanRootPath = '';
   state.scanFiles = [];
   state.scanResult = null;
-  document.getElementById('scan-folder-path').textContent = '';
+  state.oldData = null;
+  state.compareResult = null;
+
+  document.getElementById('folder-path-input').value = '';
   document.getElementById('scan-btn').disabled = true;
   document.getElementById('export-btn').disabled = true;
   document.getElementById('scan-stats-card').style.display = 'none';
-  document.getElementById('scan-table-card').style.display = 'none';
+  document.getElementById('compare-stats-card').style.display = 'none';
+  document.getElementById('results-card').style.display = 'none';
+  document.getElementById('filter-bar').style.display = 'none';
   document.getElementById('scan-stats').innerHTML = '';
-  document.getElementById('scan-table-wrap').innerHTML = '';
-}
-
-function resetCompare() {
-  state.compareFolderHandle = null;
-  state.compareFolderName = '';
-  state.compareNewFiles = [];
-  state.oldData = null;
-  state.compareResult = null;
-  document.getElementById('compare-folder-path').textContent = '';
+  document.getElementById('compare-stats').innerHTML = '';
+  document.getElementById('results-table-wrap').innerHTML = '';
+  document.getElementById('old-file-path').value = '';
   document.getElementById('old-file-info').textContent = '';
   document.getElementById('old-file-input').value = '';
-  document.getElementById('compare-action-card').style.display = 'none';
-  document.getElementById('compare-results-card').style.display = 'none';
-  document.getElementById('changes-card').style.display = 'none';
-  document.getElementById('demo-btn').style.display = '';
-  document.getElementById('export-compare-btn').disabled = true;
-  document.getElementById('compare-stats').innerHTML = '';
-  document.getElementById('compare-table-wrap').innerHTML = '';
+  document.getElementById('compare-checkbox').checked = false;
+  document.getElementById('compare-upload-area').style.display = 'none';
+
+  clearLog();
+  log('已重置');
 }
 
 // ===== Utilities =====
