@@ -107,7 +107,12 @@ let conversation = [];
     document.getElementById('chat-input').disabled = false;
     document.getElementById('send-btn').disabled = false;
     document.getElementById('chat-input').focus();
+    addMessage('system', '✅ Token 已加载，开始对话吧！');
     startPolling();
+  } else {
+    addMessage('system', '🔑 请输入你的 GitHub Token（ghp_...），点保存后开始对话');
+    document.getElementById('status-indicator').textContent = '⏳ 等待 Token';
+    document.getElementById('status-indicator').className = 'status offline';
   }
 })();
 
