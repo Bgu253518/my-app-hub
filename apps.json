@@ -93,7 +93,7 @@
   {
     "id": "claude-config",
     "name": "AI 聊天助手",
-    "shortDesc": "内嵌 AI 聊天窗口，基于 Anthropic Claude API，支持对话问答、代码生成",
+    "shortDesc": "内嵌 AI 聊天窗口，支持 Anthropic / DeepSeek / OpenRouter 多 API 提供商",
     "fullDesc": "内置于应用工坊的 AI 聊天助手。基于 Anthropic Claude API，支持多轮对话、代码生成、文本处理等。API Key 保存在浏览器本地（localStorage），一次配置永久使用。无需切换终端，网页内直接对话。",
     "category": "gui",
     "status": "done",
