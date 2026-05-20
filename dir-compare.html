@@ -223,6 +223,13 @@ tr.row-new:hover td, tr.row-modified:hover td, tr.row-removed:hover td { filter:
         <div class="hint">支持 Chrome / Edge 浏览器 · 会读取文件名称、大小、修改时间等信息</div>
       </div>
       <div id="scan-folder-path" style="font-size:12px;color:var(--text-secondary);margin-top:8px;"></div>
+      <div class="form-group" style="margin-top:10px;">
+        <label>📌 文件夹绝对路径（用于生成可点击的超链接）</label>
+        <div class="form-row">
+          <input type="text" id="scan-root-path" placeholder="例如：C:\Users\bgu\Desktop\项目文件" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);border-radius:6px;padding:8px 12px;color:var(--text-primary);font-size:13px;outline:none;">
+          <span style="font-size:11px;color:var(--text-secondary);">留空则路径显示为纯文本</span>
+        </div>
+      </div>
       <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;">
         <button class="btn btn-primary" onclick="startScan()" id="scan-btn" disabled>▶ 开始扫描</button>
         <button class="btn btn-ghost" onclick="exportScan()" id="export-btn" disabled>📥 导出 Excel</button>
@@ -259,6 +266,13 @@ tr.row-new:hover td, tr.row-modified:hover td, tr.row-removed:hover td { filter:
         <div class="hint">读取当前最新文件状态</div>
       </div>
       <div id="compare-folder-path" style="font-size:12px;color:var(--text-secondary);margin-top:8px;"></div>
+      <div class="form-group" style="margin-top:10px;">
+        <label>📌 文件夹绝对路径（用于生成可点击的超链接）</label>
+        <div class="form-row">
+          <input type="text" id="compare-root-path" placeholder="例如：C:\Users\bgu\Desktop\项目文件" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);border-radius:6px;padding:8px 12px;color:var(--text-primary);font-size:13px;outline:none;">
+          <span style="font-size:11px;color:var(--text-secondary);">留空则路径显示为纯文本</span>
+        </div>
+      </div>
     </div>
 
     <!-- Old baseline upload -->
@@ -579,72 +593,77 @@ function showScanTable(files) {
 function makeSheetWithMeta(data, columns, pathColKey, rootPath, sheetName) {
   // columns: [{key, label, wch}]
   var colKeys = columns.map(function(c){ return c.key; });
-  var colLabels = columns.map(function(c){ return c.label; });
-  var colWidths = columns.map(function(c){ return c.wch || 20; });
   var colCount = columns.length;
+  var rootUri = rootPath ? 'file:///' + rootPath.replace(/\\/g, '/') : '';
+  var rootDisplay = rootPath ? '根目录：' + rootPath : '根目录：（未设置路径，超链接不可用）';
+  var dateStr = (function(){
+    var d = new Date();
+    return '生成日期：' + d.getFullYear() + '-' +
+      String(d.getMonth()+1).padStart(2,'0') + '-' +
+      String(d.getDate()).padStart(2,'0') + ' ' +
+      String(d.getHours()).padStart(2,'0') + ':' +
+      String(d.getMinutes()).padStart(2,'0') + ':' +
+      String(d.getSeconds()).padStart(2,'0');
+  })();
 
-  // Build rows: root dir, date, empty, headers, data rows
-  var rows = [];
-  var rootDisplay = '根目录：' + rootPath;
-  var dateStr = '生成日期：' + new Date().toLocaleString('zh-CN', { hour12: false });
+  // Build worksheet manually for full control over hyperlinks
+  var ws = {};
+  var lastRow = data.length + 4 - 1;
+  var lastCol = colCount - 1;
+  ws['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:lastRow,c:lastCol}});
 
-  // Row 0: root directory
-  var rootRow = [rootDisplay];
-  for (var i = 1; i < colCount; i++) rootRow.push(null);
-  rows.push(rootRow);
+  function cellRef(r, c) { return XLSX.utils.encode_cell({r:r, c:c}); }
 
-  // Row 1: generation date
-  var dateRow = [dateStr];
-  for (var i = 1; i < colCount; i++) dateRow.push(null);
-  rows.push(dateRow);
-
-  // Row 2: empty
-  var emptyRow = [];
-  for (var i = 0; i < colCount; i++) emptyRow.push(null);
-  rows.push(emptyRow);
-
-  // Row 3: headers
-  rows.push(colLabels.slice());
-
-  // Row 4+: data
-  data.forEach(function(row){
-    var r = [];
-    colKeys.forEach(function(k){
-      r.push(row[k] !== undefined ? row[k] : null);
-    });
-    rows.push(r);
-  });
-
-  var ws = XLSX.utils.aoa_to_sheet(rows);
-
-  // Merges for root dir & date rows
-  ws['!merges'] = [
-    {s:{r:0,c:0}, e:{r:0,c:colCount-1}},
-    {s:{r:1,c:0}, e:{r:1,c:colCount-1}},
-  ];
-
-  // Hyperlinks: root dir row (row 0, col 0)
-  var rootCell = XLSX.utils.encode_cell({r:0,c:0});
-  if (!ws[rootCell]) ws[rootCell] = {t:'s', v: rootDisplay};
-  ws[rootCell].l = { Target: 'file:///' + rootPath.replace(/\\/g, '/'), Tooltip: rootPath };
-
-  // Hyperlinks: path column in data rows (starting from row 4)
-  var pathColIdx = colKeys.indexOf(pathColKey);
-  if (pathColIdx >= 0) {
-    for (var ri = 0; ri < data.length; ri++) {
-      var pathVal = String(data[ri][pathColKey] || '');
-      if (pathVal) {
-        var cellAddr = XLSX.utils.encode_cell({r: ri + 4, c: pathColIdx});
-        var cell = ws[cellAddr];
-        if (cell) {
-          cell.l = { Target: 'file:///' + pathVal.replace(/\\/g, '/'), Tooltip: pathVal };
-        }
-      }
-    }
+  // Row 0: Root directory
+  if (rootUri) {
+    // HYPERLINK formula for clickable link
+    ws[cellRef(0,0)] = {
+      t: 'n', f: 'HYPERLINK("' + rootUri + '","' + rootDisplay.replace(/"/g,'""') + '")'
+    };
+  } else {
+    ws[cellRef(0,0)] = { t: 's', v: rootDisplay };
   }
 
+  // Row 1: Generation date
+  ws[cellRef(1,0)] = { t: 's', v: dateStr };
+
+  // Row 3: Headers
+  columns.forEach(function(col, ci){
+    ws[cellRef(3, ci)] = { t: 's', v: col.label };
+  });
+
+  // Row 4+: Data rows
+  var pathColIdx = colKeys.indexOf(pathColKey);
+  data.forEach(function(row, ri){
+    var rowNum = ri + 4;
+    colKeys.forEach(function(key, ci){
+      var val = row[key];
+      if (val === undefined || val === null) return;
+      var addr = cellRef(rowNum, ci);
+
+      if (rootUri && ci === pathColIdx) {
+        // HYPERLINK formula for path column — path value is already absolute
+        var pathStr = String(val);
+        var fileUri = 'file:///' + pathStr.replace(/\\/g, '/');
+        ws[addr] = {
+          t: 'n', f: 'HYPERLINK("' + fileUri + '","' + pathStr.replace(/"/g,'""') + '")'
+        };
+      } else if (typeof val === 'number') {
+        ws[addr] = { t: 'n', v: val };
+      } else {
+        ws[addr] = { t: 's', v: String(val) };
+      }
+    });
+  });
+
+  // Merges
+  ws['!merges'] = [
+    {s:{r:0,c:0}, e:{r:0,c:lastCol}},
+    {s:{r:1,c:0}, e:{r:1,c:lastCol}},
+  ];
+
   // Column widths
-  ws['!cols'] = colWidths.map(function(w){ return {wch: w}; });
+  ws['!cols'] = columns.map(function(c){ return {wch: c.wch || 20}; });
 
   return ws;
 }
@@ -653,7 +672,7 @@ function makeSheetWithMeta(data, columns, pathColKey, rootPath, sheetName) {
 function exportScan() {
   if (!state.scanFiles || !state.scanFiles.length) return;
 
-  var rootPath = state.scanFolderName;
+  var rootPath = document.getElementById('scan-root-path').value.trim() || state.scanFolderName;
   var data = state.scanFiles.map(function(f){
     return {
       '名称': f.name,
@@ -1057,7 +1076,7 @@ function filterChanges(filter) {
 function exportCompare() {
   if (!state.compareResult) return;
   var result = state.compareResult;
-  var rootPath = state.compareFolderName;
+  var rootPath = document.getElementById('compare-root-path').value.trim() || state.compareFolderName;
 
   // Build comparison detail sheet
   var detailData = result.data.map(function(r){
