@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智能筛选汇总工具</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg-deep: #0a0a14; --bg-card: rgba(22,22,44,0.6);
+  --glass-border: rgba(255,255,255,0.08);
+  --text-primary: #e8e8f0; --text-secondary: #9999b0;
+  --accent-1: #7c5cfc; --accent-2: #5cfca0; --accent-3: #fc5c9c;
+  --radius: 14px; --radius-sm: 8px; --transition: 0.2s ease;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: linear-gradient(160deg, #0a0a14 0%, #12122a 30%, #16163a 60%, #0d0d24 100%);
+  color: var(--text-primary); min-height: 100vh; line-height: 1.6;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 20% 20%, rgba(124,92,252,0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 60%, rgba(252,92,156,0.04) 0%, transparent 50%);
+  pointer-events: none; z-index: 0;
+}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(124,92,252,0.25); border-radius: 3px; }
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,10,20,0.8); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 0 24px; height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header .brand { font-size: 17px; font-weight: 700; }
+.header a { color: var(--text-secondary); text-decoration: none; font-size: 13px; padding: 6px 14px; border: 1px solid var(--glass-border); border-radius: 8px; transition: var(--transition); }
+.header a:hover { color: var(--text-primary); border-color: rgba(124,92,252,0.3); }
+.main { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 24px; }
+.section {
+  background: var(--bg-card); border: 1px solid var(--glass-border);
+  border-radius: var(--radius); padding: 24px; margin-bottom: 20px;
+  backdrop-filter: blur(10px);
+}
+.section-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.section-hint { font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; }
+
+.drop-zone {
+  border: 2px dashed rgba(124,92,252,0.3); border-radius: var(--radius);
+  padding: 48px 24px; text-align: center; cursor: pointer; transition: var(--transition);
+}
+.drop-zone:hover, .drop-zone.dragover { border-color: var(--accent-1); background: rgba(124,92,252,0.06); }
+.drop-zone .dz-icon { font-size: 48px; margin-bottom: 10px; }
+.drop-zone .dz-text { font-size: 15px; font-weight: 600; }
+.drop-zone .dz-hint { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+.data-info {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; background: rgba(124,92,252,0.08);
+  border: 1px solid rgba(124,92,252,0.2); border-radius: var(--radius-sm);
+  margin-bottom: 16px; flex-wrap: wrap;
+}
+.data-info .di-label { font-size: 12px; color: var(--text-secondary); }
+.data-info .di-value { font-size: 13px; font-weight: 600; }
+
+.filter-row {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  padding: 10px 14px; margin-bottom: 8px;
+  background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+}
+.filter-row select, .filter-row input {
+  padding: 8px 10px; border: 1px solid var(--glass-border); border-radius: 6px;
+  background: rgba(0,0,0,0.3); color: var(--text-primary); font-size: 13px;
+  outline: none; font-family: inherit;
+}
+.filter-row select:focus, .filter-row input:focus { border-color: var(--accent-1); }
+.filter-row .fr-logic { font-size: 12px; font-weight: 700; color: var(--accent-2); padding: 0 4px; }
+.filter-row .fr-remove {
+  padding: 4px 10px; border: none; border-radius: 4px;
+  background: rgba(252,92,156,0.15); color: #fc5c9c; font-size: 11px; cursor: pointer;
+}
+
+.preview-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.preview-table th {
+  padding: 8px 10px; border-bottom: 2px solid var(--glass-border);
+  color: var(--text-secondary); font-weight: 600; text-align: left;
+  font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+  position: sticky; top: 0; background: var(--bg-card);
+}
+.preview-table td { padding: 6px 10px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.preview-table tr:hover { background: rgba(255,255,255,0.02); }
+.preview-wrap { max-height: 350px; overflow-y: auto; margin-bottom: 12px; }
+
+.btn {
+  padding: 10px 20px; border: none; border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: var(--transition); display: inline-flex; align-items: center; gap: 6px;
+}
+.btn-primary { background: var(--accent-1); color: #fff; }
+.btn-primary:hover { background: #9578ff; transform: translateY(-1px); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.btn-secondary { background: rgba(255,255,255,0.06); color: var(--text-primary); border: 1px solid var(--glass-border); }
+.btn-secondary:hover { background: rgba(255,255,255,0.12); }
+.btn-success { background: var(--accent-2); color: #000; }
+.btn-success:hover { background: #6dfcaa; }
+.tool-actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0 0; }
+
+.result-box {
+  padding: 16px; border-radius: var(--radius-sm);
+  border: 1px solid rgba(92,252,160,0.2); background: rgba(92,252,160,0.06);
+  display: none; margin-top: 16px;
+}
+.result-box.show { display: block; }
+.result-box .result-title { color: #5cfca0; font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+.result-box .result-detail { color: var(--text-secondary); font-size: 12px; }
+
+.processing { display: none; align-items: center; gap: 10px; padding: 16px 0; color: var(--text-secondary); font-size: 13px; }
+.processing.show { display: flex; }
+.spinner { width: 24px; height: 24px; border: 3px solid rgba(124,92,252,0.2); border-top-color: var(--accent-1); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.empty-state { padding: 40px; text-align: center; color: var(--text-secondary); font-size: 14px; }
+
+@media (max-width: 640px) {
+  .main { padding: 14px; } .section { padding: 16px; }
+  .drop-zone { padding: 32px 14px; }
+  .filter-row { flex-direction: column; align-items: stretch; }
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="brand">🔎 智能筛选汇总工具</div>
+  <a href="index.html">← 返回首页</a>
+</div>
+<div class="main">
+
+  <div class="section">
+    <div class="section-title">📂 上传数据文件</div>
+    <div class="section-hint">上传 Excel 文件，自动识别列名和数据</div>
+    <div class="drop-zone" id="dropZone">
+      <div class="dz-icon">📂</div>
+      <div class="dz-text">拖拽 Excel 文件到此处，或点击选择文件</div>
+      <div class="dz-hint">支持 .xlsx / .xls / .csv 格式</div>
+    </div>
+    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none">
+  </div>
+
+  <div class="section" id="filterSection" style="display:none">
+    <div class="data-info" id="dataInfo"></div>
+
+    <div class="section-title">🔍 筛选条件</div>
+    <div class="section-hint">设置一个或多个筛选条件，多个条件之间为"且"关系（AND）</div>
+    <div id="filterRows"></div>
+    <div class="tool-actions">
+      <button class="btn btn-secondary" id="addFilterBtn">➕ 添加条件</button>
+      <button class="btn btn-primary" id="runFilterBtn">▶ 执行筛选</button>
+      <button class="btn btn-secondary" id="resetFilterBtn">🔄 重置</button>
+    </div>
+
+    <div class="section-title" style="margin-top:20px">📊 数据预览</div>
+    <div class="preview-wrap" id="previewWrap"><div class="empty-state">暂无数据</div></div>
+
+    <div class="processing" id="processing">
+      <div class="spinner"></div>
+      <span>正在处理...</span>
+    </div>
+
+    <div class="result-box" id="resultBox">
+      <div class="result-title">✅ 筛选完成</div>
+      <div class="result-detail" id="resultDetail"></div>
+      <div class="tool-actions">
+        <button class="btn btn-primary" id="downloadBtn">⬇ 下载筛选结果</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let rawData = [];      // Array of row objects
+let columns = [];       // Column names
+let fileName = '';
+let filterResult = null;
+
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const filterSection = document.getElementById('filterSection');
+const dataInfo = document.getElementById('dataInfo');
+const filterRows = document.getElementById('filterRows');
+const addFilterBtn = document.getElementById('addFilterBtn');
+const runFilterBtn = document.getElementById('runFilterBtn');
+const resetFilterBtn = document.getElementById('resetFilterBtn');
+const previewWrap = document.getElementById('previewWrap');
+const processing = document.getElementById('processing');
+const resultBox = document.getElementById('resultBox');
+const resultDetail = document.getElementById('resultDetail');
+const downloadBtn = document.getElementById('downloadBtn');
+
+dropZone.onclick = () => fileInput.click();
+dropZone.ondragover = e => { e.preventDefault(); dropZone.classList.add('dragover'); };
+dropZone.ondragleave = () => dropZone.classList.remove('dragover');
+dropZone.ondrop = e => {
+  e.preventDefault(); dropZone.classList.remove('dragover');
+  const files = Array.from(e.dataTransfer.files).filter(f => f.name.match(/\.(xlsx?|csv)$/i));
+  if (files.length > 0) loadFile(files[0]);
+};
+
+fileInput.onchange = () => {
+  if (fileInput.files.length > 0) loadFile(fileInput.files[0]);
+  fileInput.value = '';
+};
+
+async function loadFile(file) {
+  processing.classList.add('show');
+  filterSection.style.display = 'none';
+  resultBox.classList.remove('show');
+  await new Promise(r => setTimeout(r, 50));
+
+  try {
+    const buf = await file.arrayBuffer();
+    let wb;
+    if (file.name.match(/\.csv$/i)) {
+      const text = new TextDecoder('utf-8').decode(buf);
+      wb = XLSX.read(text, { type: 'string' });
+    } else {
+      wb = XLSX.read(buf, { type: 'array' });
+    }
+
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json(ws, { defval: '' });
+
+    if (json.length === 0) {
+      alert('文件中没有数据');
+      processing.classList.remove('show');
+      return;
+    }
+
+    columns = Object.keys(json[0]);
+    rawData = json;
+    fileName = file.name;
+
+    // Show data info
+    dataInfo.innerHTML = `
+      <span class="di-label">文件:</span><span class="di-value">${escapeHtml(file.name)}</span>
+      <span class="di-label">列数:</span><span class="di-value">${columns.length}</span>
+      <span class="di-value">行数:</span><span class="di-value">${rawData.length}</span>
+    `;
+
+    filterSection.style.display = 'block';
+    initFilterRows();
+    renderPreview(rawData);
+  } catch (err) {
+    alert('文件读取失败: ' + err.message);
+  } finally {
+    processing.classList.remove('show');
+  }
+}
+
+function initFilterRows() {
+  filterRows.innerHTML = '';
+  addFilterRow();
+  addFilterRow();
+}
+
+function addFilterRow() {
+  const row = document.createElement('div');
+  row.className = 'filter-row';
+  const idx = filterRows.children.length;
+
+  const logicHtml = idx === 0 ? '' : `<span class="fr-logic">且</span>`;
+
+  const ops = ['等于','不等于','包含','不包含','开头是','结尾是','大于','小于','大于等于','小于等于','为空','不为空'];
+  const opValues = ['eq','neq','contains','ncontains','startswith','endswith','gt','lt','gte','lte','empty','notempty'];
+
+  row.innerHTML = `
+    ${logicHtml}
+    <select class="fr-col">${columns.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')}</select>
+    <select class="fr-op">${ops.map((o, i) => `<option value="${opValues[i]}">${o}</option>`).join('')}</select>
+    <input class="fr-val" placeholder="值" style="width:150px">
+    <button class="fr-remove" onclick="this.closest('.filter-row').remove()">✕</button>
+  `;
+  filterRows.appendChild(row);
+}
+
+addFilterBtn.onclick = () => addFilterRow();
+
+runFilterBtn.onclick = () => {
+  const conditions = [];
+  filterRows.querySelectorAll('.filter-row').forEach(row => {
+    const col = row.querySelector('.fr-col').value;
+    const op = row.querySelector('.fr-op').value;
+    const val = row.querySelector('.fr-val').value;
+    conditions.push({ col, op, val });
+  });
+
+  const validConditions = conditions.filter(c => c.op !== 'empty' && c.op !== 'notempty' || true);
+
+  processing.classList.add('show');
+  resultBox.classList.remove('show');
+
+  setTimeout(() => {
+    try {
+      const filtered = rawData.filter(row => {
+        return conditions.every(c => {
+          const cellVal = String(row[c.col] ?? '').trim();
+          const searchVal = c.val.trim();
+          switch (c.op) {
+            case 'eq': return cellVal === searchVal;
+            case 'neq': return cellVal !== searchVal;
+            case 'contains': return cellVal.includes(searchVal);
+            case 'ncontains': return !cellVal.includes(searchVal);
+            case 'startswith': return cellVal.startsWith(searchVal);
+            case 'endswith': return cellVal.endsWith(searchVal);
+            case 'gt': return parseFloat(cellVal) > parseFloat(searchVal) || cellVal > searchVal;
+            case 'lt': return parseFloat(cellVal) < parseFloat(searchVal) || cellVal < searchVal;
+            case 'gte': return parseFloat(cellVal) >= parseFloat(searchVal) || cellVal >= searchVal;
+            case 'lte': return parseFloat(cellVal) <= parseFloat(searchVal) || cellVal <= searchVal;
+            case 'empty': return cellVal === '';
+            case 'notempty': return cellVal !== '';
+            default: return true;
+          }
+        });
+      });
+
+      filterResult = filtered;
+      renderPreview(filtered);
+
+      // Find amount columns (contains 金额/合计/总计/金额/小计)
+      const amountCols = columns.filter(c => /金额|合计|总计|小计|余额|金额|价款|税额|价格/i.test(c));
+      let summary = `筛选结果: ${filtered.length} 行（原始 ${rawData.length} 行）`;
+      if (amountCols.length > 0) {
+        const sums = amountCols.map(c => {
+          const sum = filtered.reduce((acc, row) => acc + (parseFloat(row[c]) || 0), 0);
+          return `${c}: ${sum.toLocaleString('zh-CN', {minimumFractionDigits:2})}`;
+        });
+        summary += ' · ' + sums.join(' · ');
+      }
+
+      resultDetail.textContent = summary;
+      resultBox.classList.add('show');
+    } catch (err) {
+      alert('筛选出错: ' + err.message);
+    } finally {
+      processing.classList.remove('show');
+    }
+  }, 100);
+};
+
+resetFilterBtn.onclick = () => {
+  filterResult = null;
+  renderPreview(rawData);
+  resultBox.classList.remove('show');
+};
+
+function renderPreview(data) {
+  if (data.length === 0) {
+    previewWrap.innerHTML = '<div class="empty-state">没有匹配的数据</div>';
+    return;
+  }
+  const maxRows = Math.min(data.length, 100);
+  let html = `<table class="preview-table"><thead><tr>
+    <th>#</th>${columns.map(c => `<th>${escapeHtml(c)}</th>`).join('')}
+  </tr></thead><tbody>`;
+  for (let i = 0; i < maxRows; i++) {
+    html += `<tr><td>${i+1}</td>`;
+    columns.forEach(c => {
+      const val = data[i][c] ?? '';
+      const display = typeof val === 'number' ? val.toLocaleString() : String(val);
+      html += `<td>${escapeHtml(display.slice(0, 50))}</td>`;
+    });
+    html += '</tr>';
+  }
+  if (data.length > maxRows) {
+    html += `<tr><td colspan="${columns.length+1}" style="text-align:center;color:var(--text-secondary);padding:12px">... 共 ${data.length} 行，仅显示前 ${maxRows} 行</td></tr>`;
+  }
+  html += '</tbody></table>';
+  previewWrap.innerHTML = html;
+}
+
+downloadBtn.onclick = () => {
+  const data = filterResult || rawData;
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '筛选结果');
+  const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '筛选结果_' + new Date().toISOString().slice(0,10) + '.xlsx';
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+function escapeHtml(str) {
+  if (str == null) return '';
+  const d = document.createElement('div');
+  d.textContent = String(str);
+  return d.innerHTML;
+}
+</script>
+</body>
+</html>
