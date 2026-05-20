@@ -2015,13 +2015,22 @@ function openToolPanel(appId) {
   const app = apps.find(a => a.id === appId);
   if (!app) return;
 
+  // AI 聊天助手：直接弹出聊天窗口
+  if (appId === 'claude-config') { toggleAIChat(); return; }
+
+  // 带密码保护的工具
+  const PROTECTED_TOOLS = ['tb-autofill', 'bkd-rollforward', 'word-checkbench'];
+  if (PROTECTED_TOOLS.includes(appId)) {
+    const pw = prompt('请输入管理员密码来打开此工具:');
+    if (pw !== 'Asd#522128') { alert('密码错误，无法打开'); return; }
+  }
+
   // 独立页面的工具：先跳转，不显示面板（避免闪现 PDF 拖拽区）
   const externalPages = {
     'rou-calc': 'rou-calculator.html',
     'img-compressor': 'image-toolbox.html',
     'data-cleaner': 'data-cleaner.html',
     'file-renamer': 'file-renamer.html',
-    'claude-config': '',
     'offline-ai': 'offline-ai.html',
     'smart-todo': 'smart-todo.html',
     'audit-hub': 'audit-hub.html',
