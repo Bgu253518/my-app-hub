@@ -575,10 +575,85 @@ function showScanTable(files) {
   document.getElementById('scan-table-wrap').innerHTML = html;
 }
 
+// ===== Excel Helpers =====
+function makeSheetWithMeta(data, columns, pathColKey, rootPath, sheetName) {
+  // columns: [{key, label, wch}]
+  var colKeys = columns.map(function(c){ return c.key; });
+  var colLabels = columns.map(function(c){ return c.label; });
+  var colWidths = columns.map(function(c){ return c.wch || 20; });
+  var colCount = columns.length;
+
+  // Build rows: root dir, date, empty, headers, data rows
+  var rows = [];
+  var rootDisplay = '根目录：' + rootPath;
+  var dateStr = '生成日期：' + new Date().toLocaleString('zh-CN', { hour12: false });
+
+  // Row 0: root directory
+  var rootRow = [rootDisplay];
+  for (var i = 1; i < colCount; i++) rootRow.push(null);
+  rows.push(rootRow);
+
+  // Row 1: generation date
+  var dateRow = [dateStr];
+  for (var i = 1; i < colCount; i++) dateRow.push(null);
+  rows.push(dateRow);
+
+  // Row 2: empty
+  var emptyRow = [];
+  for (var i = 0; i < colCount; i++) emptyRow.push(null);
+  rows.push(emptyRow);
+
+  // Row 3: headers
+  rows.push(colLabels.slice());
+
+  // Row 4+: data
+  data.forEach(function(row){
+    var r = [];
+    colKeys.forEach(function(k){
+      r.push(row[k] !== undefined ? row[k] : null);
+    });
+    rows.push(r);
+  });
+
+  var ws = XLSX.utils.aoa_to_sheet(rows);
+
+  // Merges for root dir & date rows
+  ws['!merges'] = [
+    {s:{r:0,c:0}, e:{r:0,c:colCount-1}},
+    {s:{r:1,c:0}, e:{r:1,c:colCount-1}},
+  ];
+
+  // Hyperlinks: root dir row (row 0, col 0)
+  var rootCell = XLSX.utils.encode_cell({r:0,c:0});
+  if (!ws[rootCell]) ws[rootCell] = {t:'s', v: rootDisplay};
+  ws[rootCell].l = { Target: 'file:///' + rootPath.replace(/\\/g, '/'), Tooltip: rootPath };
+
+  // Hyperlinks: path column in data rows (starting from row 4)
+  var pathColIdx = colKeys.indexOf(pathColKey);
+  if (pathColIdx >= 0) {
+    for (var ri = 0; ri < data.length; ri++) {
+      var pathVal = String(data[ri][pathColKey] || '');
+      if (pathVal) {
+        var cellAddr = XLSX.utils.encode_cell({r: ri + 4, c: pathColIdx});
+        var cell = ws[cellAddr];
+        if (cell) {
+          cell.l = { Target: 'file:///' + pathVal.replace(/\\/g, '/'), Tooltip: pathVal };
+        }
+      }
+    }
+  }
+
+  // Column widths
+  ws['!cols'] = colWidths.map(function(w){ return {wch: w}; });
+
+  return ws;
+}
+
 // ===== Export Scan =====
 function exportScan() {
   if (!state.scanFiles || !state.scanFiles.length) return;
 
+  var rootPath = state.scanFolderName;
   var data = state.scanFiles.map(function(f){
     return {
       '名称': f.name,
@@ -587,18 +662,22 @@ function exportScan() {
       '大小(KB)': f.sizeKB,
       '修改时间': f.lastModified,
       '最晚时间': f.latestTime,
-      '完整路径': state.scanFolderName + '/' + f.relPath,
+      '完整路径': rootPath + '/' + f.relPath,
     };
   });
 
-  var wb = XLSX.utils.book_new();
-  var ws = XLSX.utils.json_to_sheet(data);
-
-  // Set column widths
-  ws['!cols'] = [
-    {wch: 40}, {wch: 30}, {wch: 10}, {wch: 12}, {wch: 20}, {wch: 20}, {wch: 60}
+  var columns = [
+    {key:'名称', label:'名称', wch:40},
+    {key:'上级文件夹路径', label:'上级文件夹路径', wch:30},
+    {key:'文件类型', label:'文件类型', wch:10},
+    {key:'大小(KB)', label:'大小(KB)', wch:12},
+    {key:'修改时间', label:'修改时间', wch:20},
+    {key:'最晚时间', label:'最晚时间', wch:20},
+    {key:'完整路径', label:'完整路径', wch:60},
   ];
 
+  var wb = XLSX.utils.book_new();
+  var ws = makeSheetWithMeta(data, columns, '完整路径', rootPath, '完整清单');
   XLSX.utils.book_append_sheet(wb, ws, '完整清单');
 
   // Stats sheet
@@ -606,16 +685,16 @@ function exportScan() {
   state.scanFiles.forEach(function(f){ typeCount[f.type] = (typeCount[f.type] || 0) + 1; });
   var statsData = [
     ['统计项', '值'],
-    ['扫描日期', new Date().toLocaleString()],
-    ['文件夹', state.scanFolderName],
+    ['扫描日期', new Date().toLocaleString('zh-CN', { hour12: false })],
+    ['文件夹', rootPath],
     ['文件总数', state.scanFiles.length],
-    ['汇总', ''],
+    ['文件类型分布', ''],
   ];
   Object.keys(typeCount).sort().forEach(function(t){
-    statsData.push(['  ' + t + ' 文件', typeCount[t]]);
+    statsData.push(['  ' + t, typeCount[t]]);
   });
   var statsWs = XLSX.utils.aoa_to_sheet(statsData);
-  statsWs['!cols'] = [{wch: 20}, {wch: 12}];
+  statsWs['!cols'] = [{wch: 22}, {wch: 12}];
   XLSX.utils.book_append_sheet(wb, statsWs, '汇总');
 
   var datePart = new Date().toISOString().slice(0,10).replace(/-/g,'');
@@ -978,6 +1057,7 @@ function filterChanges(filter) {
 function exportCompare() {
   if (!state.compareResult) return;
   var result = state.compareResult;
+  var rootPath = state.compareFolderName;
 
   // Build comparison detail sheet
   var detailData = result.data.map(function(r){
@@ -995,17 +1075,29 @@ function exportCompare() {
   });
 
   var wb = XLSX.utils.book_new();
-  var ws = XLSX.utils.json_to_sheet(detailData);
-  ws['!cols'] = [{wch:12},{wch:40},{wch:10},{wch:12},{wch:12},{wch:22},{wch:22},{wch:60}];
+
+  // Sheet 1: 对比清单 (with hyperlinks for type != 已删除)
+  var detailCols = [
+    {key:'状态', label:'状态', wch:12},
+    {key:'名称', label:'名称', wch:40},
+    {key:'文件类型', label:'文件类型', wch:10},
+    {key:'原大小(KB)', label:'原大小(KB)', wch:12},
+    {key:'新大小(KB)', label:'新大小(KB)', wch:12},
+    {key:'原修改时间', label:'原修改时间', wch:22},
+    {key:'新修改时间', label:'新修改时间', wch:22},
+    {key:'路径', label:'路径', wch:60},
+  ];
+
+  var ws = makeSheetWithMeta(detailData, detailCols, '路径', rootPath, '对比清单');
   XLSX.utils.book_append_sheet(wb, ws, '对比清单');
 
-  // Summary sheet
+  // Sheet 2: 汇总
   var s = result.stats;
   var oldName = state.oldData ? state.oldData.filename : '旧基准';
   var summaryData = [
     ['文件目录对比报告', ''],
-    ['生成日期', new Date().toLocaleString()],
-    ['新扫描文件夹', state.compareFolderName],
+    ['生成日期', new Date().toLocaleString('zh-CN', { hour12: false })],
+    ['新扫描文件夹', rootPath],
     ['旧基准文件', oldName],
     ['', ''],
     ['统计项', '数量'],
@@ -1021,7 +1113,7 @@ function exportCompare() {
   ws2['!cols'] = [{wch:24},{wch:14}];
   XLSX.utils.book_append_sheet(wb, ws2, '汇总');
 
-  // New files sheet
+  // Sheet 3: 新扫描完整清单 (with hyperlinks)
   var newFilesData = result.newData.map(function(f){
     return {
       '名称': f.name,
@@ -1033,8 +1125,15 @@ function exportCompare() {
     };
   });
   if (newFilesData.length) {
-    var ws3 = XLSX.utils.json_to_sheet(newFilesData);
-    ws3['!cols'] = [{wch:40},{wch:30},{wch:10},{wch:12},{wch:22},{wch:60}];
+    var newCols = [
+      {key:'名称', label:'名称', wch:40},
+      {key:'上级文件夹路径', label:'上级文件夹路径', wch:30},
+      {key:'文件类型', label:'文件类型', wch:10},
+      {key:'大小(KB)', label:'大小(KB)', wch:12},
+      {key:'修改时间', label:'修改时间', wch:22},
+      {key:'完整路径', label:'完整路径', wch:60},
+    ];
+    var ws3 = makeSheetWithMeta(newFilesData, newCols, '完整路径', rootPath, '新扫描完整清单');
     XLSX.utils.book_append_sheet(wb, ws3, '新扫描完整清单');
   }
 
