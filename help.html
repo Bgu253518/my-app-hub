@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -151,9 +151,7 @@ body {
     <li><a href="#ch-word">Word 报告上数与校验工作台 — 自动上数/合计校验</a></li>
     <li><a href="#ch-gdc">GDC 审计任务工时管理系统 — 任务/工时/分摊/仪表盘</a></li>
     <li><a href="#ch-audit-hub">审计项目工时任务协同系统 — 多角色/复核/归档</a></li>
-    <li><a href="#ch-claude">Claude Code 个人配置 — 一键配置第三方 API</a></li>
-    <li><a href="#ch-dir-compare">文件目录扫描对比工具 — 新增/修改/删除一目了然</a></li>
-    <li><a href="#ch-smart-todo">智能待办 — AI 解析/桌面提醒/导入导出</a></li>
+	    <li><a href="#ch-smart-todo">智能待办 — AI 解析/桌面提醒/导入导出</a></li>
   </ol>
 </div>
 
@@ -500,79 +498,12 @@ body {
 </div>
 
 <!-- ====================================================================== -->
-<!-- 12. Claude Code 个人配置 -->
-<!-- ====================================================================== -->
-<div class="tool-chapter" id="ch-claude">
-<div class="chapter-header">
-  <span class="ch-icon">⚙️</span>
-  <h2>12. Claude Code 个人配置</h2>
-  <div class="ch-desc">一键配置 Claude Code 使用 DeepSeek / OpenRouter / 阿里云百炼等第三方 API 服务商</div>
-</div>
-<h3>支持的服务商</h3>
-<table class="param-table">
-  <tr><th>服务商</th><th>接口地址</th><th>推荐模型</th></tr>
-  <tr><td>DeepSeek</td><td>api.deepseek.com</td><td>deepseek-chat</td></tr>
-  <tr><td>OpenRouter</td><td>openrouter.ai/api/v1</td><td>anthropic/claude-sonnet-4-6</td></tr>
-  <tr><td>阿里云百炼</td><td>dashscope.aliyuncs.com</td><td>qwen-plus</td></tr>
-  <tr><td>自定义</td><td>用户指定</td><td>用户指定</td></tr>
-</table>
-<h3>操作步骤</h3>
-<ol class="step-list">
-  <li><strong>选择服务商</strong><p>在下拉框中选择你要使用的 API 服务商。系统会自动显示对应的接口地址和默认模型。</p></li>
-  <li><strong>填写 API 密钥</strong><p>输入你的 API Key（从服务商控制台获取）。可点击「显示/隐藏」切换可见性。页面有密码保护，输入密码 <span class="kbd">Glh@253518</span> 解锁。</p></li>
-  <li><strong>（可选）选择模型</strong><p>可自定义选择模型，不选则使用服务商默认模型（推荐）。小型/快速模型用于简单任务。</p></li>
-  <li><strong>生成脚本</strong><p>点击「生成配置脚本」。在展开的预览区确认参数无误。</p></li>
-  <li><strong>下载 setup.bat</strong><p>点击「下载 setup.bat」保存到本地。如果 setx 失败（注册表被拦截），可下载「claude-start.bat 备用包装器」（橙色按钮），无需注册表权限。</p></li>
-  <li><strong>执行配置</strong><p>双击 setup.bat 自动配置环境变量。关闭当前终端后重新打开，运行 <span class="kbd">claude</span> 即可。</p></li>
-</ol>
-<div class="info-box warn"><strong>⚠ 常见问题</strong>如遇「拒绝访问注册表路径」错误，请以管理员身份运行 setup.bat，或使用 claude-start.bat 备用包装器。中文乱码是正常现象，已通过 chcp 65001 修复。</div>
-</div>
-
-<!-- ====================================================================== -->
-<!-- 13. 文件目录扫描对比工具 -->
-<!-- ====================================================================== -->
-<div class="tool-chapter" id="ch-dir-compare">
-<div class="chapter-header">
-  <span class="ch-icon">📂</span>
-  <h2>13. 文件目录扫描对比工具</h2>
-  <div class="ch-desc">浏览器中扫描文件夹、对比新旧文件状态，新增/修改/删除一目了然，支持导出 Excel 报告</div>
-</div>
-<div class="info-box"><strong>🔐 本地运行</strong>使用浏览器 File System Access API 读取文件夹信息，所有文件数据在浏览器本地处理，不上传任何服务器。</div>
-<h3>扫描模式</h3>
-<table class="param-table">
-  <tr><th>功能</th><th>说明</th></tr>
-  <tr><td>📁 选择文件夹</td><td>点击选择要扫描的文件夹，浏览器会请求读取权限</td></tr>
-  <tr><td>📊 扫描统计</td><td>自动统计文件总数、总大小、文件类型分布、大小分段</td></tr>
-  <tr><td>📄 文件清单</td><td>完整列出所有文件（名称、类型、大小、修改时间、路径）</td></tr>
-  <tr><td>📥 导出 Excel</td><td>导出为带格式的 Excel 文件（含完整清单 Sheet + 汇总 Sheet）</td></tr>
-</table>
-<h3>对比模式</h3>
-<table class="param-table">
-  <tr><th>功能</th><th>说明</th></tr>
-  <tr><td>🆕 新增</td><td>旧基准中没有、新扫描中出现的新文件（绿色标识）</td></tr>
-  <tr><td>🟠 已修改</td><td>大小或修改时间发生变化的文件（橙色标识）</td></tr>
-  <tr><td>🔴 已删除</td><td>旧基准中有、新扫描中已不存在的文件（红色标识）</td></tr>
-  <tr><td>⚪ 未变更</td><td>两次扫描中完全一致的文件（灰色标识）</td></tr>
-</table>
-<h3>操作步骤</h3>
-<ol class="step-list">
-  <li><strong>选择模式</strong><p>在「扫描模式」和「对比模式」之间切换。简单查看文件结构选择扫描模式；需要对比变化选择对比模式。</p></li>
-  <li><strong>选择文件夹</strong><p>点击选择文件夹按钮，在弹出的对话框中选取要扫描的文件夹。浏览器会请求读取权限，请允许。</p></li>
-  <li><strong>开始扫描</strong><p>点击「开始扫描」按钮，工具会递归遍历文件夹中所有文件。文件数量越多耗时越长，进度条显示处理进度。</p></li>
-  <li><strong>查看结果</strong><p>扫描完成后自动显示统计卡片和文件清单表格。表格列可排序（点击表头），路径列支持悬停查看完整路径。</p></li>
-  <li><strong>对比分析</strong><p>对比模式下，先上传之前扫描导出的 Excel 文件作为旧基准，再扫描新文件夹，自动识别新增、修改、删除、未变更四种状态。支持按状态筛选查看。</p></li>
-  <li><strong>导出报告</strong><p>点击「导出 Excel」下载带格式的 Excel 报告。扫描模式：完整清单 + 汇总；对比模式：对比清单 + 汇总 + 新扫描完整清单。</p></li>
-</ol>
-<div class="info-box"><strong>⚠️ 浏览器要求</strong>需要使用 Chrome 86+ 或 Edge 86+ 浏览器，较旧浏览器不支持文件夹选择功能。扫描大量文件（超过 5000 个）时可能需要较长时间，请耐心等待。</div>
-</div>
-
-<!-- ====================================================================== -->
-<!-- 14. 智能待办 -->
+<!-- 12. 智能待办 -->
 <!-- ====================================================================== -->
 <div class="tool-chapter" id="ch-smart-todo">
 <div class="chapter-header">
   <span class="ch-icon">📋</span>
-  <h2>14. 智能待办</h2>
+  <h2>12. 智能待办</h2>
   <div class="ch-desc">AI 自然语言解析任务、桌面提醒通知、邮件格式智能识别、CSV/JSON 导入导出</div>
 </div>
 <h3>功能一览</h3>
@@ -622,10 +553,11 @@ Subject: 本周审计任务分配<br>
     <a href="https://bgu253518.github.io/my-app-hub/" style="color:var(--accent2)">🏠 返回首页</a> &nbsp;·&nbsp;
     <a href="https://github.com/Bgu253518/my-app-hub" style="color:var(--accent2)">📂 GitHub 源码</a>
   </p>
-  <p style="margin-top:12px;color:#999">版本 v2.0 · 最后更新 2026年5月 · 共 14 个工具完整指引</p>
+  <p style="margin-top:12px;color:#999">版本 v2.0 · 最后更新 2026年5月 · 共 12 个工具完整指引</p>
   <p style="color:#999">💡 提示：在浏览器中按 <span class="kbd">Ctrl+P</span> → 另存为 PDF，即可导出精美的离线操作手册</p>
 </div>
 
 </div><!-- /.manual-wrap -->
 </body>
 </html>
+

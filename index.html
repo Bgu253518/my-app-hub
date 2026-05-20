@@ -148,50 +148,6 @@ textarea:focus-visible,
 .gate-box .error { color: #fc5c9c; font-size: 13px; text-align: center; display: none; }
 
 
-/* ============ AI Chat Widget ============ */
-.ai-chat-overlay { position: fixed; bottom: 20px; right: 20px; width: 400px; height: 560px; z-index: 9998; background: rgba(16, 16, 36, 0.97); border: 1px solid var(--glass-border); border-radius: 16px; backdrop-filter: blur(24px); box-shadow: 0 12px 60px rgba(0,0,0,0.5); display: none; flex-direction: column; overflow: hidden; animation: chatSlideIn 0.3s ease; }
-.ai-chat-overlay.open { display: flex; }
-@keyframes chatSlideIn { from { transform: translateY(20px) scale(0.96); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
-.ai-chat-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--glass-border); cursor: move; user-select: none; flex-shrink: 0; }
-.ai-chat-header .title { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; }
-.ai-chat-header .title .badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: rgba(124,92,252,0.2); color: #b4a0ff; }
-.ai-chat-close { width: 30px; height: 30px; border: 1px solid var(--glass-border); border-radius: 50%; background: rgba(0,0,0,0.2); color: var(--text-secondary); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
-.ai-chat-close:hover { background: rgba(252,92,156,0.15); border-color: #fc5c9c; color: #fc5c9c; }
-.ai-chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; font-size: 14px; line-height: 1.6; }
-.chat-msg { max-width: 85%; padding: 10px 14px; border-radius: 14px; animation: msgIn 0.25s ease; white-space: pre-wrap; word-break: break-word; }
-@keyframes msgIn { from { transform: translateY(6px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-.chat-msg.user { align-self: flex-end; background: rgba(124,92,252,0.2); border: 1px solid rgba(124,92,252,0.15); }
-.chat-msg.assistant { align-self: flex-start; background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); }
-.chat-msg.system { align-self: center; font-size: 12px; color: var(--text-secondary); background: rgba(255,255,255,0.02); padding: 6px 12px; border-radius: 8px; }
-.chat-msg.typing .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-1); margin: 0 2px; animation: typing 1.4s infinite ease-in-out; }
-.chat-msg.typing .dot:nth-child(2) { animation-delay: 0.2s; }
-.chat-msg.typing .dot:nth-child(3) { animation-delay: 0.4s; }
-@keyframes typing { 0%, 60%, 100% { transform: translateY(0); opacity: 0.3; } 30% { transform: translateY(-4px); opacity: 1; } }
-.ai-chat-input-row { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--glass-border); flex-shrink: 0; background: rgba(0,0,0,0.15); }
-.ai-chat-input-row textarea { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px 14px; color: var(--text-primary); font-size: 14px; font-family: inherit; resize: none; outline: none; transition: var(--transition); line-height: 1.4; max-height: 120px; }
-.ai-chat-input-row textarea:focus { border-color: var(--accent-1); box-shadow: 0 0 0 3px rgba(124,92,252,0.1); }
-.ai-chat-input-row .send-btn { width: 44px; height: 44px; border: none; border-radius: 50%; background: var(--accent-1); color: #fff; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); flex-shrink: 0; align-self: flex-end; }
-.ai-chat-input-row .send-btn:hover { background: #9578ff; transform: scale(1.05); }
-.ai-chat-input-row .send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-.ai-chat-pw-gate { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px 20px; flex-shrink: 0; }
-.ai-chat-pw-gate.hidden { display: none; }
-.pw-gate-icon { font-size: 32px; }
-.pw-gate-title { font-size: 16px; font-weight: 600; }
-.pw-gate-hint { font-size: 12px; color: var(--text-secondary); text-align: center; }
-.ai-chat-pw-gate input { width: 100%; padding: 10px 14px; border: 1px solid var(--glass-border); border-radius: 10px; background: rgba(0,0,0,0.3); color: var(--text-primary); font-size: 14px; outline: none; text-align: center; }
-.ai-chat-pw-gate input:focus { border-color: var(--accent-1); box-shadow: 0 0 0 3px rgba(124,92,252,0.1); }
-.pw-gate-btn { width: 100%; padding: 10px; border: none; border-radius: 10px; background: var(--accent-1); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; transition: var(--transition); }
-.pw-gate-btn:hover { background: #9578ff; }
-.pw-gate-error { font-size: 12px; color: #fc5c9c; display: none; }
-.ai-chat-apikey-bar { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-bottom: 1px solid var(--glass-border); background: rgba(252,200,92,0.05); flex-shrink: 0; }
-.ai-chat-apikey-bar.hidden { display: none; }
-.ai-chat-apikey-bar select { flex: 0 0 auto; padding: 6px 8px; border: 1px solid var(--glass-border); border-radius: 8px; background: rgba(0,0,0,0.3); color: var(--text-primary); font-size: 12px; outline: none; cursor: pointer; }
-.ai-chat-apikey-bar input { flex: 1; padding: 6px 10px; border: 1px solid var(--glass-border); border-radius: 8px; background: rgba(0,0,0,0.3); color: var(--text-primary); font-size: 12px; outline: none; font-family: monospace; min-width: 100px; }
-.ai-chat-apikey-bar input:focus { border-color: var(--accent-1); }
-.ai-chat-apikey-bar .key-btn { padding: 6px 12px; border: 1px solid var(--accent-1); border-radius: 8px; background: transparent; color: var(--accent-1); font-size: 12px; cursor: pointer; transition: var(--transition); white-space: nowrap; }
-.ai-chat-apikey-bar .key-btn:hover { background: rgba(124,92,252,0.15); }
-@media (max-width: 640px) { .ai-chat-overlay { width: 100%; height: 100%; bottom: 0; right: 0; border-radius: 0; } .ai-chat-messages { padding: 12px; } }
-.ai-float-btn.chat-open { background: #fc5c9c; box-shadow: 0 4px 20px rgba(252,92,156,0.35); }
 .hidden { display: none !important; }
 
 #main-content { display: none; }
@@ -1450,41 +1406,10 @@ textarea:focus-visible,
 </div>
 </div>
 <!-- end #main-content -->
-<div class="ai-chat-overlay" id="ai-chat-overlay">
-  <div class="ai-chat-header" id="chatDragHandle">
-    <div class="title"><span>🤖</span><span>AI 助手</span><span class="badge" id="chat-badge">Anthropic</span></div>
-    <button class="ai-chat-close" onclick="toggleAIChat()">✕</button>
-  </div>
-  <div class="ai-chat-pw-gate" id="chat-pw-gate">
-    <div class="pw-gate-icon">🔑</div>
-    <div class="pw-gate-title">管理员验证</div>
-    <div class="pw-gate-hint">请输入管理员密码来配置 API Key</div>
-    <input type="password" id="chat-pw-input" placeholder="输入管理员密码" autocomplete="off">
-    <div class="pw-gate-error" id="chat-pw-error">密码错误</div>
-    <button class="pw-gate-btn" onclick="verifyChatPassword()">验证并配置</button>
-  </div>
-  <div class="ai-chat-apikey-bar hidden" id="apikey-bar">
-    <select id="chat-provider">
-      <option value="anthropic">Anthropic Claude</option>
-      <option value="deepseek">DeepSeek</option>
-      <option value="openrouter">OpenRouter</option>
-    </select>
-    <input type="password" id="chat-api-key" placeholder="输入 API Key">
-    <button class="key-btn" onclick="saveApiKey()">保存</button>
-  </div>
-  <div class="ai-chat-messages" id="chat-messages">
-    <div class="chat-msg assistant">✌️ 你好！我是 AI 助手，有什么可以帮你的？</div>
-  </div>
-  <div class="ai-chat-input-row">
-    <textarea id="chat-input" rows="2" placeholder="输入消息... (Enter 发送, Shift+Enter 换行)" disabled></textarea>
-    <button class="send-btn" id="chat-send-btn" disabled onclick="sendChatMessage()">➤</button>
-  </div>
-</div>
-
 
 <script>
 /* ============ Configuration ============ */
-const DATA_URL = 'apps.json?v=9';
+const DATA_URL = 'apps.json?v=10';
 // 密码（base64 编码，运行时解码后直接对比，避免编码问题）
 const _k = 'R2xoQDI1MzUxOA==';
 
@@ -1879,9 +1804,6 @@ function openToolPanel(appId) {
   const app = apps.find(a => a.id === appId);
   if (!app) return;
 
-  // AI 聊天助手：直接弹出聊天窗口
-  if (appId === 'claude-config') { toggleAIChat(); return; }
-
   // 带密码保护的工具
   const PROTECTED_TOOLS = ['tb-autofill', 'bkd-rollforward', 'word-checkbench'];
   if (PROTECTED_TOOLS.includes(appId)) {
@@ -1895,7 +1817,6 @@ function openToolPanel(appId) {
     'img-compressor': 'image-toolbox.html',
     'data-cleaner': 'data-cleaner.html',
     'file-renamer': 'file-renamer.html',
-    'claude-config': 'claude-setup-tool.html',
     'smart-todo': 'smart-todo.html',
     'audit-hub': 'audit-hub.html',
     'word-checkbench': 'word-checkbench.html',
@@ -1909,7 +1830,6 @@ function openToolPanel(appId) {
     'file-collector': 'file-collector.html',
     'smart-filter': 'smart-filter.html',
     'batch-unzip': 'batch-unzip.html',
-    'dir-compare': 'dir-compare.html'
   };
   if (externalPages[appId]) { window.open(externalPages[appId], '_self'); return; }
 
@@ -2861,165 +2781,6 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-let chatMessages = [];
-let isChatSending = false;
-function toggleAIChat() {
-  const overlay = document.getElementById('ai-chat-overlay');
-  const btn = document.getElementById('ai-float-btn');
-  overlay.classList.toggle('open');
-  btn.classList.toggle('chat-open');
-  if (overlay.classList.contains('open')) {
-    const key = localStorage.getItem('ai_api_key');
-    const provider = localStorage.getItem('ai_provider') || 'anthropic';
-    const pwGate = document.getElementById('chat-pw-gate');
-    const keyBar = document.getElementById('apikey-bar');
-    const sendBtn = document.getElementById('chat-send-btn');
-    const textarea = document.getElementById('chat-input');
-    if (key) {
-      pwGate.classList.add('hidden'); keyBar.classList.add('hidden');
-      document.getElementById('chat-badge').textContent = provider.charAt(0).toUpperCase() + provider.slice(1);
-      sendBtn.disabled = false; textarea.disabled = false; textarea.focus();
-    } else {
-      pwGate.classList.remove('hidden'); keyBar.classList.add('hidden');
-      document.getElementById('chat-pw-input').value = '';
-      document.getElementById('chat-pw-error').style.display = 'none';
-      document.getElementById('chat-pw-input').focus();
-    }
-  }
-}
-function verifyChatPassword() {
-  const pwInput = document.getElementById('chat-pw-input');
-  const pwError = document.getElementById('chat-pw-error');
-  if (pwInput.value.trim() === 'Asd#522128') {
-    pwError.style.display = 'none';
-    document.getElementById('chat-pw-gate').classList.add('hidden');
-    document.getElementById('apikey-bar').classList.remove('hidden');
-    document.getElementById('chat-api-key').focus();
-  } else {
-    pwError.style.display = 'block'; pwInput.value = ''; pwInput.focus();
-  }
-}
-function saveApiKey() {
-  const input = document.getElementById('chat-api-key');
-  const provider = document.getElementById('chat-provider').value;
-  const key = input.value.trim();
-  if (!key) { alert('请输入 API Key'); return; }
-  localStorage.setItem('ai_provider', provider);
-  localStorage.setItem('ai_api_key', key);
-  document.getElementById('apikey-bar').classList.add('hidden');
-  document.getElementById('chat-badge').textContent = provider.charAt(0).toUpperCase() + provider.slice(1);
-  document.getElementById('chat-send-btn').disabled = false;
-  document.getElementById('chat-input').disabled = false;
-  document.getElementById('chat-input').focus();
-}
-function addChatMessage(role, content) {
-  const container = document.getElementById('chat-messages');
-  const div = document.createElement('div');
-  div.className = 'chat-msg ' + role;
-  div.textContent = content;
-  container.appendChild(div);
-  container.scrollTop = container.scrollHeight;
-}
-function removeTypingIndicator() { const el = document.getElementById('chat-typing'); if (el) el.remove(); }
-async function sendChatMessage() {
-  if (isChatSending) return;
-  const textarea = document.getElementById('chat-input');
-  const msg = textarea.value.trim();
-  if (!msg) return;
-  textarea.value = ''; textarea.style.height = 'auto';
-  const key = localStorage.getItem('ai_api_key');
-  const provider = localStorage.getItem('ai_provider') || 'anthropic';
-  if (!key) {
-    addChatMessage('system', '⚠️ 请先设置 API Key');
-    document.getElementById('apikey-bar').classList.remove('hidden');
-    return;
-  }
-  addChatMessage('user', msg);
-  chatMessages.push({ role: 'user', content: msg });
-  const typingDiv = document.createElement('div');
-  typingDiv.className = 'chat-msg assistant typing';
-  typingDiv.id = 'chat-typing';
-  typingDiv.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
-  document.getElementById('chat-messages').appendChild(typingDiv);
-  isChatSending = true;
-  document.getElementById('chat-send-btn').disabled = true;
-  textarea.disabled = true;
-  const history = chatMessages.slice(-20);
-  try {
-    let url, reqHeaders, reqBody;
-    if (provider === 'anthropic') {
-      url = 'https://api.anthropic.com/v1/messages';
-      reqHeaders = { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' };
-      reqBody = { model: 'claude-sonnet-4-20250514', max_tokens: 4096, messages: history };
-    } else if (provider === 'deepseek') {
-      url = 'https://api.deepseek.com/v1/chat/completions';
-      reqHeaders = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key };
-      reqBody = { model: 'deepseek-chat', max_tokens: 4096, messages: history };
-    } else {
-      url = 'https://openrouter.ai/api/v1/chat/completions';
-      reqHeaders = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key };
-      reqBody = { model: 'deepseek/deepseek-chat-v3-0324:free', max_tokens: 4096, messages: history };
-    }
-    const response = await fetch(url, { method: 'POST', headers: reqHeaders, body: JSON.stringify(reqBody) });
-    const data = await response.json();
-    removeTypingIndicator();
-    if (data.error) {
-      addChatMessage('system', '[ERROR] ' + (data.error.message || 'API 请求失败'));
-    } else {
-      let reply;
-      if (data.content && Array.isArray(data.content)) reply = data.content[0].text;
-      else if (data.choices && data.choices.length > 0) reply = data.choices[0].message.content;
-      else reply = JSON.stringify(data);
-      addChatMessage('assistant', reply);
-      chatMessages.push({ role: 'assistant', content: reply });
-    }
-  } catch (err) {
-    removeTypingIndicator();
-    addChatMessage('system', '[NET ERR] ' + err.message);
-  } finally {
-    isChatSending = false;
-    document.getElementById('chat-send-btn').disabled = false;
-    textarea.disabled = false;
-    textarea.focus();
-  }
-}
-document.addEventListener('DOMContentLoaded', function() {
-  const textarea = document.getElementById('chat-input');
-  if (textarea) {
-    textarea.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); }
-    });
-    textarea.addEventListener('input', function() {
-      this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-    });
-  }
-  const pwInput = document.getElementById('chat-pw-input');
-  if (pwInput) {
-    pwInput.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') { e.preventDefault(); verifyChatPassword(); }
-    });
-  }
-});
-let dragState = null;
-document.addEventListener('DOMContentLoaded', function() {
-  const header = document.getElementById('chatDragHandle');
-  if (!header) return;
-  header.addEventListener('mousedown', function(e) {
-    const overlay = document.getElementById('ai-chat-overlay');
-    const rect = overlay.getBoundingClientRect();
-    dragState = { startX: e.clientX, startY: e.clientY, origLeft: rect.left, origTop: rect.top };
-    overlay.style.bottom = 'auto'; overlay.style.right = 'auto';
-    overlay.style.left = rect.left + 'px'; overlay.style.top = rect.top + 'px';
-    document.addEventListener('mousemove', onDrag); document.addEventListener('mouseup', endDrag);
-  });
-});
-function onDrag(e) {
-  if (!dragState) return;
-  const overlay = document.getElementById('ai-chat-overlay');
-  overlay.style.left = (dragState.origLeft + e.clientX - dragState.startX) + 'px';
-  overlay.style.top = (dragState.origTop + e.clientY - dragState.startY) + 'px';
-}
-function endDrag() { dragState = null; document.removeEventListener('mousemove', onDrag); document.removeEventListener('mouseup', endDrag); }
 
 </script>
 </body>

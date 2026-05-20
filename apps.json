@@ -3,7 +3,7 @@
     "id": "help",
     "name": "使用说明与操作指引",
     "shortDesc": "全部已上线工具的完整使用手册、操作步骤、参数说明和技巧",
-    "fullDesc": "顾力菡应用工坊全部已完成工具的完整使用手册。涵盖 PDF 多功能工具箱（7合1）、批量文件重命名、CSV 数据清洗器、图片批量压缩（含图片转PDF）、ROU 租赁测算器、Word 报告上数与校验工作台、BKD 底稿滚存与上数助手、TB 自动上数器、审计抽凭助手（单家+批量双模式）、审计项目工时任务协同系统、AI 聊天助手共 11 个工具。每个工具有详细操作步骤、参数说明表格、功能标签说明和实用技巧。",
+    "fullDesc": "顾力菡应用工坊全部已完成工具的完整使用手册。涵盖 PDF 多功能工具箱（7合1）、批量文件重命名、CSV 数据清洗器、图片批量压缩（含图片转PDF）、ROU 租赁测算器、Word 报告上数与校验工作台、BKD 底稿滚存与上数助手、TB 自动上数器、审计抽凭助手（单家+批量双模式）、审计项目工时任务协同系统共 10 个工具。每个工具有详细操作步骤、参数说明表格、功能标签说明和实用技巧。",
     "category": "other",
     "status": "done",
     "version": "v1.0.0",
@@ -86,19 +86,6 @@
     "status": "done",
     "version": "v1.0.0",
     "icon": "📋",
-    "onlineTool": true,
-    "github": "https://github.com/Bgu253518/my-app-hub",
-    "download": ""
-  },
-  {
-    "id": "claude-config",
-    "name": "AI 聊天助手",
-    "shortDesc": "内嵌 AI 聊天窗口，支持 Anthropic / DeepSeek / OpenRouter 多 API 提供商",
-    "fullDesc": "内置于应用工坊的 AI 聊天助手。基于 Anthropic Claude API，支持多轮对话、代码生成、文本处理等。API Key 保存在浏览器本地（localStorage），一次配置永久使用。无需切换终端，网页内直接对话。",
-    "category": "gui",
-    "status": "done",
-    "version": "v1.0.0",
-    "icon": "⚙️",
     "onlineTool": true,
     "github": "https://github.com/Bgu253518/my-app-hub",
     "download": ""
@@ -255,19 +242,6 @@
     "status": "done",
     "version": "v1.0.0",
     "icon": "🗜️",
-    "onlineTool": true,
-    "github": "",
-    "download": ""
-  },
-  {
-    "id": "dir-compare",
-    "name": "文件目录扫描对比工具",
-    "shortDesc": "浏览器中扫描文件夹、对比新旧文件状态，新增/修改/删除一目了然",
-    "fullDesc": "纯浏览器端运行的文件目录扫描对比工具。使用 File System Access API 选择文件夹，自动递归扫描全部文件并提取名称、大小（KB）、修改时间、文件类型、相对路径等信息，支持按文件类型自动分类。对比模式下，可上传旧基准 Excel 文件或使用演示数据，与新扫描结果进行智能对比，自动识别新增（绿色）、已修改（橙色）、已删除（红色）、未变更（灰色）四种状态，并支持按状态筛选查看。统计卡片展示文件总数、类型分布、大小分段。支持导出带格式的 Excel 报告（含完整清单+汇总 Sheet；对比模式额外含对比清单+汇总+新扫描完整清单）。所有数据在浏览器本地处理，不上传任何服务器。",
-    "category": "gui",
-    "status": "done",
-    "version": "v1.0.0",
-    "icon": "📂",
     "onlineTool": true,
     "github": "",
     "download": ""
