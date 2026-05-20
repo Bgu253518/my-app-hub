@@ -1,1 +1,12 @@
-{"responses":[],"lastSequence":0,"waitingFor":1,"timestamp":"2026-05-20T02:28:12.039Z"}
+{
+  "responses": [
+    {
+      "seq": 1,
+      "reply": "嘿 朋友，收到你的消息啦！你说的是\"hi\"对吧？我很好奇呢，能多聊聊吗？😄",
+      "timestamp": "2026-05-20T02:28:13.979Z"
+    }
+  ],
+  "lastSequence": 1,
+  "waitingFor": 0,
+  "timestamp": "2026-05-20T02:28:12.039Z"
+}
