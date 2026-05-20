@@ -149,20 +149,7 @@ textarea:focus-visible,
 
 
 /* ============ AI Chat Widget ============ */
-.ai-chat-overlay {
-  position: fixed; bottom: 20px; right: 20px;
-  width: 400px; height: 560px;
-  z-index: 9998;
-  background: rgba(16, 16, 36, 0.97);
-  border: 1px solid var(--glass-border);
-  border-radius: 16px;
-  backdrop-filter: blur(24px);
-  box-shadow: 0 12px 60px rgba(0,0,0,0.5);
-  display: none;
-  flex-direction: column;
-  overflow: hidden;
-  animation: chatSlideIn 0.3s ease;
-}
+.ai-chat-overlay { position: fixed; bottom: 20px; right: 20px; width: 400px; height: 560px; z-index: 9998; background: rgba(16, 16, 36, 0.97); border: 1px solid var(--glass-border); border-radius: 16px; backdrop-filter: blur(24px); box-shadow: 0 12px 60px rgba(0,0,0,0.5); display: none; flex-direction: column; overflow: hidden; animation: chatSlideIn 0.3s ease; }
 .ai-chat-overlay.open { display: flex; }
 @keyframes chatSlideIn { from { transform: translateY(20px) scale(0.96); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
 .ai-chat-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--glass-border); cursor: move; user-select: none; flex-shrink: 0; }
@@ -1481,7 +1468,7 @@ textarea:focus-visible,
   <tr><td>7</td><td>BKD 底稿滚存与上数</td><td>审计底稿期初审定期末的滚存调整与数据迁移</td></tr>
   <tr><td>8</td><td>TB 自动上数器</td><td>试算平衡表自动导入与数据核对</td></tr>
   <tr><td>9</td><td>审计抽凭助手</td><td>货币单位抽样（MUS）与随机抽样双模式，支持单家与批量</td></tr>
-  <tr><td>10</td><td>AI 聊天助手</td><td>内嵌 AI 聊天窗口，基于 Anthropic / DeepSeek / OpenRouter</td></tr>
+  <tr><td>10</td><td>AI 聊天助手</td><td>内嵌 AI 聊天窗口，支持 Anthropic / DeepSeek / OpenRouter</td></tr>
 </table>
 
 <h2>四、通用操作说明</h2>
@@ -1528,7 +1515,6 @@ textarea:focus-visible,
 </div>
 </div>
 <!-- end #main-content -->
-
 <div class="ai-chat-overlay" id="ai-chat-overlay">
   <div class="ai-chat-header" id="chatDragHandle">
     <div class="title"><span>🤖</span><span>AI 助手</span><span class="badge" id="chat-badge">Anthropic</span></div>
@@ -1970,7 +1956,7 @@ function openToolPanel(appId) {
   // AI 聊天助手：直接弹出聊天窗口
   if (appId === 'claude-config') { toggleAIChat(); return; }
 
-  // 带密码保护的工具：需要管理员密码才能打开
+  // 带密码保护的工具
   const PROTECTED_TOOLS = ['tb-autofill', 'bkd-rollforward', 'word-checkbench'];
   if (PROTECTED_TOOLS.includes(appId)) {
     const pw = prompt('请输入管理员密码来打开此工具:');
@@ -2950,7 +2936,6 @@ document.addEventListener('keydown', (e) => {
 
 let chatMessages = [];
 let isChatSending = false;
-
 function toggleAIChat() {
   const overlay = document.getElementById('ai-chat-overlay');
   const btn = document.getElementById('ai-float-btn');
@@ -2964,22 +2949,17 @@ function toggleAIChat() {
     const sendBtn = document.getElementById('chat-send-btn');
     const textarea = document.getElementById('chat-input');
     if (key) {
-      pwGate.classList.add('hidden');
-      keyBar.classList.add('hidden');
+      pwGate.classList.add('hidden'); keyBar.classList.add('hidden');
       document.getElementById('chat-badge').textContent = provider.charAt(0).toUpperCase() + provider.slice(1);
-      sendBtn.disabled = false;
-      textarea.disabled = false;
-      textarea.focus();
+      sendBtn.disabled = false; textarea.disabled = false; textarea.focus();
     } else {
-      pwGate.classList.remove('hidden');
-      keyBar.classList.add('hidden');
+      pwGate.classList.remove('hidden'); keyBar.classList.add('hidden');
       document.getElementById('chat-pw-input').value = '';
       document.getElementById('chat-pw-error').style.display = 'none';
       document.getElementById('chat-pw-input').focus();
     }
   }
 }
-
 function verifyChatPassword() {
   const pwInput = document.getElementById('chat-pw-input');
   const pwError = document.getElementById('chat-pw-error');
@@ -2989,12 +2969,9 @@ function verifyChatPassword() {
     document.getElementById('apikey-bar').classList.remove('hidden');
     document.getElementById('chat-api-key').focus();
   } else {
-    pwError.style.display = 'block';
-    pwInput.value = '';
-    pwInput.focus();
+    pwError.style.display = 'block'; pwInput.value = ''; pwInput.focus();
   }
 }
-
 function saveApiKey() {
   const input = document.getElementById('chat-api-key');
   const provider = document.getElementById('chat-provider').value;
@@ -3008,7 +2985,6 @@ function saveApiKey() {
   document.getElementById('chat-input').disabled = false;
   document.getElementById('chat-input').focus();
 }
-
 function addChatMessage(role, content) {
   const container = document.getElementById('chat-messages');
   const div = document.createElement('div');
@@ -3017,17 +2993,13 @@ function addChatMessage(role, content) {
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
 }
-
 function removeTypingIndicator() { const el = document.getElementById('chat-typing'); if (el) el.remove(); }
-
 async function sendChatMessage() {
   if (isChatSending) return;
   const textarea = document.getElementById('chat-input');
   const msg = textarea.value.trim();
   if (!msg) return;
-  textarea.value = '';
-  textarea.style.height = 'auto';
-
+  textarea.value = ''; textarea.style.height = 'auto';
   const key = localStorage.getItem('ai_api_key');
   const provider = localStorage.getItem('ai_provider') || 'anthropic';
   if (!key) {
@@ -3035,21 +3007,17 @@ async function sendChatMessage() {
     document.getElementById('apikey-bar').classList.remove('hidden');
     return;
   }
-
   addChatMessage('user', msg);
   chatMessages.push({ role: 'user', content: msg });
-
   const typingDiv = document.createElement('div');
   typingDiv.className = 'chat-msg assistant typing';
   typingDiv.id = 'chat-typing';
   typingDiv.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
   document.getElementById('chat-messages').appendChild(typingDiv);
-
   isChatSending = true;
   document.getElementById('chat-send-btn').disabled = true;
   textarea.disabled = true;
   const history = chatMessages.slice(-20);
-
   try {
     let url, reqHeaders, reqBody;
     if (provider === 'anthropic') {
@@ -3069,7 +3037,7 @@ async function sendChatMessage() {
     const data = await response.json();
     removeTypingIndicator();
     if (data.error) {
-      addChatMessage('system', '❌ ' + (data.error.message || 'API 请求失败'));
+      addChatMessage('system', '[ERROR] ' + (data.error.message || 'API 请求失败'));
     } else {
       let reply;
       if (data.content && Array.isArray(data.content)) reply = data.content[0].text;
@@ -3080,7 +3048,7 @@ async function sendChatMessage() {
     }
   } catch (err) {
     removeTypingIndicator();
-    addChatMessage('system', '❌ 网络错误: ' + err.message);
+    addChatMessage('system', '[NET ERR] ' + err.message);
   } finally {
     isChatSending = false;
     document.getElementById('chat-send-btn').disabled = false;
@@ -3088,7 +3056,6 @@ async function sendChatMessage() {
     textarea.focus();
   }
 }
-
 document.addEventListener('DOMContentLoaded', function() {
   const textarea = document.getElementById('chat-input');
   if (textarea) {
@@ -3096,8 +3063,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); }
     });
     textarea.addEventListener('input', function() {
-      this.style.height = 'auto';
-      this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+      this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 120) + 'px';
     });
   }
   const pwInput = document.getElementById('chat-pw-input');
@@ -3107,7 +3073,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
-
 let dragState = null;
 document.addEventListener('DOMContentLoaded', function() {
   const header = document.getElementById('chatDragHandle');
@@ -3118,8 +3083,7 @@ document.addEventListener('DOMContentLoaded', function() {
     dragState = { startX: e.clientX, startY: e.clientY, origLeft: rect.left, origTop: rect.top };
     overlay.style.bottom = 'auto'; overlay.style.right = 'auto';
     overlay.style.left = rect.left + 'px'; overlay.style.top = rect.top + 'px';
-    document.addEventListener('mousemove', onDrag);
-    document.addEventListener('mouseup', endDrag);
+    document.addEventListener('mousemove', onDrag); document.addEventListener('mouseup', endDrag);
   });
 });
 function onDrag(e) {
