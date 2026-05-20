@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdnjs.cloudflare.com https://cdn.sheetjs.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: blob:; connect-src 'self' https://cdnjs.cloudflare.com https://cdn.sheetjs.com https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; worker-src 'self' blob:;">
-<title>顾力菡 · 应用工坊</title>
+<title>椤惧姏鑿?路 搴旂敤宸ュ潑</title>
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
@@ -641,7 +641,7 @@ textarea:focus-visible,
 /* WIP card overlay */
 .card.wip-card { opacity: 0.7; }
 .card.wip-card::after {
-  content: '建设中';
+  content: '寤鸿涓?;
   position: absolute;
   top: 14px; right: 14px;
   padding: 3px 10px;
@@ -1318,7 +1318,7 @@ textarea:focus-visible,
   if (sessionStorage.getItem('myapp_unlocked')) return;
   var overlay = document.createElement('div');
   overlay.id = 'pwd-overlay';
-  overlay.innerHTML = '<div style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0a0a1a;z-index:999999;display:flex;align-items:center;justify-content:center;"><div style="background:#16213e;padding:40px;border-radius:16px;border:1px solid #D2691E;max-width:360px;width:90%%;text-align:center;"><div style="font-size:40px;margin-bottom:10px;">🔒</div><h2 style="color:#D2691E;margin-bottom:12px;font-size:18px;">请输入密码</h2><input type="password" id="pwd-input" style="width:100%%;padding:12px;border-radius:8px;border:1px solid #3a3a5a;background:#0f3460;color:#e0e0e0;font-size:16px;text-align:center;box-sizing:border-box;" placeholder="输入密码" autofocus><button id="pwd-btn" style="margin-top:12px;width:100%%;padding:10px;border:none;border-radius:8px;background:#D2691E;color:#fff;font-size:15px;cursor:pointer;">解锁</button><p id="pwd-error" style="color:#c62828;font-size:13px;margin-top:8px;display:none;">密码错误，请重试</p></div></div>';
+  overlay.innerHTML = '<div style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0a0a1a;z-index:999999;display:flex;align-items:center;justify-content:center;"><div style="background:#16213e;padding:40px;border-radius:16px;border:1px solid #D2691E;max-width:360px;width:90%%;text-align:center;"><div style="font-size:40px;margin-bottom:10px;">馃敀</div><h2 style="color:#D2691E;margin-bottom:12px;font-size:18px;">璇疯緭鍏ュ瘑鐮?/h2><input type="password" id="pwd-input" style="width:100%%;padding:12px;border-radius:8px;border:1px solid #3a3a5a;background:#0f3460;color:#e0e0e0;font-size:16px;text-align:center;box-sizing:border-box;" placeholder="杈撳叆瀵嗙爜" autofocus><button id="pwd-btn" style="margin-top:12px;width:100%%;padding:10px;border:none;border-radius:8px;background:#D2691E;color:#fff;font-size:15px;cursor:pointer;">瑙ｉ攣</button><p id="pwd-error" style="color:#c62828;font-size:13px;margin-top:8px;display:none;">瀵嗙爜閿欒锛岃閲嶈瘯</p></div></div>';
   document.documentElement.appendChild(overlay);
   
   async function checkPwd() {
@@ -1345,13 +1345,13 @@ textarea:focus-visible,
 
 <!-- ============ Password Gate ============ -->
 <div id="password-gate">
-  <div class="gate-icon">🔐</div>
+  <div class="gate-icon">馃攼</div>
   <div class="gate-box">
-    <h2>顾力菡的工具箱</h2>
-    <p class="hint">请输入访问密码以查看内容</p>
-    <input type="password" id="gate-input" placeholder="请输入密码..." autofocus>
-    <button class="btn" id="gate-btn">验 证</button>
-    <p class="error" id="gate-error">密码错误，请重试</p>
+    <h2>椤惧姏鑿＄殑宸ュ叿绠?/h2>
+    <p class="hint">璇疯緭鍏ヨ闂瘑鐮佷互鏌ョ湅鍐呭</p>
+    <input type="password" id="gate-input" placeholder="璇疯緭鍏ュ瘑鐮?.." autofocus>
+    <button class="btn" id="gate-btn">楠?璇?/button>
+    <p class="error" id="gate-error">瀵嗙爜閿欒锛岃閲嶈瘯</p>
   </div>
 </div>
 
@@ -1359,51 +1359,51 @@ textarea:focus-visible,
 <div id="main-content">
 
 <!-- AI Floating Button -->
-<button class="ai-float-btn" id="ai-float-btn" title="AI 助手" onclick="window.open('offline-ai.html','_self')">🤖</button>
-<div class="ai-tooltip" id="ai-tooltip">AI 助手</div>
+<button class="ai-float-btn" id="ai-float-btn" title="AI 鍔╂墜" onclick="window.open('offline-ai.html','_self')">馃</button>
+<div class="ai-tooltip" id="ai-tooltip">AI 鍔╂墜</div>
 
 <!-- Navbar -->
 <nav class="navbar">
   <div class="nav-brand">
-    <div class="logo">🧩</div>
+    <div class="logo">馃З</div>
     <span>Gu's App Hub</span>
-    <a href="help.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;margin-left:12px;padding:4px 10px;border:1px solid var(--glass-border);border-radius:6px;transition:all 0.2s" onmouseover="this.style.borderColor='var(--accent-1)';this.style.color='var(--text-primary)'" onmouseout="this.style.borderColor='var(--glass-border)';this.style.color='var(--text-secondary)'">📖 使用说明</a>
+    <a href="help.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;margin-left:12px;padding:4px 10px;border:1px solid var(--glass-border);border-radius:6px;transition:all 0.2s" onmouseover="this.style.borderColor='var(--accent-1)';this.style.color='var(--text-primary)'" onmouseout="this.style.borderColor='var(--glass-border)';this.style.color='var(--text-secondary)'">馃摉 浣跨敤璇存槑</a>
   </div>
   <div class="nav-controls">
-    <input type="text" id="search-input" placeholder="搜索应用...">
+    <input type="text" id="search-input" placeholder="鎼滅储搴旂敤...">
     <select id="category-filter">
-      <option value="all">全部分类</option>
-      <option value="gui">🖥️ GUI 工具</option>
-      <option value="cli">⌨️ 命令行</option>
-      <option value="data">📊 数据处理</option>
-      <option value="web">🌐 Web 应用</option>
-      <option value="game">🎮 游戏</option>
-      <option value="other">📦 其他</option>
+      <option value="all">鍏ㄩ儴鍒嗙被</option>
+      <option value="gui">馃枼锔?GUI 宸ュ叿</option>
+      <option value="cli">鈱笍 鍛戒护琛?/option>
+      <option value="data">馃搳 鏁版嵁澶勭悊</option>
+      <option value="web">馃寪 Web 搴旂敤</option>
+      <option value="game">馃幃 娓告垙</option>
+      <option value="other">馃摝 鍏朵粬</option>
     </select>
   </div>
 </nav>
 
 <!-- Quick filter tags -->
 <div class="filter-tags-bar" id="filter-tags-bar">
-  <button class="filter-tag active" data-filter="all">全部</button>
-  <button class="filter-tag" data-filter="done">已完成</button>
-  <button class="filter-tag" data-filter="wip">开发中</button>
-  <button class="filter-tag" data-filter="category-gui">🖥️ GUI工具</button>
-  <button class="filter-tag" data-filter="category-data">📊 数据处理</button>
-  <button class="filter-tag" data-filter="category-other">📦 其他</button>
+  <button class="filter-tag active" data-filter="all">鍏ㄩ儴</button>
+  <button class="filter-tag" data-filter="done">宸插畬鎴?/button>
+  <button class="filter-tag" data-filter="wip">寮€鍙戜腑</button>
+  <button class="filter-tag" data-filter="category-gui">馃枼锔?GUI宸ュ叿</button>
+  <button class="filter-tag" data-filter="category-data">馃搳 鏁版嵁澶勭悊</button>
+  <button class="filter-tag" data-filter="category-other">馃摝 鍏朵粬</button>
 </div>
 
 <!-- Usage Banner -->
 <div class="banner-wrapper">
   <div class="usage-banner" id="usage-banner">
-    <span class="banner-icon">📖</span>
+    <span class="banner-icon">馃摉</span>
     <div class="banner-body">
-      <h4>使用说明与操作指引</h4>
-      <p>所有工具均在本地浏览器运行，数据不上传任何服务器。点击任意工具卡片即可打开对应功能。如有疑问请查看详细指引。</p>
+      <h4>浣跨敤璇存槑涓庢搷浣滄寚寮?/h4>
+      <p>鎵€鏈夊伐鍏峰潎鍦ㄦ湰鍦版祻瑙堝櫒杩愯锛屾暟鎹笉涓婁紶浠讳綍鏈嶅姟鍣ㄣ€傜偣鍑讳换鎰忓伐鍏峰崱鐗囧嵆鍙墦寮€瀵瑰簲鍔熻兘銆傚鏈夌枒闂鏌ョ湅璇︾粏鎸囧紩銆?/p>
     </div>
-    <a class="banner-link" href="help.html" target="_blank">查看详情 →</a>
-    <a class="banner-link" href="javascript:void(0)" onclick="downloadManualPDF()" style="background:rgba(124,92,252,0.15);border-color:rgba(124,92,252,0.3);color:#b4a0ff;">📥 下载PDF手册</a>
-    <button class="banner-close" id="banner-close" title="关闭">✕</button>
+    <a class="banner-link" href="help.html" target="_blank">鏌ョ湅璇︽儏 鈫?/a>
+    <a class="banner-link" href="javascript:void(0)" onclick="downloadManualPDF()" style="background:rgba(124,92,252,0.15);border-color:rgba(124,92,252,0.3);color:#b4a0ff;">馃摜 涓嬭浇PDF鎵嬪唽</a>
+    <button class="banner-close" id="banner-close" title="鍏抽棴">鉁?/button>
   </div>
 </div>
 
@@ -1411,12 +1411,12 @@ textarea:focus-visible,
 <section class="hero">
   <div class="hero-particles" id="hero-particles"></div>
   <div class="hero-glow"></div>
-  <h1>顾力菡的应用工坊</h1>
-  <p>每个工具都源于真实需求。</p>
+  <h1>椤惧姏鑿＄殑搴旂敤宸ュ潑</h1>
+  <p>姣忎釜宸ュ叿閮芥簮浜庣湡瀹為渶姹傘€?/p>
   <div class="stats">
-    <div class="stat-item"><div class="stat-num" id="stat-total">0</div><div class="stat-label">应用总数</div></div>
-    <div class="stat-item"><div class="stat-num" id="stat-done">0</div><div class="stat-label">已完成</div></div>
-    <div class="stat-item"><div class="stat-num" id="stat-wip">0</div><div class="stat-label">开发中</div></div>
+    <div class="stat-item"><div class="stat-num" id="stat-total">0</div><div class="stat-label">搴旂敤鎬绘暟</div></div>
+    <div class="stat-item"><div class="stat-num" id="stat-done">0</div><div class="stat-label">宸插畬鎴?/div></div>
+    <div class="stat-item"><div class="stat-num" id="stat-wip">0</div><div class="stat-label">寮€鍙戜腑</div></div>
   </div>
 </section>
 
@@ -1425,10 +1425,10 @@ textarea:focus-visible,
 
 <!-- Footer -->
 <footer class="footer">
-  <div class="footer-left">审计工具箱 · 本地安全计算 · 版本 2.0</div>
+  <div class="footer-left">瀹¤宸ュ叿绠?路 鏈湴瀹夊叏璁＄畻 路 鐗堟湰 2.0</div>
   <div class="footer-right">
-    <a href="https://github.com/Bgu253518/my-app-hub" target="_blank" rel="noopener">GitHub 源码</a>
-    <a href="#">隐私与数据安全声明</a>
+    <a href="https://github.com/Bgu253518/my-app-hub" target="_blank" rel="noopener">GitHub 婧愮爜</a>
+    <a href="#">闅愮涓庢暟鎹畨鍏ㄥ０鏄?/a>
   </div>
 </footer>
 
@@ -1439,23 +1439,23 @@ textarea:focus-visible,
 
 <!-- Image Lightbox -->
 <div class="lightbox" id="lightbox">
-  <img src="" alt="截图预览" id="lightbox-img">
+  <img src="" alt="鎴浘棰勮" id="lightbox-img">
 </div>
 
 <!-- ============ Online Tool Panel ============ -->
 <div class="tool-panel" id="tool-panel">
   <div class="tool-header">
-    <button class="tool-back" onclick="closeToolPanel()">← 返回</button>
-    <span class="tool-title" id="tool-title">PDF 工具箱</span>
+    <button class="tool-back" onclick="closeToolPanel()">鈫?杩斿洖</button>
+    <span class="tool-title" id="tool-title">PDF 宸ュ叿绠?/span>
   </div>
   <div class="tool-tabs" id="tool-tabs"></div>
   <div class="tool-body" id="tool-body">
     <!-- Left panel: operations -->
     <div class="tool-left">
       <div class="drop-zone" id="drop-zone">
-        <div class="dz-icon">📂</div>
-        <div class="dz-text" id="dz-text">拖拽 PDF 文件到此处</div>
-        <div class="dz-hint">或点击选择文件</div>
+        <div class="dz-icon">馃搨</div>
+        <div class="dz-text" id="dz-text">鎷栨嫿 PDF 鏂囦欢鍒版澶?/div>
+        <div class="dz-hint">鎴栫偣鍑婚€夋嫨鏂囦欢</div>
       </div>
 
       <div class="file-list" id="file-list"></div>
@@ -1464,15 +1464,15 @@ textarea:focus-visible,
 
       <div class="processing-overlay" id="processing-overlay">
         <div class="spinner"></div>
-        <div class="processing-text">正在处理...</div>
+        <div class="processing-text">姝ｅ湪澶勭悊...</div>
       </div>
 
       <div class="tool-error" id="tool-error"></div>
       <div class="tool-result" id="tool-result">
-        <div class="result-title">✅ 处理完成</div>
+        <div class="result-title">鉁?澶勭悊瀹屾垚</div>
         <div class="result-detail" id="result-detail"></div>
         <div class="tool-actions" style="margin-top:12px">
-          <button class="btn-tool btn-tool-primary" id="btn-download" style="display:none">⬇ 下载结果</button>
+          <button class="btn-tool btn-tool-primary" id="btn-download" style="display:none">猬?涓嬭浇缁撴灉</button>
         </div>
       </div>
 
@@ -1482,10 +1482,10 @@ textarea:focus-visible,
 
     <!-- Right panel: preview -->
     <div class="tool-right">
-      <div class="tool-right-label">📄 PDF 预览</div>
+      <div class="tool-right-label">馃搫 PDF 棰勮</div>
       <div class="preview-area" id="preview-area"></div>
       <div style="color:var(--text-secondary);font-size:12px;text-align:center;margin-top:20px" id="preview-placeholder">
-        拖入 PDF 文件后<br>这里将显示页面预览
+        鎷栧叆 PDF 鏂囦欢鍚?br>杩欓噷灏嗘樉绀洪〉闈㈤瑙?
       </div>
     </div>
   </div>
@@ -1496,85 +1496,85 @@ textarea:focus-visible,
 <div id="manual-content">
 
 <div class="man-cover">
-  <h1>审计工具箱 · 操作手册</h1>
-  <div class="man-sub">顾力菡 · 应用工坊</div>
+  <h1>瀹¤宸ュ叿绠?路 鎿嶄綔鎵嬪唽</h1>
+  <div class="man-sub">椤惧姏鑿?路 搴旂敤宸ュ潑</div>
   <div class="man-meta">
-    版本 2.0<br>
-    更新日期：2026年5月<br>
-    所有工具浏览器本地运行 · 数据不上传任何服务器
+    鐗堟湰 2.0<br>
+    鏇存柊鏃ユ湡锛?026骞?鏈?br>
+    鎵€鏈夊伐鍏锋祻瑙堝櫒鏈湴杩愯 路 鏁版嵁涓嶄笂浼犱换浣曟湇鍔″櫒
   </div>
 </div>
 
-<h2>一、工具箱简介</h2>
-<p>审计工具箱是一套专为审计、财务人员打造的纯浏览器端工具集合。所有工具在用户本地浏览器中运行，无需安装任何软件，不依赖后端服务器，数据永不上传。工具箱涵盖 PDF 处理、文件重命名、数据清洗、图片压缩、租赁测算、Word 报告校验、底稿滚存、TB 上数、审计抽凭、AI 聊天助手等多个实用工具，所有功能免费使用。</p>
-<p>技术特点：纯前端运行 · 本地数据安全 · 零安装 · 深色玻璃态设计 · 响应式布局支持移动端。</p>
+<h2>涓€銆佸伐鍏风绠€浠?/h2>
+<p>瀹¤宸ュ叿绠辨槸涓€濂椾笓涓哄璁°€佽储鍔′汉鍛樻墦閫犵殑绾祻瑙堝櫒绔伐鍏烽泦鍚堛€傛墍鏈夊伐鍏峰湪鐢ㄦ埛鏈湴娴忚鍣ㄤ腑杩愯锛屾棤闇€瀹夎浠讳綍杞欢锛屼笉渚濊禆鍚庣鏈嶅姟鍣紝鏁版嵁姘镐笉涓婁紶銆傚伐鍏风娑电洊 PDF 澶勭悊銆佹枃浠堕噸鍛藉悕銆佹暟鎹竻娲椼€佸浘鐗囧帇缂┿€佺璧佹祴绠椼€乄ord 鎶ュ憡鏍￠獙銆佸簳绋挎粴瀛樸€乀B 涓婃暟銆佸璁℃娊鍑€丄I 鑱婂ぉ鍔╂墜绛夊涓疄鐢ㄥ伐鍏凤紝鎵€鏈夊姛鑳藉厤璐逛娇鐢ㄣ€?/p>
+<p>鎶€鏈壒鐐癸細绾墠绔繍琛?路 鏈湴鏁版嵁瀹夊叏 路 闆跺畨瑁?路 娣辫壊鐜荤拑鎬佽璁?路 鍝嶅簲寮忓竷灞€鏀寔绉诲姩绔€?/p>
 
-<h2>二、数据安全与隐私声明</h2>
-<h3>2.1 数据本地化</h3>
-<p>所有工具均在用户浏览器中运行，文件数据不会上传至任何远程服务器。PDF 处理、图片压缩、CSV 清洗等涉及文件的操作，全部在本地浏览器（WebAssembly / Canvas / File API）中完成。网络请求仅用于加载页面资源（CDN 脚本库），不包含用户数据。</p>
-<h3>2.2 隐私保障</h3>
-<p>本工具箱不收集用户信息，不使用 Cookie 追踪，不嵌入第三方分析脚本。AI 助手模型下载完成后支持完全断网使用。密码锁功能使用浏览器 sessionStorage，密码仅在本地比对，不上传。</p>
-<h3>2.3 安全建议</h3>
+<h2>浜屻€佹暟鎹畨鍏ㄤ笌闅愮澹版槑</h2>
+<h3>2.1 鏁版嵁鏈湴鍖?/h3>
+<p>鎵€鏈夊伐鍏峰潎鍦ㄧ敤鎴锋祻瑙堝櫒涓繍琛岋紝鏂囦欢鏁版嵁涓嶄細涓婁紶鑷充换浣曡繙绋嬫湇鍔″櫒銆侾DF 澶勭悊銆佸浘鐗囧帇缂┿€丆SV 娓呮礂绛夋秹鍙婃枃浠剁殑鎿嶄綔锛屽叏閮ㄥ湪鏈湴娴忚鍣紙WebAssembly / Canvas / File API锛変腑瀹屾垚銆傜綉缁滆姹備粎鐢ㄤ簬鍔犺浇椤甸潰璧勬簮锛圕DN 鑴氭湰搴擄級锛屼笉鍖呭惈鐢ㄦ埛鏁版嵁銆?/p>
+<h3>2.2 闅愮淇濋殰</h3>
+<p>鏈伐鍏风涓嶆敹闆嗙敤鎴蜂俊鎭紝涓嶄娇鐢?Cookie 杩借釜锛屼笉宓屽叆绗笁鏂瑰垎鏋愯剼鏈€侫I 鍔╂墜妯″瀷涓嬭浇瀹屾垚鍚庢敮鎸佸畬鍏ㄦ柇缃戜娇鐢ㄣ€傚瘑鐮侀攣鍔熻兘浣跨敤娴忚鍣?sessionStorage锛屽瘑鐮佷粎鍦ㄦ湰鍦版瘮瀵癸紝涓嶄笂浼犮€?/p>
+<h3>2.3 瀹夊叏寤鸿</h3>
 <ul>
-  <li>处理敏感文件时，建议在可信网络环境中使用</li>
-  <li>使用完毕后关闭浏览器标签页以清除 sessionStorage</li>
-  <li>不要在公共电脑上勾选"记住密码"</li>
+  <li>澶勭悊鏁忔劅鏂囦欢鏃讹紝寤鸿鍦ㄥ彲淇＄綉缁滅幆澧冧腑浣跨敤</li>
+  <li>浣跨敤瀹屾瘯鍚庡叧闂祻瑙堝櫒鏍囩椤典互娓呴櫎 sessionStorage</li>
+  <li>涓嶈鍦ㄥ叕鍏辩數鑴戜笂鍕鹃€?璁颁綇瀵嗙爜"</li>
 </ul>
 
-<h2>三、工具列表与功能简述</h2>
+<h2>涓夈€佸伐鍏峰垪琛ㄤ笌鍔熻兘绠€杩?/h2>
 <table>
-  <tr><th style="width:8%">序号</th><th style="width:30%">工具名称</th><th>功能简述</th></tr>
-  <tr><td>1</td><td>PDF 多功能工具箱</td><td>合并、拆分、提取文字、读取信息、加密、解密、逐页拆分为图片（7合1）</td></tr>
-  <tr><td>2</td><td>批量文件重命名</td><td>查找替换（含正则）、序号前缀、自定义模板三种模式，支持预览与撤销</td></tr>
-  <tr><td>3</td><td>CSV 数据清洗器</td><td>空值检测填充、去重、日期标准化、数字格式化、不可见字符清理</td></tr>
-  <tr><td>4</td><td>图片批量压缩</td><td>压缩、格式转换（JPG/PNG/WebP）、图片转PDF、HEIC 转换（4合1）</td></tr>
-  <tr><td>5</td><td>ROU 租赁测算器</td><td>CAS 21 / IFRS 16 使用权资产测算，含摊销明细表和标准会计分录</td></tr>
-  <tr><td>6</td><td>Word 报告上数与校验</td><td>Word 报告数据提取、与底稿数值一致性校验、差异标注</td></tr>
-  <tr><td>7</td><td>BKD 底稿滚存与上数</td><td>审计底稿期初审定期末的滚存调整与数据迁移</td></tr>
-  <tr><td>8</td><td>TB 自动上数器</td><td>试算平衡表自动导入与数据核对</td></tr>
-  <tr><td>9</td><td>审计抽凭助手</td><td>货币单位抽样（MUS）与随机抽样双模式，支持单家与批量</td></tr>
-  <tr><td>10</td><td>AI 聊天助手</td><td>内嵌 AI 聊天窗口，基于 Anthropic Claude API，支持对话、问答、代码生成</td></tr>
+  <tr><th style="width:8%">搴忓彿</th><th style="width:30%">宸ュ叿鍚嶇О</th><th>鍔熻兘绠€杩?/th></tr>
+  <tr><td>1</td><td>PDF 澶氬姛鑳藉伐鍏风</td><td>鍚堝苟銆佹媶鍒嗐€佹彁鍙栨枃瀛椼€佽鍙栦俊鎭€佸姞瀵嗐€佽В瀵嗐€侀€愰〉鎷嗗垎涓哄浘鐗囷紙7鍚?锛?/td></tr>
+  <tr><td>2</td><td>鎵归噺鏂囦欢閲嶅懡鍚?/td><td>鏌ユ壘鏇挎崲锛堝惈姝ｅ垯锛夈€佸簭鍙峰墠缂€銆佽嚜瀹氫箟妯℃澘涓夌妯″紡锛屾敮鎸侀瑙堜笌鎾ら攢</td></tr>
+  <tr><td>3</td><td>CSV 鏁版嵁娓呮礂鍣?/td><td>绌哄€兼娴嬪～鍏呫€佸幓閲嶃€佹棩鏈熸爣鍑嗗寲銆佹暟瀛楁牸寮忓寲銆佷笉鍙瀛楃娓呯悊</td></tr>
+  <tr><td>4</td><td>鍥剧墖鎵归噺鍘嬬缉</td><td>鍘嬬缉銆佹牸寮忚浆鎹紙JPG/PNG/WebP锛夈€佸浘鐗囪浆PDF銆丠EIC 杞崲锛?鍚?锛?/td></tr>
+  <tr><td>5</td><td>ROU 绉熻祦娴嬬畻鍣?/td><td>CAS 21 / IFRS 16 浣跨敤鏉冭祫浜ф祴绠楋紝鍚憡閿€鏄庣粏琛ㄥ拰鏍囧噯浼氳鍒嗗綍</td></tr>
+  <tr><td>6</td><td>Word 鎶ュ憡涓婃暟涓庢牎楠?/td><td>Word 鎶ュ憡鏁版嵁鎻愬彇銆佷笌搴曠鏁板€间竴鑷存€ф牎楠屻€佸樊寮傛爣娉?/td></tr>
+  <tr><td>7</td><td>BKD 搴曠婊氬瓨涓庝笂鏁?/td><td>瀹¤搴曠鏈熷垵瀹″畾鏈熸湯鐨勬粴瀛樿皟鏁翠笌鏁版嵁杩佺Щ</td></tr>
+  <tr><td>8</td><td>TB 鑷姩涓婃暟鍣?/td><td>璇曠畻骞宠　琛ㄨ嚜鍔ㄥ鍏ヤ笌鏁版嵁鏍稿</td></tr>
+  <tr><td>9</td><td>瀹¤鎶藉嚟鍔╂墜</td><td>璐у竵鍗曚綅鎶芥牱锛圡US锛変笌闅忔満鎶芥牱鍙屾ā寮忥紝鏀寔鍗曞涓庢壒閲?/td></tr>
+  <tr><td>10</td><td>AI 鑱婂ぉ鍔╂墜</td><td>鍐呭祵 AI 鑱婂ぉ绐楀彛锛屽熀浜?Anthropic Claude API锛屾敮鎸佸璇濄€侀棶绛斻€佷唬鐮佺敓鎴?/td></tr>
 </table>
 
-<h2>四、通用操作说明</h2>
-<h3>4.1 文件上传</h3>
-<p>支持文件拖拽上传和点击选择文件两种方式。拖拽区域有视觉反馈（边框高亮），PDF 文件上传后右侧面板自动预览前几页。</p>
-<h3>4.2 参数设置</h3>
-<p>各工具提供相应的参数选项（下拉框、滑动条、文本输入等），参数修改实时保存，点击"执行"或"开始"按钮启动处理。</p>
-<h3>4.3 结果导出</h3>
-<p>处理完成后，显示"下载结果"按钮或自动触发浏览器下载。部分工具支持导出为 CSV、Excel、ZIP 等格式。</p>
-<h3>4.4 进度反馈</h3>
-<p>大型文件处理时，页面显示处理中动画（旋转加载器），避免重复点击。PDF 渲染使用 pdf.js Worker 在后台线程执行。</p>
+<h2>鍥涖€侀€氱敤鎿嶄綔璇存槑</h2>
+<h3>4.1 鏂囦欢涓婁紶</h3>
+<p>鏀寔鏂囦欢鎷栨嫿涓婁紶鍜岀偣鍑婚€夋嫨鏂囦欢涓ょ鏂瑰紡銆傛嫋鎷藉尯鍩熸湁瑙嗚鍙嶉锛堣竟妗嗛珮浜級锛孭DF 鏂囦欢涓婁紶鍚庡彸渚ч潰鏉胯嚜鍔ㄩ瑙堝墠鍑犻〉銆?/p>
+<h3>4.2 鍙傛暟璁剧疆</h3>
+<p>鍚勫伐鍏锋彁渚涚浉搴旂殑鍙傛暟閫夐」锛堜笅鎷夋銆佹粦鍔ㄦ潯銆佹枃鏈緭鍏ョ瓑锛夛紝鍙傛暟淇敼瀹炴椂淇濆瓨锛岀偣鍑?鎵ц"鎴?寮€濮?鎸夐挳鍚姩澶勭悊銆?/p>
+<h3>4.3 缁撴灉瀵煎嚭</h3>
+<p>澶勭悊瀹屾垚鍚庯紝鏄剧ず"涓嬭浇缁撴灉"鎸夐挳鎴栬嚜鍔ㄨЕ鍙戞祻瑙堝櫒涓嬭浇銆傞儴鍒嗗伐鍏锋敮鎸佸鍑轰负 CSV銆丒xcel銆乑IP 绛夋牸寮忋€?/p>
+<h3>4.4 杩涘害鍙嶉</h3>
+<p>澶у瀷鏂囦欢澶勭悊鏃讹紝椤甸潰鏄剧ず澶勭悊涓姩鐢伙紙鏃嬭浆鍔犺浇鍣級锛岄伩鍏嶉噸澶嶇偣鍑汇€侾DF 娓叉煋浣跨敤 pdf.js Worker 鍦ㄥ悗鍙扮嚎绋嬫墽琛屻€?/p>
 
-<h2>五、常见问题与注意事项</h2>
-<h3>5.1 浏览器兼容性</h3>
+<h2>浜斻€佸父瑙侀棶棰樹笌娉ㄦ剰浜嬮」</h2>
+<h3>5.1 娴忚鍣ㄥ吋瀹规€?/h3>
 <ul>
-  <li>推荐使用 Chrome / Edge 浏览器（最新版本）</li>
-  <li>Firefox / Safari 部分功能（如 File System Access API）暂不支持</li>
-  <li>移动端浏览器可能因性能限制处理较慢</li>
+  <li>鎺ㄨ崘浣跨敤 Chrome / Edge 娴忚鍣紙鏈€鏂扮増鏈級</li>
+  <li>Firefox / Safari 閮ㄥ垎鍔熻兘锛堝 File System Access API锛夋殏涓嶆敮鎸?/li>
+  <li>绉诲姩绔祻瑙堝櫒鍙兘鍥犳€ц兘闄愬埗澶勭悊杈冩參</li>
 </ul>
-<h3>5.2 文件大小限制</h3>
+<h3>5.2 鏂囦欢澶у皬闄愬埗</h3>
 <ul>
-  <li>PDF 文件建议不超过 100MB（浏览器内存限制）</li>
-  <li>图片批量处理建议单次不超过 50 张</li>
-  <li>CSV 数据行数建议不超过 10 万行</li>
+  <li>PDF 鏂囦欢寤鸿涓嶈秴杩?100MB锛堟祻瑙堝櫒鍐呭瓨闄愬埗锛?/li>
+  <li>鍥剧墖鎵归噺澶勭悊寤鸿鍗曟涓嶈秴杩?50 寮?/li>
+  <li>CSV 鏁版嵁琛屾暟寤鸿涓嶈秴杩?10 涓囪</li>
 </ul>
-<h3>5.3 性能优化建议</h3>
+<h3>5.3 鎬ц兘浼樺寲寤鸿</h3>
 <ul>
-  <li>处理大文件时关闭其他占用内存的标签页</li>
-  <li>图片压缩质量建议 60-80%（兼顾体积与质量）</li>
-  <li>PDF 拆分图片时选择 2x 分辨率、PNG 格式获得最佳清晰度</li>
+  <li>澶勭悊澶ф枃浠舵椂鍏抽棴鍏朵粬鍗犵敤鍐呭瓨鐨勬爣绛鹃〉</li>
+  <li>鍥剧墖鍘嬬缉璐ㄩ噺寤鸿 60-80%锛堝吋椤句綋绉笌璐ㄩ噺锛?/li>
+  <li>PDF 鎷嗗垎鍥剧墖鏃堕€夋嫨 2x 鍒嗚鲸鐜囥€丳NG 鏍煎紡鑾峰緱鏈€浣虫竻鏅板害</li>
 </ul>
-<h3>5.4 常见问题</h3>
-<p><strong>Q：PDF 页面预览不显示？</strong><br>A：检查浏览器是否支持 Web Worker，确认 pdf.js 加载成功。刷新页面后重试。</p>
-<p><strong>Q：文件重命名后如何撤销？</strong><br>A：重命名执行后点击"撤销"按钮（保持页面不刷新），可恢复原始文件名。</p>
-<p><strong>Q：AI 助手加载失败？</strong><br>A：首次使用需下载模型（约 600MB），请等待下载完成。如长时间卡住，刷新页面重试。推荐使用 Chrome（支持 WebGPU 加速）。</p>
-<p><strong>Q：忘记工具箱密码？</strong><br>A：密码为预设值，请联系工具箱管理员获取。清除浏览器 sessionStorage 后需重新输入。</p>
+<h3>5.4 甯歌闂</h3>
+<p><strong>Q锛歅DF 椤甸潰棰勮涓嶆樉绀猴紵</strong><br>A锛氭鏌ユ祻瑙堝櫒鏄惁鏀寔 Web Worker锛岀‘璁?pdf.js 鍔犺浇鎴愬姛銆傚埛鏂伴〉闈㈠悗閲嶈瘯銆?/p>
+<p><strong>Q锛氭枃浠堕噸鍛藉悕鍚庡浣曟挙閿€锛?/strong><br>A锛氶噸鍛藉悕鎵ц鍚庣偣鍑?鎾ら攢"鎸夐挳锛堜繚鎸侀〉闈笉鍒锋柊锛夛紝鍙仮澶嶅師濮嬫枃浠跺悕銆?/p>
+<p><strong>Q锛欰I 鍔╂墜鍔犺浇澶辫触锛?/strong><br>A锛氶娆′娇鐢ㄩ渶涓嬭浇妯″瀷锛堢害 600MB锛夛紝璇风瓑寰呬笅杞藉畬鎴愩€傚闀挎椂闂村崱浣忥紝鍒锋柊椤甸潰閲嶈瘯銆傛帹鑽愪娇鐢?Chrome锛堟敮鎸?WebGPU 鍔犻€燂級銆?/p>
+<p><strong>Q锛氬繕璁板伐鍏风瀵嗙爜锛?/strong><br>A锛氬瘑鐮佷负棰勮鍊硷紝璇疯仈绯诲伐鍏风绠＄悊鍛樿幏鍙栥€傛竻闄ゆ祻瑙堝櫒 sessionStorage 鍚庨渶閲嶆柊杈撳叆銆?/p>
 
 <div class="man-footer">
-  <p>审计工具箱 · 版本 2.0 · 本地安全计算</p>
-  <p>技术支持与反馈：通过 GitHub Issues 提交</p>
-  <p>© 顾力菡 Gu Lihan</p>
+  <p>瀹¤宸ュ叿绠?路 鐗堟湰 2.0 路 鏈湴瀹夊叏璁＄畻</p>
+  <p>鎶€鏈敮鎸佷笌鍙嶉锛氶€氳繃 GitHub Issues 鎻愪氦</p>
+  <p>漏 椤惧姏鑿?Gu Lihan</p>
 </div>
 
 </div>
@@ -1584,27 +1584,27 @@ textarea:focus-visible,
 <!-- ============ AI Chat Widget ============ -->
 <div class="ai-chat-overlay" id="ai-chat-overlay">
   <div class="ai-chat-header" id="chatDragHandle">
-    <div class="title"><span>🤖</span><span>AI 助手</span><span class="badge">Anthropic</span></div>
-    <button class="ai-chat-close" onclick="toggleAIChat()">✕</button>
+    <div class="title"><span>馃</span><span>AI 鍔╂墜</span><span class="badge" id="chat-badge">Anthropic</span></div>
+    <button class="ai-chat-close" onclick="toggleAIChat()">鉁?/button>
   </div>
   <div class="ai-chat-pw-gate" id="chat-pw-gate">
-    <div class="pw-gate-icon">🔑</div>
-    <div class="pw-gate-title">管理员验证</div>
-    <div class="pw-gate-hint">请输入管理员密码来配置 API Key</div>
-    <input type="password" id="chat-pw-input" placeholder="输入管理员密码" autocomplete="off">
-    <div class="pw-gate-error" id="chat-pw-error">密码错误</div>
-    <button class="pw-gate-btn" onclick="verifyChatPassword()">验证并配置</button>
+    <div class="pw-gate-icon">馃攽</div>
+    <div class="pw-gate-title">绠＄悊鍛橀獙璇?/div>
+    <div class="pw-gate-hint">璇疯緭鍏ョ鐞嗗憳瀵嗙爜鏉ラ厤缃?API Key</div>
+    <input type="password" id="chat-pw-input" placeholder="杈撳叆绠＄悊鍛樺瘑鐮? autocomplete="off">
+    <div class="pw-gate-error" id="chat-pw-error">瀵嗙爜閿欒</div>
+    <button class="pw-gate-btn" onclick="verifyChatPassword()">楠岃瘉骞堕厤缃?/button>
   </div>
   <div class="ai-chat-apikey-bar hidden" id="apikey-bar">
-    <input type="password" id="chat-api-key" placeholder="sk-ant-... 输入 Anthropic API Key">
-    <button class="key-btn" onclick="saveApiKey()">保存</button>
+    <input type="password" id="chat-api-key" placeholder="输入 API Key">
+    <button class="key-btn" onclick="saveApiKey()">淇濆瓨</button>
   </div>
   <div class="ai-chat-messages" id="chat-messages">
-    <div class="chat-msg assistant">✌️ 你好！我是 AI 助手，有什么可以帮你的？</div>
+    <div class="chat-msg assistant">鉁岋笍 浣犲ソ锛佹垜鏄?AI 鍔╂墜锛屾湁浠€涔堝彲浠ュ府浣犵殑锛?/div>
   </div>
   <div class="ai-chat-input-row">
-    <textarea id="chat-input" rows="2" placeholder="输入消息... (Enter 发送, Shift+Enter 换行)" disabled></textarea>
-    <button class="send-btn" id="chat-send-btn" disabled onclick="sendChatMessage()">➤</button>
+    <textarea id="chat-input" rows="2" placeholder="杈撳叆娑堟伅... (Enter 鍙戦€? Shift+Enter 鎹㈣)" disabled></textarea>
+    <button class="send-btn" id="chat-send-btn" disabled onclick="sendChatMessage()">鉃?/button>
   </div>
 </div>
 
@@ -1612,7 +1612,7 @@ textarea:focus-visible,
 <script>
 /* ============ Configuration ============ */
 const DATA_URL = 'apps.json?v=7';
-// 密码（base64 编码，运行时解码后直接对比，避免编码问题）
+// 瀵嗙爜锛坆ase64 缂栫爜锛岃繍琛屾椂瑙ｇ爜鍚庣洿鎺ュ姣旓紝閬垮厤缂栫爜闂锛?
 const _k = 'R2xoQDI1MzUxOA==';
 
 /* ============ Password Gate ============ */
@@ -1650,15 +1650,15 @@ const _k = 'R2xoQDI1MzUxOA==';
 
 /* ============ Category Config ============ */
 const CATEGORIES = {
-  gui: { label: 'GUI 工具', icon: '🖥️' },
-  cli: { label: '命令行工具', icon: '⌨️' },
-  data: { label: '数据处理', icon: '📊' },
-  web: { label: 'Web 应用', icon: '🌐' },
-  game: { label: '游戏', icon: '🎮' },
-  other: { label: '其他', icon: '📦' }
+  gui: { label: 'GUI 宸ュ叿', icon: '馃枼锔? },
+  cli: { label: '鍛戒护琛屽伐鍏?, icon: '鈱笍' },
+  data: { label: '鏁版嵁澶勭悊', icon: '馃搳' },
+  web: { label: 'Web 搴旂敤', icon: '馃寪' },
+  game: { label: '娓告垙', icon: '馃幃' },
+  other: { label: '鍏朵粬', icon: '馃摝' }
 };
 
-const STATUS_MAP = { done: '已完成', wip: '开发中' };
+const STATUS_MAP = { done: '宸插畬鎴?, wip: '寮€鍙戜腑' };
 
 /* ============ State ============ */
 let apps = [];
@@ -1670,7 +1670,7 @@ if (window.top !== window.self) {
 }
 
 /* ============ Console Security Warning ============ */
-console.log('%c⚠️ 安全警告 %c此浏览器控制台仅供开发者使用。请勿在此粘贴或执行不明代码。',
+console.log('%c鈿狅笍 瀹夊叏璀﹀憡 %c姝ゆ祻瑙堝櫒鎺у埗鍙颁粎渚涘紑鍙戣€呬娇鐢ㄣ€傝鍕垮湪姝ょ矘璐存垨鎵ц涓嶆槑浠ｇ爜銆?,
   'color:#fc5c9c;font-size:20px;font-weight:bold;', 'color:#e8e8f0;font-size:13px;');
 
 /* ============ Initialize App ============ */
@@ -1681,7 +1681,7 @@ async function initApp() {
     apps = await resp.json();
     if (!Array.isArray(apps)) apps = [];
   } catch (err) {
-    console.error('加载应用数据失败:', err);
+    console.error('鍔犺浇搴旂敤鏁版嵁澶辫触:', err);
     apps = [];
   }
 
@@ -1738,7 +1738,7 @@ function initAiTooltip() {
 /* ============ Manual PDF Download ============ */
 function downloadManualPDF() {
   var el = document.getElementById('manual-content');
-  if (!el) { alert('手册内容未找到，请刷新页面后重试。'); return; }
+  if (!el) { alert('鎵嬪唽鍐呭鏈壘鍒帮紝璇峰埛鏂伴〉闈㈠悗閲嶈瘯銆?); return; }
 
   // Clone the hidden manual so we can modify it for export without affecting the original
   var clone = el.cloneNode(true);
@@ -1752,7 +1752,7 @@ function downloadManualPDF() {
 
   var opt = {
     margin:       [10, 12, 10, 12], // top, right, bottom, left (mm)
-    filename:     '审计工具箱操作手册_' + new Date().toISOString().slice(0,10) + '.pdf',
+    filename:     '瀹¤宸ュ叿绠辨搷浣滄墜鍐宊' + new Date().toISOString().slice(0,10) + '.pdf',
     image:        { type: 'jpeg', quality: 0.95 },
     html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
     jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
@@ -1763,7 +1763,7 @@ function downloadManualPDF() {
     document.body.removeChild(clone);
   }).catch(function(err) {
     document.body.removeChild(clone);
-    alert('PDF 生成失败：' + err.message);
+    alert('PDF 鐢熸垚澶辫触锛? + err.message);
     console.error('PDF error:', err);
   });
 }
@@ -1782,7 +1782,7 @@ function renderCards() {
   const { search, category } = currentFilter;
 
   const filtered = apps.filter(app => {
-    // 隐藏卡片但保留代码
+    // 闅愯棌鍗＄墖浣嗕繚鐣欎唬鐮?
     if (app.id === 'help' || app.id === 'offline-ai') return false;
     if (category !== 'all' && app.category !== category) return false;
     var tag = currentFilter.tag;
@@ -1802,8 +1802,8 @@ function renderCards() {
 
   if (filtered.length === 0) {
     grid.innerHTML = `<div class="empty-state">
-      <div class="empty-icon">📭</div>
-      <p>没有找到匹配的应用</p>
+      <div class="empty-icon">馃摥</div>
+      <p>娌℃湁鎵惧埌鍖归厤鐨勫簲鐢?/p>
     </div>`;
     return;
   }
@@ -1855,22 +1855,22 @@ function openModal(app) {
   const cat = CATEGORIES[app.category] || CATEGORIES.other;
 
   const downloadBtn = app.download
-    ? `<a class="btn btn-dl" href="${escapeHtml(app.download)}" download>⬇ 下载</a>`
+    ? `<a class="btn btn-dl" href="${escapeHtml(app.download)}" download>猬?涓嬭浇</a>`
     : '';
 
   const onlineBtn = (app.onlineTool)
-    ? `<button class="btn btn-dl" onclick="event.stopPropagation(); closeModal(); openToolPanel('${escapeHtml(app.id)}')" style="background: linear-gradient(135deg, #7c5cfc, #5ccafc);">🛠️ 在线使用</button>`
+    ? `<button class="btn btn-dl" onclick="event.stopPropagation(); closeModal(); openToolPanel('${escapeHtml(app.id)}')" style="background: linear-gradient(135deg, #7c5cfc, #5ccafc);">馃洜锔?鍦ㄧ嚎浣跨敤</button>`
     : '';
 
   container.innerHTML = `
     <div class="modal-header">
       <h2>${escapeHtml(app.icon || cat.icon)} ${escapeHtml(app.name)}</h2>
-      <button class="modal-close" onclick="closeModal()">✕</button>
+      <button class="modal-close" onclick="closeModal()">鉁?/button>
     </div>
     <div class="modal-body">
-      ${app.version ? `<div class="modal-section"><span class="tag tag-status ${app.status === 'wip' ? 'wip' : ''}">${escapeHtml(app.version)} · ${STATUS_MAP[app.status] || app.status}</span></div>` : ''}
-      ${app.fullDesc ? `<div class="modal-section"><h4>📝 功能说明</h4><p>${escapeHtml(app.fullDesc)}</p></div>` : ''}
-      ${(app.download || app.onlineTool) ? `<div class="modal-section"><h4>🔗 链接</h4><div class="modal-links">${downloadBtn}${onlineBtn}</div></div>` : ''}
+      ${app.version ? `<div class="modal-section"><span class="tag tag-status ${app.status === 'wip' ? 'wip' : ''}">${escapeHtml(app.version)} 路 ${STATUS_MAP[app.status] || app.status}</span></div>` : ''}
+      ${app.fullDesc ? `<div class="modal-section"><h4>馃摑 鍔熻兘璇存槑</h4><p>${escapeHtml(app.fullDesc)}</p></div>` : ''}
+      ${(app.download || app.onlineTool) ? `<div class="modal-section"><h4>馃敆 閾炬帴</h4><div class="modal-links">${downloadBtn}${onlineBtn}</div></div>` : ''}
     </div>
   `;
 
@@ -1899,10 +1899,10 @@ function closeLightbox() {
 async function copyToClipboard(text, btn) {
   try {
     await navigator.clipboard.writeText(text);
-    btn.textContent = '✅ 已复制';
+    btn.textContent = '鉁?宸插鍒?;
     btn.classList.add('copied');
     setTimeout(() => {
-      btn.textContent = '📋 复制';
+      btn.textContent = '馃搵 澶嶅埗';
       btn.classList.remove('copied');
     }, 2000);
   } catch {
@@ -1914,10 +1914,10 @@ async function copyToClipboard(text, btn) {
     ta.select();
     document.execCommand('copy');
     document.body.removeChild(ta);
-    btn.textContent = '✅ 已复制';
+    btn.textContent = '鉁?宸插鍒?;
     btn.classList.add('copied');
     setTimeout(() => {
-      btn.textContent = '📋 复制';
+      btn.textContent = '馃搵 澶嶅埗';
       btn.classList.remove('copied');
     }, 2000);
   }
@@ -1983,18 +1983,18 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-// 启动
+// 鍚姩
 initApp();
 
 /* ============ Online Tool Panel ============ */
 const TOOL_OPS = {
-  merge:      { title: '🔗 合并 PDF', hint: '拖入 2 个或更多 PDF 文件，按顺序合并为一个', multiple: true,  minFiles: 2 },
-  split:      { title: '✂️ 拆分 PDF', hint: '拖入 1 个 PDF 文件，输入要提取的页码范围', multiple: false, minFiles: 1 },
-  'extract-text': { title: '📝 提取文字', hint: '拖入 1 个 PDF 文件，提取所有页面文字内容', multiple: false, minFiles: 1 },
-  info:       { title: '📄 读取信息', hint: '拖入 1 个 PDF 文件，查看元数据和页面信息', multiple: false, minFiles: 1 },
-  encrypt:    { title: '🔒 加密 PDF', hint: '拖入 1 个 PDF，设置打开密码', multiple: false, minFiles: 1 },
-  decrypt:    { title: '🔓 解密 PDF', hint: '拖入 1 个已加密的 PDF，输入密码解密', multiple: false, minFiles: 1 },
-  'split-images': { title: '🖼️ 拆分为图片', hint: '拖入 1 个 PDF，逐页导出为图片并打包下载', multiple: false, minFiles: 1 },
+  merge:      { title: '馃敆 鍚堝苟 PDF', hint: '鎷栧叆 2 涓垨鏇村 PDF 鏂囦欢锛屾寜椤哄簭鍚堝苟涓轰竴涓?, multiple: true,  minFiles: 2 },
+  split:      { title: '鉁傦笍 鎷嗗垎 PDF', hint: '鎷栧叆 1 涓?PDF 鏂囦欢锛岃緭鍏ヨ鎻愬彇鐨勯〉鐮佽寖鍥?, multiple: false, minFiles: 1 },
+  'extract-text': { title: '馃摑 鎻愬彇鏂囧瓧', hint: '鎷栧叆 1 涓?PDF 鏂囦欢锛屾彁鍙栨墍鏈夐〉闈㈡枃瀛楀唴瀹?, multiple: false, minFiles: 1 },
+  info:       { title: '馃搫 璇诲彇淇℃伅', hint: '鎷栧叆 1 涓?PDF 鏂囦欢锛屾煡鐪嬪厓鏁版嵁鍜岄〉闈俊鎭?, multiple: false, minFiles: 1 },
+  encrypt:    { title: '馃敀 鍔犲瘑 PDF', hint: '鎷栧叆 1 涓?PDF锛岃缃墦寮€瀵嗙爜', multiple: false, minFiles: 1 },
+  decrypt:    { title: '馃敁 瑙ｅ瘑 PDF', hint: '鎷栧叆 1 涓凡鍔犲瘑鐨?PDF锛岃緭鍏ュ瘑鐮佽В瀵?, multiple: false, minFiles: 1 },
+  'split-images': { title: '馃柤锔?鎷嗗垎涓哄浘鐗?, hint: '鎷栧叆 1 涓?PDF锛岄€愰〉瀵煎嚭涓哄浘鐗囧苟鎵撳寘涓嬭浇', multiple: false, minFiles: 1 },
 };
 
 let toolState = {
@@ -2015,17 +2015,17 @@ function openToolPanel(appId) {
   const app = apps.find(a => a.id === appId);
   if (!app) return;
 
-  // AI 聊天助手：直接弹出聊天窗口
+  // AI 鑱婂ぉ鍔╂墜锛氱洿鎺ュ脊鍑鸿亰澶╃獥鍙?
   if (appId === 'claude-config') { toggleAIChat(); return; }
 
-  // 带密码保护的工具
+  // 甯﹀瘑鐮佷繚鎶ょ殑宸ュ叿
   const PROTECTED_TOOLS = ['tb-autofill', 'bkd-rollforward', 'word-checkbench'];
   if (PROTECTED_TOOLS.includes(appId)) {
-    const pw = prompt('请输入管理员密码来打开此工具:');
-    if (pw !== 'Asd#522128') { alert('密码错误，无法打开'); return; }
+    const pw = prompt('璇疯緭鍏ョ鐞嗗憳瀵嗙爜鏉ユ墦寮€姝ゅ伐鍏?');
+    if (pw !== 'Asd#522128') { alert('瀵嗙爜閿欒锛屾棤娉曟墦寮€'); return; }
   }
 
-  // 独立页面的工具：先跳转，不显示面板（避免闪现 PDF 拖拽区）
+  // 鐙珛椤甸潰鐨勫伐鍏凤細鍏堣烦杞紝涓嶆樉绀洪潰鏉匡紙閬垮厤闂幇 PDF 鎷栨嫿鍖猴級
   const externalPages = {
     'rou-calc': 'rou-calculator.html',
     'img-compressor': 'image-toolbox.html',
@@ -2048,7 +2048,7 @@ function openToolPanel(appId) {
   };
   if (externalPages[appId]) { window.open(externalPages[appId], '_self'); return; }
 
-  // 内联工具：显示面板
+  // 鍐呰仈宸ュ叿锛氭樉绀洪潰鏉?
   const panel = document.getElementById('tool-panel');
   document.getElementById('tool-title').textContent = app.icon + ' ' + app.name;
   panel.classList.add('open');
@@ -2161,10 +2161,10 @@ function renderFileList() {
 
   list.innerHTML = toolState.files.map((f, i) => `
     <div class="file-item">
-      <span class="fi-icon">📄</span>
+      <span class="fi-icon">馃搫</span>
       <span class="fi-name">${escapeHtml(f.name)}</span>
       <span class="fi-size">${formatSize(f.size)}</span>
-      <button class="fi-remove" onclick="removeFile(${i})">✕</button>
+      <button class="fi-remove" onclick="removeFile(${i})">鉁?/button>
     </div>
   `).join('');
 
@@ -2196,7 +2196,7 @@ async function renderPreviews() {
       // File label
       const fileLabel = document.createElement('div');
       fileLabel.className = 'preview-thumb';
-      fileLabel.innerHTML = `<div class="thumb-file">📄 ${escapeHtml(file.name)}</div>`;
+      fileLabel.innerHTML = `<div class="thumb-file">馃搫 ${escapeHtml(file.name)}</div>`;
       previewArea.appendChild(fileLabel);
 
       for (let i = 1; i <= pagesToShow; i++) {
@@ -2213,12 +2213,12 @@ async function renderPreviews() {
 
         const thumb = document.createElement('div');
         thumb.className = 'preview-thumb';
-        thumb.title = `第 ${i} 页`;
+        thumb.title = `绗?${i} 椤礰;
         thumb.appendChild(canvas);
 
         const label = document.createElement('div');
         label.className = 'thumb-label';
-        label.textContent = `第 ${i} 页`;
+        label.textContent = `绗?${i} 椤礰;
         thumb.appendChild(label);
 
         previewArea.appendChild(thumb);
@@ -2227,13 +2227,13 @@ async function renderPreviews() {
       if (pdf.numPages > pagesToShow) {
         const more = document.createElement('div');
         more.className = 'preview-thumb';
-        more.innerHTML = `<div style="width:120px;height:160px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:12px">... 共 ${pdf.numPages} 页</div>`;
+        more.innerHTML = `<div style="width:120px;height:160px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:12px">... 鍏?${pdf.numPages} 椤?/div>`;
         previewArea.appendChild(more);
       }
     } catch (err) {
       const errEl = document.createElement('div');
       errEl.className = 'preview-thumb';
-      errEl.innerHTML = `<div style="width:120px;height:160px;display:flex;align-items:center;justify-content:center;color:#fc5c9c;font-size:11px;text-align:center">⚠️ 无法预览<br>${escapeHtml(file.name)}</div>`;
+      errEl.innerHTML = `<div style="width:120px;height:160px;display:flex;align-items:center;justify-content:center;color:#fc5c9c;font-size:11px;text-align:center">鈿狅笍 鏃犳硶棰勮<br>${escapeHtml(file.name)}</div>`;
       previewArea.appendChild(errEl);
     }
   }
@@ -2250,38 +2250,38 @@ function renderToolControls(op) {
   const div = document.getElementById('tool-controls');
 
   const processLabel = {
-    merge: '🔗 开始合并', split: '✂️ 开始拆分', 'extract-text': '📝 提取文字',
-    info: '📄 读取信息', encrypt: '🔒 加密', decrypt: '🔓 解密', 'split-images': '🖼️ 开始拆图'
+    merge: '馃敆 寮€濮嬪悎骞?, split: '鉁傦笍 寮€濮嬫媶鍒?, 'extract-text': '馃摑 鎻愬彇鏂囧瓧',
+    info: '馃搫 璇诲彇淇℃伅', encrypt: '馃敀 鍔犲瘑', decrypt: '馃敁 瑙ｅ瘑', 'split-images': '馃柤锔?寮€濮嬫媶鍥?
   };
 
   let extraHtml = '';
   if (op === 'split') {
-    extraHtml = `<div class="tool-input-group"><label>页码范围</label><input type="text" id="split-pages" placeholder="例如: 1-3,5,7-9"></div>`;
+    extraHtml = `<div class="tool-input-group"><label>椤电爜鑼冨洿</label><input type="text" id="split-pages" placeholder="渚嬪: 1-3,5,7-9"></div>`;
   } else if (op === 'encrypt') {
     extraHtml = `<div class="tool-input-row">
-      <div class="tool-input-group"><label>打开密码</label><input type="password" id="enc-user-pwd" placeholder="设置打开密码"></div>
-      <div class="tool-input-group"><label>权限密码（可选）</label><input type="password" id="enc-owner-pwd" placeholder="设置权限密码"></div>
+      <div class="tool-input-group"><label>鎵撳紑瀵嗙爜</label><input type="password" id="enc-user-pwd" placeholder="璁剧疆鎵撳紑瀵嗙爜"></div>
+      <div class="tool-input-group"><label>鏉冮檺瀵嗙爜锛堝彲閫夛級</label><input type="password" id="enc-owner-pwd" placeholder="璁剧疆鏉冮檺瀵嗙爜"></div>
     </div>`;
   } else if (op === 'decrypt') {
-    extraHtml = `<div class="tool-input-group"><label>PDF 密码</label><input type="password" id="decrypt-pwd" placeholder="输入 PDF 的打开密码"></div>`;
+    extraHtml = `<div class="tool-input-group"><label>PDF 瀵嗙爜</label><input type="password" id="decrypt-pwd" placeholder="杈撳叆 PDF 鐨勬墦寮€瀵嗙爜"></div>`;
   } else if (op === 'split-images') {
     extraHtml = `
       <div class="tool-input-row">
-        <div class="tool-input-group"><label>图片格式</label><select id="si-format"><option value="png">PNG</option><option value="jpeg">JPEG</option></select></div>
-        <div class="tool-input-group" id="si-quality-grp" style="display:none"><label>JPEG 质量: <span id="si-qval">85</span>%</label><input type="range" id="si-quality" value="85" min="10" max="100" oninput="document.getElementById('si-qval').textContent=this.value"></div>
-        <div class="tool-input-group"><label>分辨率</label><select id="si-scale"><option value="1">1x</option><option value="1.5">1.5x</option><option value="2" selected>2x</option><option value="3">3x</option><option value="c">自定义</option></select></div>
-        <div class="tool-input-group" id="si-custom-grp" style="display:none"><label>自定义倍数</label><input type="number" id="si-custom-scale" value="2" min="0.5" max="10" step="0.1" style="width:70px"></div>
-        <div class="tool-input-group"><label>色彩</label><select id="si-color"><option value="color">彩色</option><option value="gray">灰度</option></select></div>
+        <div class="tool-input-group"><label>鍥剧墖鏍煎紡</label><select id="si-format"><option value="png">PNG</option><option value="jpeg">JPEG</option></select></div>
+        <div class="tool-input-group" id="si-quality-grp" style="display:none"><label>JPEG 璐ㄩ噺: <span id="si-qval">85</span>%</label><input type="range" id="si-quality" value="85" min="10" max="100" oninput="document.getElementById('si-qval').textContent=this.value"></div>
+        <div class="tool-input-group"><label>鍒嗚鲸鐜?/label><select id="si-scale"><option value="1">1x</option><option value="1.5">1.5x</option><option value="2" selected>2x</option><option value="3">3x</option><option value="c">鑷畾涔?/option></select></div>
+        <div class="tool-input-group" id="si-custom-grp" style="display:none"><label>鑷畾涔夊€嶆暟</label><input type="number" id="si-custom-scale" value="2" min="0.5" max="10" step="0.1" style="width:70px"></div>
+        <div class="tool-input-group"><label>鑹插僵</label><select id="si-color"><option value="color">褰╄壊</option><option value="gray">鐏板害</option></select></div>
       </div>
-      <div class="tool-input-group"><label>页码范围（可选，留空=全部）</label><input type="text" id="si-pages" placeholder="例: 1,3,5-10（留空则导出全部）"></div>
+      <div class="tool-input-group"><label>椤电爜鑼冨洿锛堝彲閫夛紝鐣欑┖=鍏ㄩ儴锛?/label><input type="text" id="si-pages" placeholder="渚? 1,3,5-10锛堢暀绌哄垯瀵煎嚭鍏ㄩ儴锛?></div>
     `;
   }
 
   div.innerHTML = `
     ${extraHtml}
     <div class="tool-actions" style="margin-top:12px">
-      <button class="btn-tool btn-tool-primary" id="btn-process" onclick="processPDF()">${processLabel[op] || '开始处理'}</button>
-      <button class="btn-tool btn-tool-secondary" onclick="toolState.files=[]; renderFileList(); clearResult();">🗑️ 清空文件</button>
+      <button class="btn-tool btn-tool-primary" id="btn-process" onclick="processPDF()">${processLabel[op] || '寮€濮嬪鐞?}</button>
+      <button class="btn-tool btn-tool-secondary" onclick="toolState.files=[]; renderFileList(); clearResult();">馃棏锔?娓呯┖鏂囦欢</button>
     </div>
   `;
   // Init split-images toggle listeners (can't use inline <script> in innerHTML)
@@ -2303,7 +2303,7 @@ async function processPDF() {
   const cfg = TOOL_OPS[op];
 
   if (toolState.files.length < cfg.minFiles) {
-    showToolError(`请至少拖入 ${cfg.minFiles} 个 PDF 文件`);
+    showToolError(`璇疯嚦灏戞嫋鍏?${cfg.minFiles} 涓?PDF 鏂囦欢`);
     return;
   }
 
@@ -2321,7 +2321,7 @@ async function processPDF() {
       case 'split-images': await doSplitImages(); break;
     }
   } catch (err) {
-    showToolError('处理失败: ' + err.message);
+    showToolError('澶勭悊澶辫触: ' + err.message);
     console.error(err);
   } finally {
     showProcessing(false);
@@ -2334,7 +2334,7 @@ function showProcessing(show) {
 
 function showToolError(msg) {
   const el = document.getElementById('tool-error');
-  el.textContent = '❌ ' + msg;
+  el.textContent = '鉂?' + msg;
   el.classList.add('show');
   document.getElementById('tool-result').classList.remove('show');
 }
@@ -2351,7 +2351,7 @@ function clearResult() {
 function showResult(bytes, name, detail) {
   toolState.resultBytes = bytes;
   toolState.resultName = name;
-  document.getElementById('result-detail').textContent = detail || ('文件大小: ' + formatSize(bytes.length));
+  document.getElementById('result-detail').textContent = detail || ('鏂囦欢澶у皬: ' + formatSize(bytes.length));
   document.getElementById('tool-result').classList.add('show');
   document.getElementById('btn-download').style.display = 'inline-flex';
 }
@@ -2369,14 +2369,14 @@ async function doMerge() {
   }
 
   const result = await merged.save();
-  showResult(result, 'merged.pdf', `成功合并 ${toolState.files.length} 个文件，共 ${merged.getPageCount()} 页`);
+  showResult(result, 'merged.pdf', `鎴愬姛鍚堝苟 ${toolState.files.length} 涓枃浠讹紝鍏?${merged.getPageCount()} 椤礰);
 }
 
 /* --- Split --- */
 async function doSplit() {
   const { PDFDocument } = PDFLib;
   const input = document.getElementById('split-pages').value.trim();
-  if (!input) throw new Error('请输入页码范围，例如: 1-3,5,7-9');
+  if (!input) throw new Error('璇疯緭鍏ラ〉鐮佽寖鍥达紝渚嬪: 1-3,5,7-9');
 
   const file = toolState.files[0];
   const bytes = await file.arrayBuffer();
@@ -2390,24 +2390,24 @@ async function doSplit() {
     const trimmed = part.trim();
     if (trimmed.includes('-')) {
       const [start, end] = trimmed.split('-').map(s => parseInt(s.trim()));
-      if (isNaN(start) || isNaN(end)) throw new Error(`无效的范围: ${trimmed}`);
+      if (isNaN(start) || isNaN(end)) throw new Error(`鏃犳晥鐨勮寖鍥? ${trimmed}`);
       for (let i = Math.max(1, start); i <= Math.min(totalPages, end); i++) targetPages.push(i - 1);
     } else {
       const n = parseInt(trimmed);
-      if (isNaN(n)) throw new Error(`无效的页码: ${trimmed}`);
+      if (isNaN(n)) throw new Error(`鏃犳晥鐨勯〉鐮? ${trimmed}`);
       if (n >= 1 && n <= totalPages) targetPages.push(n - 1);
     }
   }
 
-  if (targetPages.length === 0) throw new Error('未找到有效页码');
+  if (targetPages.length === 0) throw new Error('鏈壘鍒版湁鏁堥〉鐮?);
 
   const newDoc = await PDFDocument.create();
   const pages = await newDoc.copyPages(srcDoc, [...new Set(targetPages)]);
   pages.forEach(p => newDoc.addPage(p));
 
   const result = await newDoc.save();
-  const name = file.name.replace(/\.pdf$/i, '') + '_拆分.pdf';
-  showResult(result, name, `提取了 ${newDoc.getPageCount()} 页（原文件共 ${totalPages} 页）`);
+  const name = file.name.replace(/\.pdf$/i, '') + '_鎷嗗垎.pdf';
+  showResult(result, name, `鎻愬彇浜?${newDoc.getPageCount()} 椤碉紙鍘熸枃浠跺叡 ${totalPages} 椤碉級`);
 }
 
 /* --- Extract Text --- */
@@ -2421,18 +2421,18 @@ async function doExtractText() {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
     const pageText = content.items.map(item => item.str).join(' ');
-    allText += `\n=== 第 ${i} 页 ===\n\n${pageText}\n`;
+    allText += `\n=== 绗?${i} 椤?===\n\n${pageText}\n`;
   }
 
   const preview = document.getElementById('text-preview');
-  preview.textContent = allText || '（未能提取到文字内容）';
+  preview.textContent = allText || '锛堟湭鑳芥彁鍙栧埌鏂囧瓧鍐呭锛?;
   preview.style.display = 'block';
   document.getElementById('tool-result').classList.add('show');
-  document.getElementById('result-detail').textContent = `共提取 ${pdf.numPages} 页文字`;
+  document.getElementById('result-detail').textContent = `鍏辨彁鍙?${pdf.numPages} 椤垫枃瀛梎;
 
   // Also offer download as .txt
   const textBytes = new TextEncoder().encode(allText);
-  const name = file.name.replace(/\.pdf$/i, '') + '_文字.txt';
+  const name = file.name.replace(/\.pdf$/i, '') + '_鏂囧瓧.txt';
   toolState.resultBytes = textBytes;
   toolState.resultName = name;
   document.getElementById('btn-download').style.display = 'inline-flex';
@@ -2446,16 +2446,16 @@ async function doInfo() {
   const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
 
   const info = {
-    '文件名': file.name,
-    '文件大小': formatSize(file.size),
-    '页数': doc.getPageCount(),
-    'PDF 版本': '1.' + (Math.floor(Math.random() * 4) + 4), // pdf-lib doesn't expose version directly
-    '标题': doc.getTitle() || '(未设置)',
-    '作者': doc.getAuthor() || '(未设置)',
-    '主题': doc.getSubject() || '(未设置)',
-    '关键词': doc.getKeywords() || '(未设置)',
-    '创建者': doc.getCreator() || '(未设置)',
-    '生产者': doc.getProducer() || '(未设置)',
+    '鏂囦欢鍚?: file.name,
+    '鏂囦欢澶у皬': formatSize(file.size),
+    '椤垫暟': doc.getPageCount(),
+    'PDF 鐗堟湰': '1.' + (Math.floor(Math.random() * 4) + 4), // pdf-lib doesn't expose version directly
+    '鏍囬': doc.getTitle() || '(鏈缃?',
+    '浣滆€?: doc.getAuthor() || '(鏈缃?',
+    '涓婚': doc.getSubject() || '(鏈缃?',
+    '鍏抽敭璇?: doc.getKeywords() || '(鏈缃?',
+    '鍒涘缓鑰?: doc.getCreator() || '(鏈缃?',
+    '鐢熶骇鑰?: doc.getProducer() || '(鏈缃?',
   };
 
   const table = document.getElementById('info-table');
@@ -2464,7 +2464,7 @@ async function doInfo() {
   ).join('');
   table.style.display = 'table';
   document.getElementById('tool-result').classList.add('show');
-  document.getElementById('result-detail').textContent = `${info['页数']} 页 · ${info['文件大小']}`;
+  document.getElementById('result-detail').textContent = `${info['椤垫暟']} 椤?路 ${info['鏂囦欢澶у皬']}`;
 }
 
 /* --- Encrypt --- */
@@ -2473,7 +2473,7 @@ async function doEncrypt() {
   const userPwd = document.getElementById('enc-user-pwd').value;
   const ownerPwd = document.getElementById('enc-owner-pwd').value || userPwd;
 
-  if (!userPwd) throw new Error('请输入密码');
+  if (!userPwd) throw new Error('璇疯緭鍏ュ瘑鐮?);
 
   const file = toolState.files[0];
   const bytes = await file.arrayBuffer();
@@ -2486,15 +2486,15 @@ async function doEncrypt() {
   });
 
   const result = await doc.save();
-  const name = file.name.replace(/\.pdf$/i, '') + '_加密.pdf';
-  showResult(result, name, '已加密，打开时需要输入密码');
+  const name = file.name.replace(/\.pdf$/i, '') + '_鍔犲瘑.pdf';
+  showResult(result, name, '宸插姞瀵嗭紝鎵撳紑鏃堕渶瑕佽緭鍏ュ瘑鐮?);
 }
 
 /* --- Decrypt --- */
 async function doDecrypt() {
   const { PDFDocument } = PDFLib;
   const pwd = document.getElementById('decrypt-pwd').value;
-  if (!pwd) throw new Error('请输入 PDF 密码');
+  if (!pwd) throw new Error('璇疯緭鍏?PDF 瀵嗙爜');
 
   const file = toolState.files[0];
   const bytes = await file.arrayBuffer();
@@ -2503,8 +2503,8 @@ async function doDecrypt() {
   const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
   // Attempt to save without encryption
   const result = await doc.save();
-  const name = file.name.replace(/\.pdf$/i, '') + '_解密.pdf';
-  showResult(result, name, '已移除密码保护');
+  const name = file.name.replace(/\.pdf$/i, '') + '_瑙ｅ瘑.pdf';
+  showResult(result, name, '宸茬Щ闄ゅ瘑鐮佷繚鎶?);
 }
 
 /* --- Split to Images --- */
@@ -2524,7 +2524,7 @@ async function doSplitImages() {
       if (r.length === 2) { for (let i = Math.max(1,+r[0]); i <= Math.min(totalPages,+r[1]); i++) selectedPages.add(i); }
       else { const n = +r[0]; if (n >= 1 && n <= totalPages) selectedPages.add(n); }
     });
-    if (selectedPages.size === 0) throw new Error('未找到有效页码');
+    if (selectedPages.size === 0) throw new Error('鏈壘鍒版湁鏁堥〉鐮?);
   } else {
     selectedPages = new Set();
     for (let i = 1; i <= totalPages; i++) selectedPages.add(i);
@@ -2564,8 +2564,8 @@ async function doSplitImages() {
   }
 
   const zipBlob = await zip.generateAsync({ type: 'blob' });
-  const name = file.name.replace(/\.pdf$/i, '') + '_图片包.zip';
-  showResult(zipBlob, name, `导出 ${pages.length} 张图片（共 ${totalPages} 页），格式 ${format.toUpperCase()}，${scale}x · ${gray?'灰度':'彩色'}`);
+  const name = file.name.replace(/\.pdf$/i, '') + '_鍥剧墖鍖?zip';
+  showResult(zipBlob, name, `瀵煎嚭 ${pages.length} 寮犲浘鐗囷紙鍏?${totalPages} 椤碉級锛屾牸寮?${format.toUpperCase()}锛?{scale}x 路 ${gray?'鐏板害':'褰╄壊'}`);
 }
 
 /* Download result */
@@ -2587,7 +2587,7 @@ function initRouTool() {
   document.getElementById('drop-zone').style.display = 'none';
   document.querySelector('.tool-left').style.display = '';
   document.querySelector('.tool-right').style.display = 'none';
-  document.getElementById('tool-tabs').innerHTML = '<button class="tool-tab active" data-op="calc">📊 测算</button><button class="tool-tab" data-op="upload">📂 导入 Excel</button>';
+  document.getElementById('tool-tabs').innerHTML = '<button class="tool-tab active" data-op="calc">馃搳 娴嬬畻</button><button class="tool-tab" data-op="upload">馃搨 瀵煎叆 Excel</button>';
   document.getElementById('file-list').innerHTML = '';
   document.getElementById('preview-area').classList.remove('show');
   document.getElementById('preview-placeholder').style.display = 'none';
@@ -2608,9 +2608,9 @@ let rouContracts = [];
 
 function getExampleContracts() {
   return [
-    { name: '办公楼租赁', startDate: '2026-01-01', endDate: '2028-12-31', monthlyRent: 50000, frequency: 'monthly', rate: 4.5, initialCost: 5000 },
-    { name: '仓库租赁',     startDate: '2026-03-01', endDate: '2028-02-28', monthlyRent: 20000, frequency: 'monthly', rate: 4.2, initialCost: 0 },
-    { name: '设备租赁',     startDate: '2026-01-15', endDate: '2027-01-14', monthlyRent: 8000,  frequency: 'monthly', rate: 5.0, initialCost: 2000 },
+    { name: '鍔炲叕妤肩璧?, startDate: '2026-01-01', endDate: '2028-12-31', monthlyRent: 50000, frequency: 'monthly', rate: 4.5, initialCost: 5000 },
+    { name: '浠撳簱绉熻祦',     startDate: '2026-03-01', endDate: '2028-02-28', monthlyRent: 20000, frequency: 'monthly', rate: 4.2, initialCost: 0 },
+    { name: '璁惧绉熻祦',     startDate: '2026-01-15', endDate: '2027-01-14', monthlyRent: 8000,  frequency: 'monthly', rate: 5.0, initialCost: 2000 },
   ];
 }
 
@@ -2618,34 +2618,34 @@ function showRouCalcUI() {
   if (rouContracts.length === 0) rouContracts = getExampleContracts();
   const controls = document.getElementById('tool-controls');
   controls.innerHTML = `
-    <div style="font-size:13px;color:var(--text-secondary)">共 ${rouContracts.length} 份合同 · 点击下方按钮查看结果 · 可修改示例数据</div>
+    <div style="font-size:13px;color:var(--text-secondary)">鍏?${rouContracts.length} 浠藉悎鍚?路 鐐瑰嚮涓嬫柟鎸夐挳鏌ョ湅缁撴灉 路 鍙慨鏀圭ず渚嬫暟鎹?/div>
     ${rouContracts.map((c, i) => `
       <div style="padding:10px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid var(--glass-border)">
         <strong>${escapeHtml(c.name)}</strong>
         <div class="tool-input-row" style="margin-top:6px">
-          <div class="tool-input-group"><label>开始</label><input type="date" value="${c.startDate}" onchange="rouContracts[${i}].startDate=this.value"></div>
-          <div class="tool-input-group"><label>结束</label><input type="date" value="${c.endDate}" onchange="rouContracts[${i}].endDate=this.value"></div>
+          <div class="tool-input-group"><label>寮€濮?/label><input type="date" value="${c.startDate}" onchange="rouContracts[${i}].startDate=this.value"></div>
+          <div class="tool-input-group"><label>缁撴潫</label><input type="date" value="${c.endDate}" onchange="rouContracts[${i}].endDate=this.value"></div>
         </div>
         <div class="tool-input-row">
-          <div class="tool-input-group"><label>月租金</label><input type="number" value="${c.monthlyRent}" onchange="rouContracts[${i}].monthlyRent=+this.value"></div>
-          <div class="tool-input-group"><label>折现率(%)</label><input type="number" step="0.1" value="${c.rate}" onchange="rouContracts[${i}].rate=+this.value"></div>
+          <div class="tool-input-group"><label>鏈堢閲?/label><input type="number" value="${c.monthlyRent}" onchange="rouContracts[${i}].monthlyRent=+this.value"></div>
+          <div class="tool-input-group"><label>鎶樼幇鐜?%)</label><input type="number" step="0.1" value="${c.rate}" onchange="rouContracts[${i}].rate=+this.value"></div>
         </div>
         <div class="tool-input-row">
-          <div class="tool-input-group"><label>初始费用</label><input type="number" value="${c.initialCost}" onchange="rouContracts[${i}].initialCost=+this.value"></div>
-          <button class="btn-tool btn-tool-secondary" onclick="rouContracts.splice(${i},1);showRouCalcUI()" style="align-self:end">🗑️ 删除</button>
+          <div class="tool-input-group"><label>鍒濆璐圭敤</label><input type="number" value="${c.initialCost}" onchange="rouContracts[${i}].initialCost=+this.value"></div>
+          <button class="btn-tool btn-tool-secondary" onclick="rouContracts.splice(${i},1);showRouCalcUI()" style="align-self:end">馃棏锔?鍒犻櫎</button>
         </div>
       </div>
     `).join('')}
     <div class="tool-actions">
-      <button class="btn-tool btn-tool-primary" onclick="addRouContract()">➕ 添加合同</button>
-      <button class="btn-tool btn-tool-primary" onclick="calculateAndShowROU()" style="background:#5cfc9c;color:#000">🔢 开始测算</button>
+      <button class="btn-tool btn-tool-primary" onclick="addRouContract()">鉃?娣诲姞鍚堝悓</button>
+      <button class="btn-tool btn-tool-primary" onclick="calculateAndShowROU()" style="background:#5cfc9c;color:#000">馃敘 寮€濮嬫祴绠?/button>
     </div>
     <div id="rou-result"></div>
   `;
 }
 
 function addRouContract() {
-  rouContracts.push({ name: '新合同 ' + (rouContracts.length+1), startDate: '2026-06-01', endDate: '2027-05-31', monthlyRent: 10000, frequency: 'monthly', rate: 4.5, initialCost: 0 });
+  rouContracts.push({ name: '鏂板悎鍚?' + (rouContracts.length+1), startDate: '2026-06-01', endDate: '2027-05-31', monthlyRent: 10000, frequency: 'monthly', rate: 4.5, initialCost: 0 });
   showRouCalcUI();
 }
 
@@ -2656,14 +2656,14 @@ function calculateAndShowROU() {
   const totalInterest = results.reduce((s, r) => s + r.totalInterest, 0);
 
   div.innerHTML = `
-    <h4 style="margin-top:16px">📊 测算汇总</h4>
+    <h4 style="margin-top:16px">馃搳 娴嬬畻姹囨€?/h4>
     <table style="width:100%;border-collapse:collapse;margin-top:8px">
       <tr style="background:rgba(124,92,252,0.2)">
-        <th style="padding:8px;text-align:left">合同</th><th style="padding:8px;text-align:right">ROU资产</th><th style="padding:8px;text-align:right">总利息</th><th style="padding:8px;text-align:center">月数</th><th style="padding:8px;text-align:right">初始费用</th>
+        <th style="padding:8px;text-align:left">鍚堝悓</th><th style="padding:8px;text-align:right">ROU璧勪骇</th><th style="padding:8px;text-align:right">鎬诲埄鎭?/th><th style="padding:8px;text-align:center">鏈堟暟</th><th style="padding:8px;text-align:right">鍒濆璐圭敤</th>
       </tr>
       ${results.map((r, i) => `
-        <tr style="cursor:pointer;border-bottom:1px solid var(--glass-border)" onclick="showRouSchedule(${i})" title="点击查看摊销明细">
-          <td style="padding:8px">📄 ${escapeHtml(rouContracts[i].name)}</td>
+        <tr style="cursor:pointer;border-bottom:1px solid var(--glass-border)" onclick="showRouSchedule(${i})" title="鐐瑰嚮鏌ョ湅鎽婇攢鏄庣粏">
+          <td style="padding:8px">馃搫 ${escapeHtml(rouContracts[i].name)}</td>
           <td style="padding:8px;text-align:right">${fmtNum(r.rouAsset)}</td>
           <td style="padding:8px;text-align:right">${fmtNum(r.totalInterest)}</td>
           <td style="padding:8px;text-align:center">${r.months}</td>
@@ -2671,11 +2671,11 @@ function calculateAndShowROU() {
         </tr>
       `).join('')}
       <tr style="font-weight:700;border-top:2px solid var(--accent-1)">
-        <td style="padding:8px">合计</td><td style="padding:8px;text-align:right">${fmtNum(totalAsset)}</td><td style="padding:8px;text-align:right">${fmtNum(totalInterest)}</td><td colspan="2"></td>
+        <td style="padding:8px">鍚堣</td><td style="padding:8px;text-align:right">${fmtNum(totalAsset)}</td><td style="padding:8px;text-align:right">${fmtNum(totalInterest)}</td><td colspan="2"></td>
       </tr>
     </table>
     <div class="tool-actions" style="margin-top:12px">
-      <button class="btn-tool btn-tool-secondary" onclick="downloadRouResults()">⬇ 导出 Excel</button>
+      <button class="btn-tool btn-tool-secondary" onclick="downloadRouResults()">猬?瀵煎嚭 Excel</button>
     </div>
     <div id="rou-schedule"></div>
   `;
@@ -2719,11 +2719,11 @@ function showRouSchedule(idx) {
   const r = calcOneROU(rouContracts[idx]);
   const div = document.getElementById('rou-schedule');
   div.innerHTML = `
-    <h4 style="margin-top:16px">📋 ${escapeHtml(rouContracts[idx].name)} · 摊销明细</h4>
+    <h4 style="margin-top:16px">馃搵 ${escapeHtml(rouContracts[idx].name)} 路 鎽婇攢鏄庣粏</h4>
     <div style="max-height:300px;overflow-y:auto">
     <table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:12px">
       <tr style="background:rgba(124,92,252,0.15);position:sticky;top:0">
-        <th style="padding:6px">月份</th><th style="padding:6px;text-align:right">月租金</th><th style="padding:6px;text-align:right">利息</th><th style="padding:6px;text-align:right">本金偿还</th><th style="padding:6px;text-align:right">期末负债</th>
+        <th style="padding:6px">鏈堜唤</th><th style="padding:6px;text-align:right">鏈堢閲?/th><th style="padding:6px;text-align:right">鍒╂伅</th><th style="padding:6px;text-align:right">鏈噾鍋胯繕</th><th style="padding:6px;text-align:right">鏈熸湯璐熷€?/th>
       </tr>
       ${r.schedule.map(s => `
         <tr style="border-bottom:1px solid var(--glass-border)">
@@ -2743,9 +2743,9 @@ function showRouUploadUI() {
   const controls = document.getElementById('tool-controls');
   controls.innerHTML = `
     <div class="drop-zone" id="rou-drop" style="display:block">
-      <div class="dz-icon">📂</div>
-      <div class="dz-text">拖入 Excel/CSV 或点击上传</div>
-      <div class="dz-hint">列名: 合同名称,开始日期,结束日期,月租金,折现率,初始费用</div>
+      <div class="dz-icon">馃搨</div>
+      <div class="dz-text">鎷栧叆 Excel/CSV 鎴栫偣鍑讳笂浼?/div>
+      <div class="dz-hint">鍒楀悕: 鍚堝悓鍚嶇О,寮€濮嬫棩鏈?缁撴潫鏃ユ湡,鏈堢閲?鎶樼幇鐜?鍒濆璐圭敤</div>
     </div>
     <div id="rou-import-result"></div>
   `;
@@ -2760,18 +2760,18 @@ function handleRouFile(file) {
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws);
       rouContracts = rows.map(r => ({
-        name: r['合同名称'] || r['name'] || '未命名',
-        startDate: r['开始日期'] || r['startDate'] || '2026-01-01',
-        endDate: r['结束日期'] || r['endDate'] || '2026-12-31',
-        monthlyRent: parseFloat(r['月租金'] || r['monthlyRent'] || 0),
+        name: r['鍚堝悓鍚嶇О'] || r['name'] || '鏈懡鍚?,
+        startDate: r['寮€濮嬫棩鏈?] || r['startDate'] || '2026-01-01',
+        endDate: r['缁撴潫鏃ユ湡'] || r['endDate'] || '2026-12-31',
+        monthlyRent: parseFloat(r['鏈堢閲?] || r['monthlyRent'] || 0),
         frequency: 'monthly',
-        rate: parseFloat(r['折现率'] || r['rate'] || 4.5),
-        initialCost: parseFloat(r['初始费用'] || r['initialCost'] || 0)
+        rate: parseFloat(r['鎶樼幇鐜?] || r['rate'] || 4.5),
+        initialCost: parseFloat(r['鍒濆璐圭敤'] || r['initialCost'] || 0)
       }));
-      document.getElementById('rou-import-result').innerHTML = `<div class="tool-result show"><div class="result-title">✅ 成功导入 ${rouContracts.length} 份合同</div></div>`;
+      document.getElementById('rou-import-result').innerHTML = `<div class="tool-result show"><div class="result-title">鉁?鎴愬姛瀵煎叆 ${rouContracts.length} 浠藉悎鍚?/div></div>`;
       document.querySelectorAll('#tool-tabs .tool-tab')[0].click();
     } catch(err) {
-      document.getElementById('rou-import-result').innerHTML = `<div class="tool-error show">❌ 导入失败: ${err.message}</div>`;
+      document.getElementById('rou-import-result').innerHTML = `<div class="tool-error show">鉂?瀵煎叆澶辫触: ${err.message}</div>`;
     }
   };
   reader.readAsArrayBuffer(file);
@@ -2779,11 +2779,11 @@ function handleRouFile(file) {
 
 function downloadRouResults() {
   const results = rouContracts.map(c => calcOneROU(c));
-  const rows = [['合同名称','ROU资产','总利息','月数','初始费用']];
+  const rows = [['鍚堝悓鍚嶇О','ROU璧勪骇','鎬诲埄鎭?,'鏈堟暟','鍒濆璐圭敤']];
   results.forEach((r, i) => rows.push([rouContracts[i].name, r.rouAsset, r.totalInterest, r.months, r.initialCost]));
   const ws = XLSX.utils.aoa_to_sheet(rows);
-  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'ROU测算汇总');
-  XLSX.writeFile(wb, 'ROU租赁测算结果.xlsx');
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'ROU娴嬬畻姹囨€?);
+  XLSX.writeFile(wb, 'ROU绉熻祦娴嬬畻缁撴灉.xlsx');
 }
 
 function fmtNum(n) { return Number(n).toLocaleString('zh-CN', { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
@@ -2793,7 +2793,7 @@ function initAgingTool() {
   document.getElementById('drop-zone').style.display = 'none';
   document.querySelector('.tool-left').style.display = '';
   document.querySelector('.tool-right').style.display = 'none';
-  document.getElementById('tool-tabs').innerHTML = '<button class="tool-tab active" data-op="manual">📝 手动录入</button><button class="tool-tab" data-op="upload">📂 导入 Excel</button>';
+  document.getElementById('tool-tabs').innerHTML = '<button class="tool-tab active" data-op="manual">馃摑 鎵嬪姩褰曞叆</button><button class="tool-tab" data-op="upload">馃搨 瀵煎叆 Excel</button>';
   document.getElementById('file-list').innerHTML = '';
   document.getElementById('preview-area').classList.remove('show');
   document.getElementById('preview-placeholder').style.display = 'none';
@@ -2816,11 +2816,11 @@ function getExampleAR() {
   const now = new Date();
   const d = (offset) => { const dt = new Date(now); dt.setDate(dt.getDate() + offset); return dt; };
   return [
-    { customer: '客户A', invoiceNo: 'INV-001', invoiceDate: fmtDate(d(-15)), amount: 50000, terms: 30 },
-    { customer: '客户B', invoiceNo: 'INV-002', invoiceDate: fmtDate(d(-80)), amount: 20000, terms: 30 },
-    { customer: '客户A', invoiceNo: 'INV-003', invoiceDate: fmtDate(d(-120)), amount: 15000, terms: 60 },
-    { customer: '客户C', invoiceNo: 'INV-004', invoiceDate: fmtDate(d(-5)),  amount: 100000, terms: 30 },
-    { customer: '客户B', invoiceNo: 'INV-005', invoiceDate: fmtDate(d(-45)), amount: 8000, terms: 30 },
+    { customer: '瀹㈡埛A', invoiceNo: 'INV-001', invoiceDate: fmtDate(d(-15)), amount: 50000, terms: 30 },
+    { customer: '瀹㈡埛B', invoiceNo: 'INV-002', invoiceDate: fmtDate(d(-80)), amount: 20000, terms: 30 },
+    { customer: '瀹㈡埛A', invoiceNo: 'INV-003', invoiceDate: fmtDate(d(-120)), amount: 15000, terms: 60 },
+    { customer: '瀹㈡埛C', invoiceNo: 'INV-004', invoiceDate: fmtDate(d(-5)),  amount: 100000, terms: 30 },
+    { customer: '瀹㈡埛B', invoiceNo: 'INV-005', invoiceDate: fmtDate(d(-45)), amount: 8000, terms: 30 },
   ];
 }
 
@@ -2830,30 +2830,30 @@ function showAgingManualUI() {
   if (arItems.length === 0) arItems = getExampleAR();
   const controls = document.getElementById('tool-controls');
   controls.innerHTML = `
-    <div style="font-size:13px;color:var(--text-secondary)">共 ${arItems.length} 笔应收 · 点击测算查看账龄分析</div>
+    <div style="font-size:13px;color:var(--text-secondary)">鍏?${arItems.length} 绗斿簲鏀?路 鐐瑰嚮娴嬬畻鏌ョ湅璐﹂緞鍒嗘瀽</div>
     ${arItems.map((item, i) => `
       <div style="padding:10px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid var(--glass-border)">
-        <strong>${escapeHtml(item.customer)}</strong> · ${escapeHtml(item.invoiceNo)}
+        <strong>${escapeHtml(item.customer)}</strong> 路 ${escapeHtml(item.invoiceNo)}
         <div class="tool-input-row" style="margin-top:6px">
-          <div class="tool-input-group"><label>发票日期</label><input type="date" value="${item.invoiceDate}" onchange="arItems[${i}].invoiceDate=this.value"></div>
-          <div class="tool-input-group"><label>金额</label><input type="number" value="${item.amount}" onchange="arItems[${i}].amount=+this.value"></div>
+          <div class="tool-input-group"><label>鍙戠エ鏃ユ湡</label><input type="date" value="${item.invoiceDate}" onchange="arItems[${i}].invoiceDate=this.value"></div>
+          <div class="tool-input-group"><label>閲戦</label><input type="number" value="${item.amount}" onchange="arItems[${i}].amount=+this.value"></div>
         </div>
         <div class="tool-input-row">
-          <div class="tool-input-group"><label>账期(天)</label><input type="number" value="${item.terms}" onchange="arItems[${i}].terms=+this.value"></div>
-          <button class="btn-tool btn-tool-secondary" onclick="arItems.splice(${i},1);showAgingManualUI()" style="align-self:end">🗑️</button>
+          <div class="tool-input-group"><label>璐︽湡(澶?</label><input type="number" value="${item.terms}" onchange="arItems[${i}].terms=+this.value"></div>
+          <button class="btn-tool btn-tool-secondary" onclick="arItems.splice(${i},1);showAgingManualUI()" style="align-self:end">馃棏锔?/button>
         </div>
       </div>
     `).join('')}
     <div class="tool-actions">
-      <button class="btn-tool btn-tool-primary" onclick="addArItem()">➕ 添加应收</button>
-      <button class="btn-tool btn-tool-primary" onclick="calculateAndShowAging()" style="background:#5cfc9c;color:#000">🔢 账龄分析</button>
+      <button class="btn-tool btn-tool-primary" onclick="addArItem()">鉃?娣诲姞搴旀敹</button>
+      <button class="btn-tool btn-tool-primary" onclick="calculateAndShowAging()" style="background:#5cfc9c;color:#000">馃敘 璐﹂緞鍒嗘瀽</button>
     </div>
     <div id="aging-result"></div>
   `;
 }
 
 function addArItem() {
-  arItems.push({ customer: '新客户', invoiceNo: 'INV-' + (arItems.length+1), invoiceDate: fmtDate(new Date()), amount: 0, terms: 30 });
+  arItems.push({ customer: '鏂板鎴?, invoiceNo: 'INV-' + (arItems.length+1), invoiceDate: fmtDate(new Date()), amount: 0, terms: 30 });
   showAgingManualUI();
 }
 
@@ -2864,22 +2864,22 @@ function calculateAndShowAging() {
     const dueDate = new Date(item.invoiceDate); dueDate.setDate(dueDate.getDate() + item.terms);
     const daysOverdue = Math.floor((now - dueDate) / (1000 * 60 * 60 * 24));
     let bucket;
-    if (daysOverdue <= 0) bucket = '未到期';
-    else if (daysOverdue <= 30) bucket = '1-30天';
-    else if (daysOverdue <= 60) bucket = '31-60天';
-    else if (daysOverdue <= 90) bucket = '61-90天';
-    else bucket = '90天以上';
+    if (daysOverdue <= 0) bucket = '鏈埌鏈?;
+    else if (daysOverdue <= 30) bucket = '1-30澶?;
+    else if (daysOverdue <= 60) bucket = '31-60澶?;
+    else if (daysOverdue <= 90) bucket = '61-90澶?;
+    else bucket = '90澶╀互涓?;
 
     if (!aging[item.customer]) aging[item.customer] = { buckets: {}, total: 0, maxBucket: 0 };
     aging[item.customer].buckets[bucket] = (aging[item.customer].buckets[bucket] || 0) + item.amount;
     aging[item.customer].total += item.amount;
-    if (['90天以上','61-90天','31-60天','1-30天','未到期'].indexOf(bucket) > aging[item.customer].maxBucket) {
-      aging[item.customer].maxBucket = ['90天以上','61-90天','31-60天','1-30天','未到期'].indexOf(bucket);
+    if (['90澶╀互涓?,'61-90澶?,'31-60澶?,'1-30澶?,'鏈埌鏈?].indexOf(bucket) > aging[item.customer].maxBucket) {
+      aging[item.customer].maxBucket = ['90澶╀互涓?,'61-90澶?,'31-60澶?,'1-30澶?,'鏈埌鏈?].indexOf(bucket);
     }
   });
 
-  const bucketOrder = ['未到期','1-30天','31-60天','61-90天','90天以上'];
-  const riskIcons = { 0:'🟢', 1:'🟡', 2:'🟠', 3:'🔴', 4:'⚫' };
+  const bucketOrder = ['鏈埌鏈?,'1-30澶?,'31-60澶?,'61-90澶?,'90澶╀互涓?];
+  const riskIcons = { 0:'馃煝', 1:'馃煛', 2:'馃煚', 3:'馃敶', 4:'鈿? };
 
   const rows = Object.entries(aging).map(([name, data]) => {
     let cells = `<td style="padding:6px">${escapeHtml(name)}</td>`;
@@ -2893,23 +2893,23 @@ function calculateAndShowAging() {
 
   const div = document.getElementById('aging-result');
   div.innerHTML = `
-    <h4 style="margin-top:16px">📊 账龄分析汇总</h4>
+    <h4 style="margin-top:16px">馃搳 璐﹂緞鍒嗘瀽姹囨€?/h4>
     <div style="overflow-x:auto">
     <table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:12px">
       <tr style="background:rgba(124,92,252,0.2)">
-        <th style="padding:6px;text-align:left">客户</th>
+        <th style="padding:6px;text-align:left">瀹㈡埛</th>
         ${bucketOrder.map(b => `<th style="padding:6px;text-align:right">${b}</th>`).join('')}
-        <th style="padding:6px;text-align:right">合计</th><th style="padding:6px;text-align:center">风险</th>
+        <th style="padding:6px;text-align:right">鍚堣</th><th style="padding:6px;text-align:center">椋庨櫓</th>
       </tr>
       ${rows}
       <tr style="font-weight:700;border-top:2px solid var(--accent-1)">
-        <td style="padding:6px">合计</td>
+        <td style="padding:6px">鍚堣</td>
         ${bucketOrder.map(b => `<td style="padding:6px;text-align:right">${fmtNum(Object.values(aging).reduce((s,d) => s + (d.buckets[b]||0), 0))}</td>`).join('')}
         <td style="padding:6px;text-align:right">${fmtNum(grandTotal)}</td><td></td>
       </tr>
     </table></div>
     <div class="tool-actions" style="margin-top:12px">
-      <button class="btn-tool btn-tool-secondary" onclick="downloadAgingResults()">⬇ 导出 Excel</button>
+      <button class="btn-tool btn-tool-secondary" onclick="downloadAgingResults()">猬?瀵煎嚭 Excel</button>
     </div>
   `;
 }
@@ -2918,9 +2918,9 @@ function showAgingUploadUI() {
   const controls = document.getElementById('tool-controls');
   controls.innerHTML = `
     <div class="drop-zone" id="aging-drop" style="display:block">
-      <div class="dz-icon">📂</div>
-      <div class="dz-text">拖入应收 Excel/CSV</div>
-      <div class="dz-hint">列名: 客户名称,发票号,发票日期,金额,账期(天)</div>
+      <div class="dz-icon">馃搨</div>
+      <div class="dz-text">鎷栧叆搴旀敹 Excel/CSV</div>
+      <div class="dz-hint">鍒楀悕: 瀹㈡埛鍚嶇О,鍙戠エ鍙?鍙戠エ鏃ユ湡,閲戦,璐︽湡(澶?</div>
     </div>
     <div id="aging-import-result"></div>
   `;
@@ -2935,16 +2935,16 @@ function handleAgingFile(file) {
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws);
       arItems = rows.map(r => ({
-        customer: r['客户名称'] || r['customer'] || '未知',
-        invoiceNo: r['发票号'] || r['invoiceNo'] || '',
-        invoiceDate: r['发票日期'] || r['invoiceDate'] || '2026-01-01',
-        amount: parseFloat(r['金额'] || r['amount'] || 0),
-        terms: parseInt(r['账期(天)'] || r['terms'] || 30)
+        customer: r['瀹㈡埛鍚嶇О'] || r['customer'] || '鏈煡',
+        invoiceNo: r['鍙戠エ鍙?] || r['invoiceNo'] || '',
+        invoiceDate: r['鍙戠エ鏃ユ湡'] || r['invoiceDate'] || '2026-01-01',
+        amount: parseFloat(r['閲戦'] || r['amount'] || 0),
+        terms: parseInt(r['璐︽湡(澶?'] || r['terms'] || 30)
       }));
-      document.getElementById('aging-import-result').innerHTML = `<div class="tool-result show"><div class="result-title">✅ 成功导入 ${arItems.length} 笔应收</div></div>`;
+      document.getElementById('aging-import-result').innerHTML = `<div class="tool-result show"><div class="result-title">鉁?鎴愬姛瀵煎叆 ${arItems.length} 绗斿簲鏀?/div></div>`;
       document.querySelectorAll('#tool-tabs .tool-tab')[0].click();
     } catch(err) {
-      document.getElementById('aging-import-result').innerHTML = `<div class="tool-error show">❌ 导入失败: ${err.message}</div>`;
+      document.getElementById('aging-import-result').innerHTML = `<div class="tool-error show">鉂?瀵煎叆澶辫触: ${err.message}</div>`;
     }
   };
   reader.readAsArrayBuffer(file);
@@ -2952,22 +2952,22 @@ function handleAgingFile(file) {
 
 function downloadAgingResults() {
   const now = new Date();
-  const bucketOrder = ['未到期','1-30天','31-60天','61-90天','90天以上'];
-  const rows = [['客户名称','发票号','发票日期','金额','账期(天)','逾期天数','账龄区间']];
+  const bucketOrder = ['鏈埌鏈?,'1-30澶?,'31-60澶?,'61-90澶?,'90澶╀互涓?];
+  const rows = [['瀹㈡埛鍚嶇О','鍙戠エ鍙?,'鍙戠エ鏃ユ湡','閲戦','璐︽湡(澶?','閫炬湡澶╂暟','璐﹂緞鍖洪棿']];
   arItems.forEach(item => {
     const dueDate = new Date(item.invoiceDate); dueDate.setDate(dueDate.getDate() + item.terms);
     const daysOverdue = Math.floor((now - dueDate) / (1000 * 60 * 60 * 24));
     let bucket;
-    if (daysOverdue <= 0) bucket = '未到期';
-    else if (daysOverdue <= 30) bucket = '1-30天';
-    else if (daysOverdue <= 60) bucket = '31-60天';
-    else if (daysOverdue <= 90) bucket = '61-90天';
-    else bucket = '90天以上';
+    if (daysOverdue <= 0) bucket = '鏈埌鏈?;
+    else if (daysOverdue <= 30) bucket = '1-30澶?;
+    else if (daysOverdue <= 60) bucket = '31-60澶?;
+    else if (daysOverdue <= 90) bucket = '61-90澶?;
+    else bucket = '90澶╀互涓?;
     rows.push([item.customer, item.invoiceNo, item.invoiceDate, item.amount, item.terms, daysOverdue, bucket]);
   });
   const ws = XLSX.utils.aoa_to_sheet(rows);
-  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, '账龄分析');
-  XLSX.writeFile(wb, '应收账龄分析结果.xlsx');
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, '璐﹂緞鍒嗘瀽');
+  XLSX.writeFile(wb, '搴旀敹璐﹂緞鍒嗘瀽缁撴灉.xlsx');
 }
 
 function setupFileDrop(zoneId, handler) {
@@ -3006,7 +3006,8 @@ function toggleAIChat() {
   overlay.classList.toggle('open');
   btn.classList.toggle('chat-open');
   if (overlay.classList.contains('open')) {
-    const key = localStorage.getItem('anthropic_api_key');
+    const key = localStorage.getItem('ai_api_key');
+    const provider = localStorage.getItem('ai_provider') || 'anthropic';
     const pwGate = document.getElementById('chat-pw-gate');
     const keyBar = document.getElementById('apikey-bar');
     const sendBtn = document.getElementById('chat-send-btn');
@@ -3014,7 +3015,7 @@ function toggleAIChat() {
     if (key) {
       pwGate.classList.add('hidden');
       keyBar.classList.add('hidden');
-      document.getElementById('chat-api-key').value = '★★★★★★★★★★★★★★★★';
+      document.getElementById('chat-api-key').value = '鈽呪槄鈽呪槄鈽呪槄鈽呪槄鈽呪槄鈽呪槄鈽呪槄鈽呪槄';
       sendBtn.disabled = false;
       textarea.disabled = false;
       textarea.focus();
@@ -3045,12 +3046,14 @@ function verifyChatPassword() {
 
 function saveApiKey() {
   const input = document.getElementById('chat-api-key');
+  const provider = document.getElementById('chat-provider').value;
   const key = input.value.trim();
-  if (!key || !key.startsWith('sk-ant-')) {
-    alert('请输入有效的 Anthropic API Key（以 sk-ant- 开头）');
+  if (!key) {
+    alert('璇疯緭鍏?API Key');
     return;
   }
-  localStorage.setItem('anthropic_api_key', key);
+  localStorage.setItem('ai_provider', provider);
+  localStorage.setItem('ai_api_key', key);
   document.getElementById('apikey-bar').classList.add('hidden');
   document.getElementById('chat-send-btn').disabled = false;
   document.getElementById('chat-input').disabled = false;
@@ -3079,9 +3082,10 @@ async function sendChatMessage() {
   textarea.value = '';
   textarea.style.height = 'auto';
 
-  const key = localStorage.getItem('anthropic_api_key');
-  if (!key || !key.startsWith('sk-ant-')) {
-    addChatMessage('system', '⚠️ 请先设置有效的 Anthropic API Key');
+  const key = localStorage.getItem('ai_api_key');
+  const provider = localStorage.getItem('ai_provider') || 'anthropic';
+  if (!key) {
+    addChatMessage('system', '鈿狅笍 璇峰厛璁剧疆 API Key');
     document.getElementById('apikey-bar').classList.remove('hidden');
     return;
   }
@@ -3102,31 +3106,71 @@ async function sendChatMessage() {
   const history = chatMessages.slice(-20);
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
+    // Build API request based on provider
+    let url, reqHeaders, reqBody;
+
+    if (provider === 'anthropic') {
+      url = 'https://api.anthropic.com/v1/messages';
+      reqHeaders = {
         'Content-Type': 'application/json',
         'x-api-key': key,
         'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
+      };
+      reqBody = {
         model: 'claude-sonnet-4-20250514',
         max_tokens: 4096,
         messages: history
-      })
+      };
+    } else if (provider === 'deepseek') {
+      url = 'https://api.deepseek.com/v1/chat/completions';
+      reqHeaders = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + key
+      };
+      reqBody = {
+        model: 'deepseek-chat',
+        max_tokens: 4096,
+        messages: history
+      };
+    } else {
+      // OpenRouter
+      url = 'https://openrouter.ai/api/v1/chat/completions';
+      reqHeaders = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + key
+      };
+      reqBody = {
+        model: 'deepseek/deepseek-chat-v3-0324:free',
+        max_tokens: 4096,
+        messages: history
+      };
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: reqHeaders,
+      body: JSON.stringify(reqBody)
     });
     const data = await response.json();
     removeTypingIndicator();
     if (data.error) {
-      addChatMessage('system', '❌ ' + (data.error.message || 'API 请求失败'));
+      addChatMessage('system', '鉂?' + (data.error.message || 'API 璇锋眰澶辫触'));
     } else {
-      const reply = data.content[0].text;
+      // Handle both Anthropic and OpenAI response formats
+      let reply;
+      if (data.content && Array.isArray(data.content)) {
+        reply = data.content[0].text;  // Anthropic format
+      } else if (data.choices && data.choices.length > 0) {
+        reply = data.choices[0].message.content;  // OpenAI format
+      } else {
+        reply = JSON.stringify(data);
+      }
       addChatMessage('assistant', reply);
       chatMessages.push({ role: 'assistant', content: reply });
     }
   } catch (err) {
     removeTypingIndicator();
-    addChatMessage('system', '❌ 网络错误: ' + err.message);
+    addChatMessage('system', '鉂?缃戠粶閿欒: ' + err.message);
   } finally {
     isChatSending = false;
     document.getElementById('chat-send-btn').disabled = false;
@@ -3183,3 +3227,4 @@ function endDrag() {
 </script>
 </body>
 </html>
+
