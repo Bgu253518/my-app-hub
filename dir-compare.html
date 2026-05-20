@@ -594,8 +594,10 @@ function makeSheetWithMeta(data, columns, pathColKey, rootPath, sheetName) {
   // columns: [{key, label, wch}]
   var colKeys = columns.map(function(c){ return c.key; });
   var colCount = columns.length;
-  var rootUri = rootPath ? 'file:///' + rootPath.replace(/\\/g, '/') : '';
-  var rootDisplay = rootPath ? '根目录：' + rootPath : '根目录：（未设置路径，超链接不可用）';
+  // Clean rootPath: trim, remove trailing slashes/backslashes
+  var cleanRoot = (rootPath || '').replace(/[\\\/]+$/, '').trim();
+  var hasRoot = !!cleanRoot;
+  var rootDisplay = hasRoot ? '根目录：' + cleanRoot : '根目录：（未设置路径，超链接不可用）';
   var dateStr = (function(){
     var d = new Date();
     return '生成日期：' + d.getFullYear() + '-' +
@@ -614,11 +616,18 @@ function makeSheetWithMeta(data, columns, pathColKey, rootPath, sheetName) {
 
   function cellRef(r, c) { return XLSX.utils.encode_cell({r:r, c:c}); }
 
-  // Row 0: Root directory
-  if (rootUri) {
-    // HYPERLINK formula for clickable link
+  // Helper: build absolute Windows path from the path value stored in data
+  // relPath uses forward slashes, cleanRoot uses backslashes — normalize to backslashes
+  function buildAbsPath(pathVal) {
+    if (!hasRoot) return String(pathVal);
+    var rel = String(pathVal).replace(/^[\\\/]+/, '').replace(/\//g, '\\');
+    return cleanRoot + '\\' + rel;
+  }
+
+  // Row 0: Root directory — plain Windows path in HYPERLINK
+  if (hasRoot) {
     ws[cellRef(0,0)] = {
-      t: 'n', f: 'HYPERLINK("' + rootUri + '","' + rootDisplay.replace(/"/g,'""') + '")'
+      t: 's', f: 'HYPERLINK("' + cleanRoot.replace(/"/g,'""') + '","' + rootDisplay.replace(/"/g,'""') + '")'
     };
   } else {
     ws[cellRef(0,0)] = { t: 's', v: rootDisplay };
@@ -641,12 +650,12 @@ function makeSheetWithMeta(data, columns, pathColKey, rootPath, sheetName) {
       if (val === undefined || val === null) return;
       var addr = cellRef(rowNum, ci);
 
-      if (rootUri && ci === pathColIdx) {
-        // HYPERLINK formula for path column — path value is already absolute
-        var pathStr = String(val);
-        var fileUri = 'file:///' + pathStr.replace(/\\/g, '/');
+      if (hasRoot && ci === pathColIdx) {
+        // HYPERLINK formula using plain Windows path (most reliable for Excel)
+        var absPath = buildAbsPath(val);
+        var displayPath = String(val).replace(/^[\\\/]+/, '');
         ws[addr] = {
-          t: 'n', f: 'HYPERLINK("' + fileUri + '","' + pathStr.replace(/"/g,'""') + '")'
+          t: 's', f: 'HYPERLINK("' + absPath.replace(/"/g,'""') + '","' + displayPath.replace(/"/g,'""') + '")'
         };
       } else if (typeof val === 'number') {
         ws[addr] = { t: 'n', v: val };
@@ -672,7 +681,8 @@ function makeSheetWithMeta(data, columns, pathColKey, rootPath, sheetName) {
 function exportScan() {
   if (!state.scanFiles || !state.scanFiles.length) return;
 
-  var rootPath = document.getElementById('scan-root-path').value.trim() || state.scanFolderName;
+  var rootInput = document.getElementById('scan-root-path').value.trim();
+  var rootPath = rootInput || state.scanFolderName;
   var data = state.scanFiles.map(function(f){
     return {
       '名称': f.name,
@@ -681,7 +691,7 @@ function exportScan() {
       '大小(KB)': f.sizeKB,
       '修改时间': f.lastModified,
       '最晚时间': f.latestTime,
-      '完整路径': rootPath + '/' + f.relPath,
+      '完整路径': f.relPath,  // relative; makeSheetWithMeta prepends rootPath for HYPERLINK
     };
   });
 
@@ -696,7 +706,7 @@ function exportScan() {
   ];
 
   var wb = XLSX.utils.book_new();
-  var ws = makeSheetWithMeta(data, columns, '完整路径', rootPath, '完整清单');
+  var ws = makeSheetWithMeta(data, columns, '完整路径', rootInput, '完整清单');
   XLSX.utils.book_append_sheet(wb, ws, '完整清单');
 
   // Stats sheet
@@ -1076,7 +1086,16 @@ function filterChanges(filter) {
 function exportCompare() {
   if (!state.compareResult) return;
   var result = state.compareResult;
-  var rootPath = document.getElementById('compare-root-path').value.trim() || state.compareFolderName;
+  var rootInput = document.getElementById('compare-root-path').value.trim();
+  var rootPath = rootInput || state.compareFolderName;
+
+  // Strip folder prefix from path to avoid double-path in HYPERLINK
+  var stripPrefix = state.compareFolderName + '\\';
+  function relPathFromCompare(p) {
+    if (typeof p !== 'string') return String(p);
+    var idx = p.toLowerCase().indexOf(stripPrefix.toLowerCase());
+    return idx === 0 ? p.substring(stripPrefix.length) : p;
+  }
 
   // Build comparison detail sheet
   var detailData = result.data.map(function(r){
@@ -1088,7 +1107,7 @@ function exportCompare() {
       '新大小(KB)': r.newSize !== undefined ? r.newSize : (r.sizeKB || ''),
       '原修改时间': r.oldMtime || '',
       '新修改时间': r.mtime || '',
-      '路径': r.path,
+      '路径': relPathFromCompare(r.path),
     };
     return row;
   });
@@ -1107,7 +1126,7 @@ function exportCompare() {
     {key:'路径', label:'路径', wch:60},
   ];
 
-  var ws = makeSheetWithMeta(detailData, detailCols, '路径', rootPath, '对比清单');
+  var ws = makeSheetWithMeta(detailData, detailCols, '路径', rootInput, '对比清单');
   XLSX.utils.book_append_sheet(wb, ws, '对比清单');
 
   // Sheet 2: 汇总
@@ -1134,13 +1153,17 @@ function exportCompare() {
 
   // Sheet 3: 新扫描完整清单 (with hyperlinks)
   var newFilesData = result.newData.map(function(f){
+    // Strip compareFolderName prefix from fullPath
+    var fp = f.fullPath || '';
+    var slashIdx = fp.indexOf('/');
+    var rel = slashIdx >= 0 ? fp.substring(slashIdx + 1) : fp;
     return {
       '名称': f.name,
       '上级文件夹路径': f.parentPath,
       '文件类型': f.type,
       '大小(KB)': f.sizeKB,
       '修改时间': f.lastModified,
-      '完整路径': f.fullPath,
+      '完整路径': rel,  // relative path only; makeSheetWithMeta prepends rootPath
     };
   });
   if (newFilesData.length) {
@@ -1152,7 +1175,7 @@ function exportCompare() {
       {key:'修改时间', label:'修改时间', wch:22},
       {key:'完整路径', label:'完整路径', wch:60},
     ];
-    var ws3 = makeSheetWithMeta(newFilesData, newCols, '完整路径', rootPath, '新扫描完整清单');
+    var ws3 = makeSheetWithMeta(newFilesData, newCols, '完整路径', rootInput, '新扫描完整清单');
     XLSX.utils.book_append_sheet(wb, ws3, '新扫描完整清单');
   }
 
