@@ -91,19 +91,6 @@
     "download": ""
   },
   {
-    "id": "offline-ai",
-    "name": "离线 AI 助手",
-    "shortDesc": "完全浏览器本地运行的 AI 文本处理助手，支持润色/翻译/总结/提取要点",
-    "fullDesc": "基于 Transformers.js 的纯浏览器端 AI 助手，所有处理在用户本地完成，不调用任何外部 API。使用 LaMini-Flan-T5-783M 模型，支持 WebGPU 加速或 WASM 回退。提供五种文本处理功能：润色改写、翻译成英文、翻译成中文、内容总结、提取要点。模型首次下载后支持完全断网使用，数据永不上传，保护用户隐私。",
-    "category": "gui",
-    "status": "done",
-    "version": "v1.0.0",
-    "icon": "🤖",
-    "onlineTool": true,
-    "github": "https://github.com/Bgu253518/my-app-hub",
-    "download": ""
-  },
-  {
     "id": "smart-todo",
     "name": "智能待办",
     "shortDesc": "AI 驱动的待办事项管理，支持桌面提醒、自然语言解析、导入导出",
@@ -255,6 +242,19 @@
     "status": "done",
     "version": "v1.0.0",
     "icon": "🗜️",
+    "onlineTool": true,
+    "github": "",
+    "download": ""
+  },
+  {
+    "id": "dir-compare",
+    "name": "文件目录扫描对比工具",
+    "shortDesc": "浏览器中扫描文件夹、对比新旧文件状态，新增/修改/删除一目了然",
+    "fullDesc": "纯浏览器端运行的文件目录扫描对比工具。使用 File System Access API 选择文件夹，自动递归扫描全部文件并提取名称、大小（KB）、修改时间、文件类型、相对路径等信息，支持按文件类型自动分类。对比模式下，可上传旧基准 Excel 文件或使用演示数据，与新扫描结果进行智能对比，自动识别新增（绿色）、已修改（橙色）、已删除（红色）、未变更（灰色）四种状态，并支持按状态筛选查看。统计卡片展示文件总数、类型分布、大小分段。支持导出带格式的 Excel 报告（含完整清单+汇总 Sheet；对比模式额外含对比清单+汇总+新扫描完整清单）。所有数据在浏览器本地处理，不上传任何服务器。",
+    "category": "gui",
+    "status": "done",
+    "version": "v1.0.0",
+    "icon": "📂",
     "onlineTool": true,
     "github": "",
     "download": ""

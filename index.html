@@ -281,67 +281,6 @@ textarea:focus-visible,
 }
 
 /* Floating AI button */
-.ai-float-btn {
-  position: fixed;
-  top: 88px; right: 24px;
-  z-index: 50;
-  width: 52px; height: 52px;
-  border-radius: 50%;
-  background: var(--accent-1);
-  color: #fff;
-  border: none;
-  font-size: 22px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 20px rgba(124, 92, 252, 0.35);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  text-decoration: none;
-}
-.ai-float-btn:hover {
-  transform: scale(1.08);
-  box-shadow: 0 6px 28px rgba(124, 92, 252, 0.5);
-  width: 56px; height: 56px;
-}
-.ai-float-btn:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
-
-.ai-tooltip {
-  position: fixed;
-  top: 96px; right: 82px;
-  z-index: 51;
-  background: rgba(22, 22, 44, 0.95);
-  border: 1px solid var(--glass-border);
-  border-radius: 8px;
-  padding: 6px 14px;
-  font-size: 12px;
-  color: var(--text-primary);
-  white-space: nowrap;
-  backdrop-filter: blur(10px);
-  pointer-events: none;
-  opacity: 0;
-  transform: translateX(8px);
-  transition: opacity 0.4s, transform 0.4s;
-}
-.ai-tooltip.show { opacity: 1; transform: translateX(0); }
-.ai-tooltip::after {
-  content: '';
-  position: absolute;
-  top: 50%; right: -5px;
-  transform: translateY(-50%);
-  border: 5px solid transparent;
-  border-left-color: rgba(22, 22, 44, 0.95);
-}
-
-@media (max-width: 640px) {
-  .usage-banner { flex-wrap: wrap; padding: 14px 16px; }
-  .usage-banner .banner-link { margin-left: 0; }
-  .usage-banner .banner-close { position: absolute; top: 10px; right: 10px; }
-  .banner-wrapper { padding: 10px 12px 0; }
-  .ai-float-btn { top: 80px; right: 12px; width: 44px; height: 44px; font-size: 18px; }
-  .ai-float-btn:hover { width: 48px; height: 48px; }
-  .ai-tooltip { top: 88px; right: 64px; }
-}
 .filter-tags-bar {
   position: relative; z-index: 1;
   display: flex;
@@ -1246,10 +1185,6 @@ textarea:focus-visible,
 <!-- ============ Main Content ============ -->
 <div id="main-content">
 
-<!-- AI Floating Button -->
-<button class="ai-float-btn" id="ai-float-btn" title="AI 助手" onclick="window.open('offline-ai.html','_self')">🤖</button>
-<div class="ai-tooltip" id="ai-tooltip">AI 助手</div>
-
 <!-- Navbar -->
 <nav class="navbar">
   <div class="nav-brand">
@@ -1471,7 +1406,7 @@ textarea:focus-visible,
 
 <script>
 /* ============ Configuration ============ */
-const DATA_URL = 'apps.json?v=7';
+const DATA_URL = 'apps.json?v=9';
 // 密码（base64 编码，运行时解码后直接对比，避免编码问题）
 const _k = 'R2xoQDI1MzUxOA==';
 
@@ -1550,7 +1485,6 @@ async function initApp() {
   bindEvents();
   initHeroParticles();
   initBannerClose();
-  initAiTooltip();
 }
 
 /* ============ Hero Particles ============ */
@@ -1585,14 +1519,6 @@ function initBannerClose() {
     banner.classList.add('hidden');
     localStorage.setItem('audit_banner_closed', '1');
   });
-}
-
-/* ============ AI Tooltip ============ */
-function initAiTooltip() {
-  var tooltip = document.getElementById('ai-tooltip');
-  if (!tooltip) return;
-  tooltip.classList.add('show');
-  setTimeout(function() { tooltip.classList.remove('show'); }, 5000);
 }
 
 /* ============ Manual PDF Download ============ */
@@ -1630,7 +1556,7 @@ function downloadManualPDF() {
 
 /* ============ Stats ============ */
 function updateStats() {
-  var visibleApps = apps.filter(function(a) { return a.id !== 'help' && a.id !== 'offline-ai'; });
+  var visibleApps = apps.filter(function(a) { return a.id !== 'help'; });
   document.getElementById('stat-total').textContent = visibleApps.length;
   document.getElementById('stat-done').textContent = visibleApps.filter(function(a) { return a.status === 'done'; }).length;
   document.getElementById('stat-wip').textContent = visibleApps.filter(function(a) { return a.status !== 'done'; }).length;
@@ -1643,7 +1569,7 @@ function renderCards() {
 
   const filtered = apps.filter(app => {
     // 隐藏卡片但保留代码
-    if (app.id === 'help' || app.id === 'offline-ai') return false;
+    if (app.id === 'help') return false;
     if (category !== 'all' && app.category !== category) return false;
     var tag = currentFilter.tag;
     if (tag === 'done' && app.status !== 'done') return false;
@@ -1882,7 +1808,6 @@ function openToolPanel(appId) {
     'data-cleaner': 'data-cleaner.html',
     'file-renamer': 'file-renamer.html',
     'claude-config': 'claude-setup-tool.html',
-    'offline-ai': 'offline-ai.html',
     'smart-todo': 'smart-todo.html',
     'word-checkbench': 'word-checkbench.html',
     'bkd-rollforward': 'bkd-rollforward.html',
@@ -1894,7 +1819,8 @@ function openToolPanel(appId) {
     'excel-merger': 'excel-merger.html',
     'file-collector': 'file-collector.html',
     'smart-filter': 'smart-filter.html',
-    'batch-unzip': 'batch-unzip.html'
+    'batch-unzip': 'batch-unzip.html',
+    'dir-compare': 'dir-compare.html'
   };
   if (externalPages[appId]) { window.open(externalPages[appId], '_self'); return; }
 

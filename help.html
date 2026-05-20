@@ -131,7 +131,7 @@ body {
 <div class="cover">
   <h1>📖 My App Hub 完整操作指引</h1>
   <div class="subtitle">顾力菡 · 应用工坊 — 全部已上线工具从 0 到 1 详细指南</div>
-  <div style="margin-top:8px;color:var(--text2)">涵盖 PDF 工具箱、图片压缩、数据清洗、审计抽凭、TB上数、BKD滚存、<br>Word上数校验、ROU测算、工时管理、文件重命名、离线AI 等全系列工具</div>
+  <div style="margin-top:8px;color:var(--text2)">涵盖 PDF 工具箱、图片压缩、数据清洗、审计抽凭、TB上数、BKD滚存、<br>Word上数校验、ROU测算、工时管理、文件重命名、文件目录扫描对比等全系列工具</div>
   <div class="version-badge">版本 v2.0 · 2026年5月</div>
   <div class="meta">全部工具均为纯浏览器端运行 · 数据永不离开您的电脑<br>GitHub: github.com/Bgu253518/my-app-hub</div>
 </div>
@@ -152,7 +152,7 @@ body {
     <li><a href="#ch-gdc">GDC 审计任务工时管理系统 — 任务/工时/分摊/仪表盘</a></li>
     <li><a href="#ch-audit-hub">审计项目工时任务协同系统 — 多角色/复核/归档</a></li>
     <li><a href="#ch-claude">Claude Code 个人配置 — 一键配置第三方 API</a></li>
-    <li><a href="#ch-offline-ai">离线 AI 助手 — 纯本地润色/翻译/总结/提取</a></li>
+    <li><a href="#ch-dir-compare">文件目录扫描对比工具 — 新增/修改/删除一目了然</a></li>
     <li><a href="#ch-smart-todo">智能待办 — AI 解析/桌面提醒/导入导出</a></li>
   </ol>
 </div>
@@ -529,33 +529,41 @@ body {
 </div>
 
 <!-- ====================================================================== -->
-<!-- 13. 离线 AI 助手 -->
+<!-- 13. 文件目录扫描对比工具 -->
 <!-- ====================================================================== -->
-<div class="tool-chapter" id="ch-offline-ai">
+<div class="tool-chapter" id="ch-dir-compare">
 <div class="chapter-header">
-  <span class="ch-icon">🤖</span>
-  <h2>13. 离线 AI 助手</h2>
-  <div class="ch-desc">基于 Transformers.js 的纯浏览器端 AI 文本处理 — 润色、翻译、总结、提取，完全离线运行</div>
+  <span class="ch-icon">📂</span>
+  <h2>13. 文件目录扫描对比工具</h2>
+  <div class="ch-desc">浏览器中扫描文件夹、对比新旧文件状态，新增/修改/删除一目了然，支持导出 Excel 报告</div>
 </div>
-<div class="info-box"><strong>🔒 完全离线</strong>AI 模型首次下载后缓存到浏览器，之后可完全断网使用。所有文本处理在本地完成，数据永不外传。</div>
-<h3>支持的功能</h3>
+<div class="info-box"><strong>🔐 本地运行</strong>使用浏览器 File System Access API 读取文件夹信息，所有文件数据在浏览器本地处理，不上传任何服务器。</div>
+<h3>扫描模式</h3>
 <table class="param-table">
-  <tr><th>功能</th><th>输入</th><th>输出</th></tr>
-  <tr><td>✨ 润色改写</td><td>原始文本（中/英）</td><td>语言流畅的改写版本</td></tr>
-  <tr><td>🌐 翻译成英文</td><td>中文文本</td><td>英文翻译</td></tr>
-  <tr><td>🌐 翻译成中文</td><td>英文文本</td><td>中文翻译</td></tr>
-  <tr><td>📝 内容总结</td><td>长文本</td><td>一段简洁摘要</td></tr>
-  <tr><td>🔑 提取要点</td><td>长文本</td><td>要点列表</td></tr>
+  <tr><th>功能</th><th>说明</th></tr>
+  <tr><td>📁 选择文件夹</td><td>点击选择要扫描的文件夹，浏览器会请求读取权限</td></tr>
+  <tr><td>📊 扫描统计</td><td>自动统计文件总数、总大小、文件类型分布、大小分段</td></tr>
+  <tr><td>📄 文件清单</td><td>完整列出所有文件（名称、类型、大小、修改时间、路径）</td></tr>
+  <tr><td>📥 导出 Excel</td><td>导出为带格式的 Excel 文件（含完整清单 Sheet + 汇总 Sheet）</td></tr>
+</table>
+<h3>对比模式</h3>
+<table class="param-table">
+  <tr><th>功能</th><th>说明</th></tr>
+  <tr><td>🆕 新增</td><td>旧基准中没有、新扫描中出现的新文件（绿色标识）</td></tr>
+  <tr><td>🟠 已修改</td><td>大小或修改时间发生变化的文件（橙色标识）</td></tr>
+  <tr><td>🔴 已删除</td><td>旧基准中有、新扫描中已不存在的文件（红色标识）</td></tr>
+  <tr><td>⚪ 未变更</td><td>两次扫描中完全一致的文件（灰色标识）</td></tr>
 </table>
 <h3>操作步骤</h3>
 <ol class="step-list">
-  <li><strong>等待模型加载</strong><p>首次打开页面时，系统会自动下载 AI 模型（约 400MB）。加载进度显示在状态栏。模型缓存后可离线使用。</p></li>
-  <li><strong>选择功能</strong><p>点击功能按钮：润色改写 / 翻译成英文 / 翻译成中文 / 内容总结 / 提取要点。</p></li>
-  <li><strong>输入文本</strong><p>在文本框中粘贴或输入需要处理的文本。无字数限制，但建议不超过 5000 字以保证响应速度。</p></li>
-  <li><strong>点击处理</strong><p>点击对应按钮，等待几秒到几十秒（取决于文本长度和设备性能）。支持 WebGPU 加速（Chrome 113+）。</p></li>
-  <li><strong>查看结果</strong><p>处理结果展示在右侧面板。可复制结果或继续修改输入文本后重新处理。</p></li>
+  <li><strong>选择模式</strong><p>在「扫描模式」和「对比模式」之间切换。简单查看文件结构选择扫描模式；需要对比变化选择对比模式。</p></li>
+  <li><strong>选择文件夹</strong><p>点击选择文件夹按钮，在弹出的对话框中选取要扫描的文件夹。浏览器会请求读取权限，请允许。</p></li>
+  <li><strong>开始扫描</strong><p>点击「开始扫描」按钮，工具会递归遍历文件夹中所有文件。文件数量越多耗时越长，进度条显示处理进度。</p></li>
+  <li><strong>查看结果</strong><p>扫描完成后自动显示统计卡片和文件清单表格。表格列可排序（点击表头），路径列支持悬停查看完整路径。</p></li>
+  <li><strong>对比分析</strong><p>对比模式下，先上传之前扫描导出的 Excel 文件作为旧基准，再扫描新文件夹，自动识别新增、修改、删除、未变更四种状态。支持按状态筛选查看。</p></li>
+  <li><strong>导出报告</strong><p>点击「导出 Excel」下载带格式的 Excel 报告。扫描模式：完整清单 + 汇总；对比模式：对比清单 + 汇总 + 新扫描完整清单。</p></li>
 </ol>
-<div class="info-box"><strong>⚡ 性能说明</strong>使用 LaMini-Flan-T5-783M 模型。WebGPU 加速下处理速度最快，CPU WASM 回退模式较慢但兼容性更好。首次加载需下载模型，后续即开即用。</div>
+<div class="info-box"><strong>⚠️ 浏览器要求</strong>需要使用 Chrome 86+ 或 Edge 86+ 浏览器，较旧浏览器不支持文件夹选择功能。扫描大量文件（超过 5000 个）时可能需要较长时间，请耐心等待。</div>
 </div>
 
 <!-- ====================================================================== -->

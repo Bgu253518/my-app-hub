@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文件目录扫描对比工具</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-deep: #0a0a14;
+  --bg-card: rgba(22, 22, 44, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --text-primary: #e8e8f0;
+  --text-secondary: #9999b0;
+  --accent-1: #7c5cfc;
+  --accent-2: #5cfca0;
+  --accent-3: #fc5c9c;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --transition: 0.2s ease;
+  --green: #2ea043;
+  --red: #da3633;
+  --orange: #d29922;
+  --gray: #484f58;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: linear-gradient(160deg, #0a0a14 0%, #12122a 30%, #16163a 60%, #0d0d24 100%);
+  color: var(--text-primary); min-height: 100vh; line-height: 1.6;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 20% 20%, rgba(124, 92, 252, 0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 60%, rgba(252, 92, 156, 0.04) 0%, transparent 50%);
+  pointer-events: none; z-index: 0;
+}
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(124, 92, 252, 0.25); border-radius: 3px; }
+
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10, 10, 20, 0.8); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 0 24px; height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header .brand { font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+.header .brand a { color: var(--text-secondary); text-decoration: none; font-size: 13px; transition: var(--transition); }
+.header .brand a:hover { color: var(--text-primary); }
+
+.main { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 20px 16px; }
+
+/* Cards */
+.card {
+  background: var(--bg-card); border: 1px solid var(--glass-border);
+  border-radius: var(--radius); padding: 20px; margin-bottom: 16px;
+  backdrop-filter: blur(10px);
+}
+.card-title { font-size: 15px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+
+/* Mode Switch */
+.mode-switch { display: flex; gap: 0; margin-bottom: 16px; }
+.mode-btn {
+  flex: 1; padding: 10px 20px; border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.03); color: var(--text-secondary);
+  font-size: 14px; font-weight: 600; cursor: pointer; transition: var(--transition);
+}
+.mode-btn:first-child { border-radius: 8px 0 0 8px; }
+.mode-btn:last-child { border-radius: 0 8px 8px 0; }
+.mode-btn.active { background: var(--accent-1); color: #fff; border-color: var(--accent-1); }
+.mode-btn:hover:not(.active) { background: rgba(124, 92, 252, 0.15); }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 20px; border: none; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: var(--transition); text-decoration: none;
+}
+.btn-primary { background: var(--accent-1); color: #fff; }
+.btn-primary:hover { background: #6a4de6; }
+.btn-success { background: var(--green); color: #fff; }
+.btn-success:hover { background: #238636; }
+.btn-danger { background: var(--red); color: #fff; }
+.btn-danger:hover { background: #bd2c2a; }
+.btn-ghost { background: rgba(255,255,255,0.06); color: var(--text-secondary); }
+.btn-ghost:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Form */
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: var(--text-secondary); }
+.form-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+.hidden-input { display: none; }
+
+/* Stats */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.stat-card {
+  background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm); padding: 12px; text-align: center;
+}
+.stat-card .num { font-size: 22px; font-weight: 800; }
+.stat-card .label { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+.stat-card.green .num { color: var(--green); }
+.stat-card.red .num { color: var(--red); }
+.stat-card.orange .num { color: var(--orange); }
+.stat-card.gray .num { color: var(--gray); }
+.stat-card.blue .num { color: var(--accent-1); }
+
+/* Table */
+.table-wrap {
+  overflow: auto; max-height: 500px;
+  border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+}
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+thead { position: sticky; top: 0; z-index: 2; }
+th {
+  background: #1a1a3a; color: var(--text-secondary); font-weight: 600;
+  padding: 8px 10px; text-align: left; white-space: nowrap;
+  border-bottom: 1px solid var(--glass-border);
+}
+td { padding: 6px 10px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+tr:hover td { background: rgba(124, 92, 252, 0.06); }
+tr.row-new td { background: rgba(46, 160, 67, 0.08); }
+tr.row-modified td { background: rgba(210, 153, 34, 0.08); }
+tr.row-removed td { background: rgba(218, 54, 51, 0.08); }
+tr.row-new:hover td, tr.row-modified:hover td, tr.row-removed:hover td { filter: brightness(1.2); }
+.text-right { text-align: right; }
+.text-mono { font-family: Consolas, monospace; font-size: 11px; }
+
+/* Badge */
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 10px;
+  font-size: 11px; font-weight: 600;
+}
+.badge-green { background: rgba(46, 160, 67, 0.2); color: var(--green); }
+.badge-red { background: rgba(218, 54, 51, 0.2); color: var(--red); }
+.badge-orange { background: rgba(210, 153, 34, 0.2); color: var(--orange); }
+.badge-gray { background: rgba(72, 79, 88, 0.3); color: #8b949e; }
+.badge-blue { background: rgba(124, 92, 252, 0.2); color: var(--accent-1); }
+
+/* Log */
+.log-box {
+  background: #0d0d20; border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm); padding: 12px; font-family: Consolas, monospace;
+  font-size: 12px; color: #5cfca0; max-height: 200px; overflow: auto;
+  line-height: 1.7;
+}
+.log-box .log-error { color: var(--red); }
+.log-box .log-warn { color: var(--orange); }
+.log-box .log-info { color: var(--accent-1); }
+
+/* Progress */
+.progress-wrap { height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; margin: 8px 0; overflow: hidden; }
+.progress-bar { height: 100%; background: var(--accent-1); width: 0%; border-radius: 2px; transition: width 0.3s; }
+
+/* Pick zone */
+.pick-zone {
+  border: 2px dashed var(--glass-border); border-radius: var(--radius-sm);
+  padding: 24px; text-align: center; cursor: pointer;
+  transition: var(--transition); margin-bottom: 12px;
+}
+.pick-zone:hover, .pick-zone.dragover { border-color: var(--accent-1); background: rgba(124, 92, 252, 0.06); }
+.pick-zone .icon { font-size: 32px; margin-bottom: 8px; }
+.pick-zone .hint { font-size: 12px; color: var(--text-secondary); }
+
+/* Checkbox group */
+.checkbox-group { display: flex; gap: 16px; flex-wrap: wrap; margin: 8px 0; }
+.checkbox-group label { display: flex; align-items: center; gap: 5px; font-size: 13px; cursor: pointer; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: #1a1a3a; border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm); padding: 10px 20px;
+  font-size: 13px; z-index: 999;
+  opacity: 0; transition: opacity 0.3s; pointer-events: none;
+}
+.toast.show { opacity: 1; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .main { padding: 12px; }
+  .stats-grid { grid-template-columns: repeat(3, 1fr); }
+  .form-row { flex-direction: column; }
+  .form-row .btn { width: 100%; justify-content: center; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">
+    <span>📂 文件目录扫描对比工具</span>
+    <a href="index.html">← 返回工坊</a>
+  </div>
+  <div style="font-size:12px;color:var(--text-secondary)">浏览器本地运行 · 不上传任何数据</div>
+</div>
+
+<div class="main" id="app">
+
+  <!-- Mode Switch -->
+  <div class="mode-switch">
+    <button class="mode-btn active" data-mode="scan" onclick="switchMode('scan')">📋 扫描模式</button>
+    <button class="mode-btn" data-mode="compare" onclick="switchMode('compare')">🔍 对比模式</button>
+  </div>
+
+  <!-- Scan Mode -->
+  <div id="scan-mode">
+
+    <!-- Folder pick -->
+    <div class="card">
+      <div class="card-title">📁 选择文件夹</div>
+      <div class="pick-zone" onclick="pickFolder()">
+        <div class="icon">📂</div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:4px">点击选择要扫描的文件夹</div>
+        <div class="hint">支持 Chrome / Edge 浏览器 · 会读取文件名称、大小、修改时间等信息</div>
+      </div>
+      <div id="scan-folder-path" style="font-size:12px;color:var(--text-secondary);margin-top:8px;"></div>
+      <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="startScan()" id="scan-btn" disabled>▶ 开始扫描</button>
+        <button class="btn btn-ghost" onclick="exportScan()" id="export-btn" disabled>📥 导出 Excel</button>
+        <button class="btn btn-ghost" onclick="resetScan()">🔄 重新选择</button>
+      </div>
+      <div class="progress-wrap" id="scan-progress-wrap" style="display:none"><div class="progress-bar" id="scan-progress-bar"></div></div>
+    </div>
+
+    <!-- Scan Stats -->
+    <div class="card" id="scan-stats-card" style="display:none;">
+      <div class="card-title">📊 扫描统计</div>
+      <div class="stats-grid" id="scan-stats"></div>
+    </div>
+
+    <!-- Scan Table -->
+    <div class="card" id="scan-table-card" style="display:none;">
+      <div class="card-title" style="justify-content:space-between">
+        <span>📄 文件清单</span>
+        <span id="scan-count" style="font-size:12px;color:var(--text-secondary)"></span>
+      </div>
+      <div class="table-wrap" id="scan-table-wrap"></div>
+    </div>
+  </div>
+
+  <!-- Compare Mode -->
+  <div id="compare-mode" style="display:none;">
+
+    <!-- New folder pick -->
+    <div class="card">
+      <div class="card-title">📁 选择新扫描文件夹</div>
+      <div class="pick-zone" onclick="pickCompareFolder()">
+        <div class="icon">📂</div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:4px">点击选择最新版本文件夹</div>
+        <div class="hint">读取当前最新文件状态</div>
+      </div>
+      <div id="compare-folder-path" style="font-size:12px;color:var(--text-secondary);margin-top:8px;"></div>
+    </div>
+
+    <!-- Old baseline upload -->
+    <div class="card">
+      <div class="card-title">📄 上传旧基准表</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">上传之前扫描导出的 Excel 文件，与新扫描结果进行对比</div>
+      <input type="file" accept=".xlsx,.xls,.json" id="old-file-input" class="hidden-input" onchange="loadOldFile(event)">
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-ghost" onclick="document.getElementById('old-file-input').click()">📤 选择旧基准文件</button>
+        <button class="btn btn-ghost" onclick="loadDemoFile()" id="demo-btn">📋 加载演示数据</button>
+      </div>
+      <div id="old-file-info" style="font-size:12px;color:var(--text-secondary);margin-top:8px;"></div>
+    </div>
+
+    <!-- Compare action -->
+    <div class="card" id="compare-action-card" style="display:none;">
+      <div class="card-title">🔍 执行对比</div>
+      <div id="compare-ready" style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="startCompare()" id="compare-btn">🔍 开始对比</button>
+        <button class="btn btn-ghost" onclick="exportCompare()" id="export-compare-btn" disabled>📥 导出对比报告</button>
+        <button class="btn btn-ghost" onclick="resetCompare()">🔄 重置</button>
+      </div>
+      <div class="progress-wrap" id="compare-progress-wrap" style="display:none"><div class="progress-bar" id="compare-progress-bar"></div></div>
+    </div>
+
+    <!-- Compare Results -->
+    <div class="card" id="compare-results-card" style="display:none;">
+      <div class="card-title">📊 对比结果</div>
+      <div class="stats-grid" id="compare-stats"></div>
+    </div>
+
+    <!-- Changes Summary -->
+    <div class="card" id="changes-card" style="display:none;">
+      <div class="card-title">📋 变更清单</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+        <button class="btn btn-ghost active-filter" data-filter="all" onclick="filterChanges('all')">全部</button>
+        <button class="btn btn-ghost" data-filter="new" onclick="filterChanges('new')">🟢 新增</button>
+        <button class="btn btn-ghost" data-filter="modified" onclick="filterChanges('modified')">🟠 已修改</button>
+        <button class="btn btn-ghost" data-filter="removed" onclick="filterChanges('removed')">🔴 已删除</button>
+        <button class="btn btn-ghost" data-filter="unchanged" onclick="filterChanges('unchanged')">⚪ 未变更</button>
+        <span id="filter-count" style="font-size:12px;color:var(--text-secondary);margin-left:auto;align-self:center;"></span>
+      </div>
+      <div class="table-wrap" id="compare-table-wrap"></div>
+    </div>
+  </div>
+
+  <!-- Log -->
+  <div class="card">
+    <div class="card-title">📝 运行日志</div>
+    <div class="log-box" id="log-box">就绪</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== State =====
+var state = {
+  mode: 'scan',
+  scanFolderHandle: null,
+  scanFolderName: '',
+  scanFiles: [],      // [{name, relPath, size, type, lastModified, ...}]
+  scanResult: null,   // {data, fileTypeMap, stats}
+
+  compareFolderHandle: null,
+  compareFolderName: '',
+  compareNewFiles: [],
+  oldData: null,      // parsed old Excel data
+  compareResult: null,// {newData, oldData, stats, changes}
+};
+
+// ===== File Type Map =====
+var FILE_TYPES = {
+  '.xlsx':'Excel','.xls':'Excel','.xlsm':'Excel','.xlsb':'Excel',
+  '.docx':'Word','.doc':'Word','.docm':'Word',
+  '.pptx':'PPT','.ppt':'PPT','.pptm':'PPT',
+  '.pdf':'PDF','.txt':'文本','.csv':'CSV','.rtf':'RTF',
+  '.jpg':'图片','.jpeg':'图片','.png':'图片','.gif':'图片','.bmp':'图片',
+  '.tiff':'图片','.tif':'图片','.webp':'图片','.svg':'图片','.ico':'图标',
+  '.zip':'压缩包','.rar':'压缩包','.7z':'压缩包','.tar':'压缩包','.gz':'压缩包','.bz2':'压缩包',
+  '.mp3':'音频','.wav':'音频','.flac':'音频','.m4a':'音频',
+  '.mp4':'视频','.avi':'视频','.mkv':'视频','.mov':'视频',
+  '.msg':'邮件','.eml':'邮件','.pst':'邮件',
+  '.py':'代码','.js':'代码','.html':'网页','.htm':'网页','.css':'样式',
+  '.json':'JSON','.xml':'XML','.ini':'配置','.cfg':'配置','.yaml':'配置','.yml':'配置',
+  '.db':'数据库','.sqlite':'数据库','.sql':'SQL'
+};
+
+function getFileType(name) {
+  var ext = name.substring(name.lastIndexOf('.')).toLowerCase();
+  return FILE_TYPES[ext] || ext.replace('.','').toUpperCase() || '未知';
+}
+
+// ===== Log =====
+function log(msg, type) {
+  var box = document.getElementById('log-box');
+  var div = document.createElement('div');
+  div.className = type ? 'log-' + type : '';
+  div.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function clearLog() {
+  document.getElementById('log-box').innerHTML = '';
+}
+
+function showToast(msg, duration) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function(){ t.classList.remove('show'); }, duration || 2500);
+}
+
+// ===== Mode Switch =====
+function switchMode(mode) {
+  state.mode = mode;
+  document.querySelectorAll('.mode-btn').forEach(function(b){
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  document.getElementById('scan-mode').style.display = mode === 'scan' ? '' : 'none';
+  document.getElementById('compare-mode').style.display = mode === 'compare' ? '' : 'none';
+}
+
+// ===== Folder Picker =====
+async function pickFolder() {
+  try {
+    if (!window.showDirectoryPicker) {
+      showToast('您的浏览器不支持文件夹选择功能，请使用 Chrome/Edge 浏览器');
+      return;
+    }
+    var handle = await window.showDirectoryPicker();
+    state.scanFolderHandle = handle;
+    state.scanFolderName = handle.name;
+    document.getElementById('scan-folder-path').textContent = '已选择: ' + handle.name;
+    document.getElementById('scan-btn').disabled = false;
+    log('已选择文件夹: ' + handle.name);
+  } catch (e) {
+    if (e.name !== 'AbortError') {
+      log('选择文件夹失败: ' + e.message, 'error');
+    }
+  }
+}
+
+async function pickCompareFolder() {
+  try {
+    if (!window.showDirectoryPicker) {
+      showToast('您的浏览器不支持文件夹选择功能');
+      return;
+    }
+    var handle = await window.showDirectoryPicker();
+    state.compareFolderHandle = handle;
+    state.compareFolderName = handle.name;
+    document.getElementById('compare-folder-path').textContent = '已选择: ' + handle.name;
+    log('已选择对比文件夹: ' + handle.name);
+    checkCompareReady();
+  } catch (e) {
+    if (e.name !== 'AbortError') {
+      log('选择文件夹失败: ' + e.message, 'error');
+    }
+  }
+}
+
+// ===== Scan Implementation =====
+async function* walkDir(handle, relPath) {
+  for await (var entry of handle.values()) {
+    var childRel = relPath ? relPath + '/' + entry.name : entry.name;
+    if (entry.kind === 'directory') {
+      yield* walkDir(entry, childRel);
+    } else {
+      yield { handle: entry, relPath: childRel };
+    }
+  }
+}
+
+async function startScan() {
+  if (!state.scanFolderHandle) return;
+  var btn = document.getElementById('scan-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ 扫描中...';
+  clearLog();
+
+  var progressWrap = document.getElementById('scan-progress-wrap');
+  var progressBar = document.getElementById('scan-progress-bar');
+  progressWrap.style.display = '';
+
+  var files = [];
+  var count = 0;
+
+  try {
+    log('开始扫描: ' + state.scanFolderName);
+    var startTime = Date.now();
+
+    // First pass: collect all entries to count total
+    var allEntries = [];
+    for await (var entry of walkDir(state.scanFolderHandle, '')) {
+      allEntries.push(entry);
+    }
+    var total = allEntries.length;
+    log('共发现 ' + total + ' 个文件');
+
+    // Second pass: read metadata
+    for (var i = 0; i < allEntries.length; i++) {
+      var ent = allEntries[i];
+      try {
+        var file = await ent.handle.getFile();
+        var sizeKB = Math.round(file.size / 10.24) / 100;
+        var mtime = new Date(file.lastModified);
+        var ctime = mtime; // Browser API doesn't give creation time
+        var latest = mtime > ctime ? mtime : ctime;
+
+        files.push({
+          name: file.name,
+          relPath: ent.relPath,
+          parentPath: ent.relPath.indexOf('/') >= 0 ? ent.relPath.substring(0, ent.relPath.lastIndexOf('/')) : '',
+          type: getFileType(file.name),
+          sizeKB: sizeKB,
+          sizeBytes: file.size,
+          lastModified: formatDate(mtime),
+          latestTime: formatDate(latest),
+          fullPath: state.scanFolderName + '/' + ent.relPath,
+        });
+        count++;
+
+        if (count % 200 === 0 || count === total) {
+          progressBar.style.width = Math.round(count / total * 100) + '%';
+          log('  已处理 ' + count + '/' + total + ' 个文件...');
+        }
+      } catch (e) {
+        // skip files that can't be read
+      }
+    }
+
+    var elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+    log('扫描完成: ' + files.length + ' 个文件, 耗时 ' + elapsed + 's', 'info');
+
+    state.scanFiles = files;
+    state.scanResult = { data: files, total: files.length };
+
+    // Show stats
+    showScanStats(files);
+    showScanTable(files);
+
+    document.getElementById('export-btn').disabled = false;
+    progressBar.style.width = '100%';
+    showToast('扫描完成! 共 ' + files.length + ' 个文件');
+
+  } catch (e) {
+    log('扫描出错: ' + e.message, 'error');
+    showToast('扫描失败', 3000);
+  }
+
+  btn.disabled = false;
+  btn.textContent = '▶ 开始扫描';
+  setTimeout(function(){ progressWrap.style.display = 'none'; }, 1500);
+}
+
+function showScanStats(files) {
+  // File type distribution
+  var typeCount = {};
+  files.forEach(function(f){ typeCount[f.type] = (typeCount[f.type] || 0) + 1; });
+
+  // Size categories
+  var small = 0, medium = 0, large = 0, huge = 0;
+  files.forEach(function(f){
+    if (f.sizeKB < 100) small++;
+    else if (f.sizeKB < 1024) medium++;
+    else if (f.sizeKB < 10240) large++;
+    else huge++;
+  });
+
+  var totalSizeKB = files.reduce(function(s,f){ return s + f.sizeKB; }, 0);
+  var totalSizeMB = (totalSizeKB / 1024).toFixed(2);
+
+  document.getElementById('scan-stats-card').style.display = '';
+  document.getElementById('scan-stats').innerHTML =
+    '<div class="stat-card blue"><div class="num">' + files.length + '</div><div class="label">文件总数</div></div>' +
+    '<div class="stat-card blue"><div class="num">' + totalSizeMB + ' MB</div><div class="label">总大小</div></div>' +
+    '<div class="stat-card blue"><div class="num">' + Object.keys(typeCount).length + '</div><div class="label">文件类型数</div></div>' +
+    '<div class="stat-card blue"><div class="num">' + small + '</div><div class="label">&lt;100KB</div></div>' +
+    '<div class="stat-card blue"><div class="num">' + medium + '</div><div class="label">100KB~1MB</div></div>' +
+    '<div class="stat-card blue"><div class="num">' + (large + huge) + '</div><div class="label">&gt;1MB</div></div>';
+
+  // Type distribution
+  var typeHtml = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;">';
+  Object.keys(typeCount).sort().forEach(function(t){
+    typeHtml += '<span class="badge badge-blue">' + t + ': ' + typeCount[t] + '</span>';
+  });
+  typeHtml += '</div>';
+  document.getElementById('scan-stats').insertAdjacentHTML('beforeend', typeHtml);
+}
+
+function showScanTable(files) {
+  document.getElementById('scan-table-card').style.display = '';
+  document.getElementById('scan-count').textContent = '共 ' + files.length + ' 项';
+
+  var html = '<table><thead><tr>' +
+    '<th>名称</th><th>类型</th><th style="text-align:right">大小(KB)</th><th>修改时间</th><th>路径</th>' +
+    '</tr></thead><tbody>';
+
+  files.forEach(function(f){
+    html += '<tr>' +
+      '<td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(f.name) + '">' + esc(f.name) + '</td>' +
+      '<td><span class="badge badge-blue">' + f.type + '</span></td>' +
+      '<td class="text-right text-mono">' + f.sizeKB.toFixed(2) + '</td>' +
+      '<td class="text-mono">' + f.lastModified + '</td>' +
+      '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-secondary)" title="' + esc(f.relPath) + '">' + esc(f.relPath) + '</td>' +
+      '</tr>';
+  });
+
+  html += '</tbody></table>';
+  document.getElementById('scan-table-wrap').innerHTML = html;
+}
+
+// ===== Export Scan =====
+function exportScan() {
+  if (!state.scanFiles || !state.scanFiles.length) return;
+
+  var data = state.scanFiles.map(function(f){
+    return {
+      '名称': f.name,
+      '上级文件夹路径': f.parentPath,
+      '文件类型': f.type,
+      '大小(KB)': f.sizeKB,
+      '修改时间': f.lastModified,
+      '最晚时间': f.latestTime,
+      '完整路径': state.scanFolderName + '/' + f.relPath,
+    };
+  });
+
+  var wb = XLSX.utils.book_new();
+  var ws = XLSX.utils.json_to_sheet(data);
+
+  // Set column widths
+  ws['!cols'] = [
+    {wch: 40}, {wch: 30}, {wch: 10}, {wch: 12}, {wch: 20}, {wch: 20}, {wch: 60}
+  ];
+
+  XLSX.utils.book_append_sheet(wb, ws, '完整清单');
+
+  // Stats sheet
+  var typeCount = {};
+  state.scanFiles.forEach(function(f){ typeCount[f.type] = (typeCount[f.type] || 0) + 1; });
+  var statsData = [
+    ['统计项', '值'],
+    ['扫描日期', new Date().toLocaleString()],
+    ['文件夹', state.scanFolderName],
+    ['文件总数', state.scanFiles.length],
+    ['汇总', ''],
+  ];
+  Object.keys(typeCount).sort().forEach(function(t){
+    statsData.push(['  ' + t + ' 文件', typeCount[t]]);
+  });
+  var statsWs = XLSX.utils.aoa_to_sheet(statsData);
+  statsWs['!cols'] = [{wch: 20}, {wch: 12}];
+  XLSX.utils.book_append_sheet(wb, statsWs, '汇总');
+
+  var datePart = new Date().toISOString().slice(0,10).replace(/-/g,'');
+  XLSX.writeFile(wb, '文件目录-' + datePart + '.xlsx');
+  log('已导出: 文件目录-' + datePart + '.xlsx', 'info');
+  showToast('导出成功!');
+}
+
+// ===== Compare =====
+function loadOldFile(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var wb = XLSX.read(e.target.result, {type: 'array'});
+      var ws = wb.Sheets['完整清单'];
+      if (!ws) {
+        // Try first sheet
+        var first = wb.SheetNames[0];
+        ws = wb.Sheets[first];
+        log('使用工作表: ' + first);
+      }
+      var data = XLSX.utils.sheet_to_json(ws);
+
+      // Normalize column names (handle potential name changes)
+      data = data.map(function(row){
+        var keys = Object.keys(row);
+        var norm = {};
+        keys.forEach(function(k){
+          var k2 = k.trim();
+          // Map common variations
+          if (k2.indexOf('完整路径') >= 0 || k2 === 'fullPath' || k2 === '完整路径') norm['完整路径'] = row[k];
+          else if (k2.indexOf('名称') >= 0 || k2 === 'name') norm['名称'] = row[k];
+          else if (k2.indexOf('文件类型') >= 0 || k2 === 'type') norm['文件类型'] = row[k];
+          else if (k2.indexOf('大小') >= 0 || k2 === 'sizeKB') norm['大小(KB)'] = row[k];
+          else if (k2.indexOf('修改时间') >= 0 || k2 === 'lastModified') norm['修改时间'] = row[k];
+          else if (k2.indexOf('最晚') >= 0 || k2 === 'latestTime') norm['最晚时间'] = row[k];
+          else if (k2.indexOf('上级') >= 0) norm['上级文件夹路径'] = row[k];
+          else norm[k2] = row[k];
+        });
+        return norm;
+      });
+
+      state.oldData = { raw: data, filename: file.name, count: data.length };
+      document.getElementById('old-file-info').innerHTML =
+        '已加载: ' + file.name + ' (' + data.length + ' 项)';
+      log('已加载旧基准表: ' + file.name + ' (' + data.length + ' 项)', 'info');
+      checkCompareReady();
+    } catch (err) {
+      log('读取旧文件失败: ' + err.message, 'error');
+      showToast('读取失败', 3000);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  event.target.value = '';
+}
+
+function loadDemoFile() {
+  // Generate demo data
+  var basePath = '演示项目\\2025\\';
+  var demoFiles = [
+    { name:'财务报告.xlsx', type:'Excel', sizeKB:2450.5, mtime:'2025-12-31 14:30:00', path:'报告' },
+    { name:'审计底稿.xlsx', type:'Excel', sizeKB:5800.2, mtime:'2025-12-30 09:15:00', path:'底稿' },
+    { name:'合同扫描.pdf', type:'PDF', sizeKB:1200.8, mtime:'2025-12-28 16:45:00', path:'合同' },
+    { name:'会议纪要.docx', type:'Word', sizeKB:350.6, mtime:'2025-12-27 11:00:00', path:'会议' },
+    { name:'数据分析.py', type:'代码', sizeKB:45.2, mtime:'2025-12-26 10:30:00', path:'脚本' },
+    { name:'工作说明.docx', type:'Word', sizeKB:180.3, mtime:'2025-12-25 08:00:00', path:'文档' },
+    { name:'项目计划.pptx', type:'PPT', sizeKB:3200.0, mtime:'2025-12-24 15:20:00', path:'计划' },
+    { name:'数据备份.zip', type:'压缩包', sizeKB:15000.0, mtime:'2025-12-23 22:00:00', path:'备份' },
+    { name:'logo.png', type:'图片', sizeKB:120.5, mtime:'2025-12-22 13:10:00', path:'素材' },
+    { name:'配置参数.json', type:'JSON', sizeKB:8.4, mtime:'2025-12-21 09:45:00', path:'配置' },
+    { name:'往来邮件.msg', type:'邮件', sizeKB:560.0, mtime:'2025-12-20 17:30:00', path:'邮件' },
+    { name:'交易明细.csv', type:'CSV', sizeKB:8900.0, mtime:'2025-12-19 11:00:00', path:'数据' },
+  ];
+
+  var data = demoFiles.map(function(f){
+    return {
+      '名称': f.name,
+      '上级文件夹路径': basePath + f.path,
+      '文件类型': f.type,
+      '大小(KB)': f.sizeKB,
+      '修改时间': f.mtime,
+      '最晚时间': f.mtime,
+      '完整路径': basePath + f.path + '\\' + f.name,
+    };
+  });
+
+  state.oldData = { raw: data, filename: '演示数据（旧基准）', count: data.length };
+  document.getElementById('old-file-info').innerHTML =
+    '已加载: 演示数据（' + data.length + ' 项）';
+  document.getElementById('demo-btn').style.display = 'none';
+  log('已加载演示数据（旧基准）', 'info');
+  checkCompareReady();
+}
+
+function checkCompareReady() {
+  var folderReady = !!state.compareFolderHandle;
+  var oldReady = !!state.oldData;
+  var card = document.getElementById('compare-action-card');
+
+  if (folderReady && oldReady) {
+    card.style.display = '';
+    document.getElementById('compare-ready').textContent =
+      '新扫描: ' + state.compareFolderName + ' | 旧基准: ' + state.oldData.filename + ' (' + state.oldData.count + ' 项)';
+    document.getElementById('compare-btn').disabled = false;
+  } else {
+    var parts = [];
+    if (!folderReady) parts.push('请选择新扫描文件夹');
+    if (!oldReady) parts.push('请上传旧基准文件或加载演示数据');
+    card.style.display = 'none';
+  }
+}
+
+async function startCompare() {
+  if (!state.compareFolderHandle || !state.oldData) return;
+
+  var btn = document.getElementById('compare-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ 扫描对比中...';
+  clearLog();
+
+  var progressWrap = document.getElementById('compare-progress-wrap');
+  var progressBar = document.getElementById('compare-progress-bar');
+  progressWrap.style.display = '';
+
+  try {
+    log('开始扫描新文件夹: ' + state.compareFolderName);
+    var startTime = Date.now();
+
+    // Scan new folder
+    var allEntries = [];
+    for await (var entry of walkDir(state.compareFolderHandle, '')) {
+      allEntries.push(entry);
+    }
+    log('共发现 ' + allEntries.length + ' 个文件');
+
+    var newFiles = [];
+    for (var i = 0; i < allEntries.length; i++) {
+      var ent = allEntries[i];
+      try {
+        var file = await ent.handle.getFile();
+        var sizeKB = Math.round(file.size / 10.24) / 100;
+        var mtime = new Date(file.lastModified);
+
+        newFiles.push({
+          name: file.name,
+          relPath: ent.relPath,
+          parentPath: ent.relPath.indexOf('/') >= 0 ? ent.relPath.substring(0, ent.relPath.lastIndexOf('/')) : '',
+          type: getFileType(file.name),
+          sizeKB: sizeKB,
+          lastModified: formatDate(mtime),
+          latestTime: formatDate(mtime),
+          fullPath: state.compareFolderName + '/' + ent.relPath,
+          _normPath: (state.compareFolderName + '/' + ent.relPath).toLowerCase().replace(/\//g, '\\'),
+        });
+      } catch(e) {}
+
+      if (i % 100 === 0 || i === allEntries.length - 1) {
+        progressBar.style.width = Math.round((i + 1) / allEntries.length * 50) + '%';
+      }
+    }
+
+    state.compareNewFiles = newFiles;
+    progressBar.style.width = '50%';
+    log('新文件夹扫描完成: ' + newFiles.length + ' 个文件');
+
+    // Build old data map
+    var oldMap = {};
+    state.oldData.raw.forEach(function(r){
+      var path = String(r['完整路径'] || '').toLowerCase().replace(/\//g, '\\');
+      oldMap[path] = {
+        name: r['名称'] || '',
+        type: r['文件类型'] || '',
+        sizeKB: parseFloat(r['大小(KB)']) || 0,
+        mtime: String(r['修改时间'] || ''),
+        fullPath: String(r['完整路径'] || ''),
+      };
+    });
+
+    // Build new data map
+    var newMap = {};
+    newFiles.forEach(function(f){
+      newMap[f._normPath] = {
+        name: f.name,
+        type: f.type,
+        sizeKB: f.sizeKB,
+        mtime: f.lastModified,
+        fullPath: f.fullPath,
+      };
+    });
+
+    var oldPaths = Object.keys(oldMap);
+    var newPaths = Object.keys(newMap);
+    var oldPathSet = new Set(oldPaths);
+    var newPathSet = new Set(newPaths);
+
+    // Added: in new but not in old
+    var added = newPaths.filter(function(p){ return !oldPathSet.has(p); });
+    // Removed: in old but not in new
+    var removed = oldPaths.filter(function(p){ return !newPathSet.has(p); });
+    // Common
+    var common = newPaths.filter(function(p){ return oldPathSet.has(p); });
+
+    // Modified vs unchanged: compare size and mtime
+    var modified = [];
+    var unchanged = [];
+    common.forEach(function(p){
+      var o = oldMap[p];
+      var n = newMap[p];
+      var sizeDiff = Math.abs(n.sizeKB - o.sizeKB) > 0.01;
+      var timeDiff = n.mtime !== o.mtime;
+      if (sizeDiff || timeDiff) {
+        modified.push({
+          path: p, name: n.name, type: n.type,
+          oldSize: o.sizeKB, newSize: n.sizeKB,
+          oldMtime: o.mtime, newMtime: n.mtime,
+          fullPath: n.fullPath,
+        });
+      } else {
+        unchanged.push({ path: p, name: n.name, type: n.type, sizeKB: n.sizeKB, mtime: n.mtime, fullPath: n.fullPath });
+      }
+    });
+
+    progressBar.style.width = '85%';
+
+    // Build result data
+    var resultData = [];
+    var stats = {
+      total: newFiles.length,
+      added: added.length,
+      removed: removed.length,
+      modified: modified.length,
+      unchanged: unchanged.length,
+    };
+
+    var statusMap = {};
+
+    added.forEach(function(p){
+      var n = newMap[p];
+      resultData.push({ status: '🟢 新增', name: n.name, type: n.type, sizeKB: n.sizeKB, mtime: n.mtime, path: p });
+      statusMap[p] = 'new';
+    });
+    removed.forEach(function(p){
+      var o = oldMap[p];
+      resultData.push({ status: '🔴 已删除', name: o.name, type: o.type, sizeKB: o.sizeKB, mtime: o.mtime, path: p });
+      statusMap[p] = 'removed';
+    });
+    modified.forEach(function(m){
+      resultData.push({
+        status: '🟠 已修改', name: m.name, type: m.type,
+        sizeKB: m.newSize, oldSize: m.oldSize, newSize: m.newSize,
+        mtime: m.newMtime, oldMtime: m.oldMtime,
+        path: m.path,
+      });
+      statusMap[m.path] = 'modified';
+    });
+    unchanged.forEach(function(u){
+      resultData.push({ status: '⚪ 未变更', name: u.name, type: u.type, sizeKB: u.sizeKB, mtime: u.mtime, path: u.path });
+      statusMap[u.path] = 'unchanged';
+    });
+
+    var elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+    log('对比完成! 新增 ' + stats.added + ', 删除 ' + stats.removed + ', 修改 ' + stats.modified + ', 未变 ' + stats.unchanged, 'info');
+    log('总耗时 ' + elapsed + 's', 'info');
+
+    state.compareResult = {
+      data: resultData,
+      stats: stats,
+      newData: newFiles,
+      oldData: state.oldData,
+      statusMap: statusMap,
+    };
+
+    showCompareStats(stats);
+    showCompareTable(resultData, 'all');
+
+    document.getElementById('export-compare-btn').disabled = false;
+    progressBar.style.width = '100%';
+    showToast('对比完成!');
+
+  } catch (e) {
+    log('对比失败: ' + e.message, 'error');
+    showToast('对比失败', 3000);
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🔍 开始对比';
+  setTimeout(function(){ progressWrap.style.display = 'none'; }, 1500);
+}
+
+function showCompareStats(stats) {
+  document.getElementById('compare-results-card').style.display = '';
+  document.getElementById('changes-card').style.display = '';
+  document.getElementById('compare-stats').innerHTML =
+    '<div class="stat-card blue"><div class="num">' + stats.total + '</div><div class="label">新扫描总数</div></div>' +
+    '<div class="stat-card green"><div class="num">' + stats.added + '</div><div class="label">🟢 新增</div></div>' +
+    '<div class="stat-card orange"><div class="num">' + stats.modified + '</div><div class="label">🟠 已修改</div></div>' +
+    '<div class="stat-card red"><div class="num">' + stats.removed + '</div><div class="label">🔴 已删除</div></div>' +
+    '<div class="stat-card gray"><div class="num">' + stats.unchanged + '</div><div class="label">⚪ 未变更</div></div>';
+}
+
+function showCompareTable(data, filter) {
+  var filtered = data;
+  if (filter === 'new') filtered = data.filter(function(r){ return r.status.indexOf('新增') >= 0; });
+  else if (filter === 'modified') filtered = data.filter(function(r){ return r.status.indexOf('已修改') >= 0; });
+  else if (filter === 'removed') filtered = data.filter(function(r){ return r.status.indexOf('已删除') >= 0; });
+  else if (filter === 'unchanged') filtered = data.filter(function(r){ return r.status.indexOf('未变更') >= 0; });
+
+  document.getElementById('filter-count').textContent = '显示 ' + filtered.length + ' / ' + data.length + ' 项';
+
+  // Sort: new, modified, removed, unchanged
+  var sortOrder = { 'new': 0, 'modified': 1, 'removed': 2, 'unchanged': 3 };
+  filtered.sort(function(a,b){
+    var sa = a.status.indexOf('新增') >=0 ? 0 : a.status.indexOf('已修改') >=0 ? 1 : a.status.indexOf('已删除') >=0 ? 2 : 3;
+    var sb = b.status.indexOf('新增') >=0 ? 0 : b.status.indexOf('已修改') >=0 ? 1 : b.status.indexOf('已删除') >=0 ? 2 : 3;
+    return sa - sb;
+  });
+
+  var html = '<table><thead><tr>' +
+    '<th>状态</th><th>名称</th><th>类型</th><th style="text-align:right">大小(KB)</th><th>修改时间</th><th>路径</th>' +
+    '</tr></thead><tbody>';
+
+  if (filtered.length === 0) {
+    html += '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-secondary)">无匹配项</td></tr>';
+  } else {
+    filtered.forEach(function(r){
+      var rowClass = r.status.indexOf('新增') >=0 ? 'row-new' : r.status.indexOf('已修改') >=0 ? 'row-modified' : r.status.indexOf('已删除') >=0 ? 'row-removed' : '';
+      var sizeStr = r.oldSize !== undefined
+        ? r.oldSize.toFixed(2) + ' → ' + r.newSize.toFixed(2)
+        : r.sizeKB.toFixed(2);
+
+      html += '<tr class="' + rowClass + '">' +
+        '<td>' + r.status + '</td>' +
+        '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(r.name) + '">' + esc(r.name) + '</td>' +
+        '<td><span class="badge badge-blue">' + r.type + '</span></td>' +
+        '<td class="text-right text-mono">' + sizeStr + '</td>' +
+        '<td class="text-mono">' + (r.mtime || '-') + '</td>' +
+        '<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-secondary)" title="' + esc(r.path) + '">' + esc(r.path) + '</td>' +
+        '</tr>';
+    });
+  }
+
+  html += '</tbody></table>';
+  document.getElementById('compare-table-wrap').innerHTML = html;
+}
+
+// ===== Filter Changes =====
+function filterChanges(filter) {
+  document.querySelectorAll('#changes-card .btn-ghost').forEach(function(b){
+    b.classList.toggle('active-filter', b.dataset.filter === filter);
+  });
+  if (state.compareResult) {
+    showCompareTable(state.compareResult.data, filter);
+  }
+}
+
+// ===== Export Compare =====
+function exportCompare() {
+  if (!state.compareResult) return;
+  var result = state.compareResult;
+
+  // Build comparison detail sheet
+  var detailData = result.data.map(function(r){
+    var row = {
+      '状态': r.status,
+      '名称': r.name,
+      '文件类型': r.type,
+      '原大小(KB)': r.oldSize !== undefined ? r.oldSize : (r.sizeKB || 0),
+      '新大小(KB)': r.newSize !== undefined ? r.newSize : (r.sizeKB || ''),
+      '原修改时间': r.oldMtime || '',
+      '新修改时间': r.mtime || '',
+      '路径': r.path,
+    };
+    return row;
+  });
+
+  var wb = XLSX.utils.book_new();
+  var ws = XLSX.utils.json_to_sheet(detailData);
+  ws['!cols'] = [{wch:12},{wch:40},{wch:10},{wch:12},{wch:12},{wch:22},{wch:22},{wch:60}];
+  XLSX.utils.book_append_sheet(wb, ws, '对比清单');
+
+  // Summary sheet
+  var s = result.stats;
+  var oldName = state.oldData ? state.oldData.filename : '旧基准';
+  var summaryData = [
+    ['文件目录对比报告', ''],
+    ['生成日期', new Date().toLocaleString()],
+    ['新扫描文件夹', state.compareFolderName],
+    ['旧基准文件', oldName],
+    ['', ''],
+    ['统计项', '数量'],
+    ['新扫描文件总数', s.total],
+    ['🟢 新增', s.added],
+    ['🟠 已修改', s.modified],
+    ['🔴 已删除', s.removed],
+    ['⚪ 未变更', s.unchanged],
+    ['', ''],
+    ['新增 + 已修改 + 已删除', s.added + s.modified + s.removed],
+  ];
+  var ws2 = XLSX.utils.aoa_to_sheet(summaryData);
+  ws2['!cols'] = [{wch:24},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, ws2, '汇总');
+
+  // New files sheet
+  var newFilesData = result.newData.map(function(f){
+    return {
+      '名称': f.name,
+      '上级文件夹路径': f.parentPath,
+      '文件类型': f.type,
+      '大小(KB)': f.sizeKB,
+      '修改时间': f.lastModified,
+      '完整路径': f.fullPath,
+    };
+  });
+  if (newFilesData.length) {
+    var ws3 = XLSX.utils.json_to_sheet(newFilesData);
+    ws3['!cols'] = [{wch:40},{wch:30},{wch:10},{wch:12},{wch:22},{wch:60}];
+    XLSX.utils.book_append_sheet(wb, ws3, '新扫描完整清单');
+  }
+
+  var datePart = new Date().toISOString().slice(0,10).replace(/-/g,'');
+  XLSX.writeFile(wb, '文件目录对比-' + datePart + '.xlsx');
+  log('已导出: 文件目录对比-' + datePart + '.xlsx', 'info');
+  showToast('导出成功!');
+}
+
+// ===== Reset =====
+function resetScan() {
+  state.scanFolderHandle = null;
+  state.scanFolderName = '';
+  state.scanFiles = [];
+  state.scanResult = null;
+  document.getElementById('scan-folder-path').textContent = '';
+  document.getElementById('scan-btn').disabled = true;
+  document.getElementById('export-btn').disabled = true;
+  document.getElementById('scan-stats-card').style.display = 'none';
+  document.getElementById('scan-table-card').style.display = 'none';
+  document.getElementById('scan-stats').innerHTML = '';
+  document.getElementById('scan-table-wrap').innerHTML = '';
+}
+
+function resetCompare() {
+  state.compareFolderHandle = null;
+  state.compareFolderName = '';
+  state.compareNewFiles = [];
+  state.oldData = null;
+  state.compareResult = null;
+  document.getElementById('compare-folder-path').textContent = '';
+  document.getElementById('old-file-info').textContent = '';
+  document.getElementById('old-file-input').value = '';
+  document.getElementById('compare-action-card').style.display = 'none';
+  document.getElementById('compare-results-card').style.display = 'none';
+  document.getElementById('changes-card').style.display = 'none';
+  document.getElementById('demo-btn').style.display = '';
+  document.getElementById('export-compare-btn').disabled = true;
+  document.getElementById('compare-stats').innerHTML = '';
+  document.getElementById('compare-table-wrap').innerHTML = '';
+}
+
+// ===== Utilities =====
+function formatDate(d) {
+  var y = d.getFullYear();
+  var m = ('0' + (d.getMonth()+1)).slice(-2);
+  var day = ('0' + d.getDate()).slice(-2);
+  var h = ('0' + d.getHours()).slice(-2);
+  var min = ('0' + d.getMinutes()).slice(-2);
+  var s = ('0' + d.getSeconds()).slice(-2);
+  return y + '-' + m + '-' + day + ' ' + h + ':' + min + ':' + s;
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
