@@ -6,57 +6,74 @@
 
 ```
 my-app-hub/
-├── index.html              ← 入口首页（从这里导航到所有工具）
-├── apps.json               ← 工具配置清单
-├── CLAUDE.md               ← 项目文档
+├── index.html                    ← 入口首页
+├── apps.json                     ← 工具配置清单
+├── CLAUDE.md / README.md         ← 文档
 │
-├── *.html                  ← 各工具网页（双击即用，密码：Asd#522128）
-├── *.py                    ← Python 工具脚本
-├── *.bat                   ← 一键启动脚本
+├── 使用说明与操作指引/             → help.html
+├── 审计抽凭助手/                   → audit-sampling.html
+├── TB自动上数器/                   → tb-autofill.html
+├── BKD底稿滚存与上数助手/          → bkd-rollforward.html
+├── Word报告上数与校验工作台/        → word-checkbench.html
+├── GDC审计任务工时管理系统/         → gdc-task-system.html
+├── 智能待办/                       → smart-todo.html
+├── 批量文件重命名工具/              → file-renamer.html
+├── CSV数据清洗器/                  → data-cleaner.html
+├── 图片批量压缩工具/               → image-toolbox.html
+├── 日志分析器/                     → log-analyzer.html
+├── ROU租赁测算器/                  → rou-calculator.html
+├── Excel多文件合并工具/            → excel-merger.html
+├── 文件批量提取工具/               → file-collector.html
+├── 智能筛选汇总工具/               → smart-filter.html
+├── 批量解压工具/                   → batch-unzip.html
+├── 五虾流水线/                     → 五虾流水线.html
+├── 信用评级查询/                   → rating_tool.html + rating_server.py
+├── Claude Code个人配置/            → claude-setup-tool.html
 │
-├── tools/                  ← 辅助 Python 脚本
-├── data/                   ← 数据配置
-└── archive/                ← 归档（不常用的旧文件）
+├── tools/                        ← 辅助 Python 脚本
+├── archive/                      ← 归档
+└── *.py / *.bat                  ← 其他脚本
 ```
 
 ## 🛠️ 工具清单
 
 ### 审计类
-| 工具 | 文件 |
-|------|------|
-| 审计抽凭助手 | `audit-sampling.html` |
-| TB 自动上数器 | `tb-autofill.html` |
-| BKD 底稿滚存 | `bkd-rollforward.html` |
-| Word 校验工作台 | `word-checkbench.html` |
-| GDC 工时管理系统 | `gdc-task-system.html` |
-| 审计项目协同 | `audit-hub.html` |
-| ROU 租赁测算 | `rou-calculator.html` |
+| 工具 | 文件夹 |
+|------|--------|
+| 审计抽凭助手 | `审计抽凭助手/` |
+| TB 自动上数器 | `TB自动上数器/` |
+| BKD 底稿滚存 | `BKD底稿滚存与上数助手/` |
+| Word 校验工作台 | `Word报告上数与校验工作台/` |
+| GDC 工时管理系统 | `GDC审计任务工时管理系统/` |
+| ROU 租赁测算 | `ROU租赁测算器/` |
 
 ### AI / 创作类
-| 工具 | 文件 |
-|------|------|
-| 五虾流水线（自媒体） | `五虾流水线.html` |
-| 信用评级查询 | `rating_tool.html` + `rating_server.py` |
-| 离线 AI 助手 | `offline-ai.html` |
-| Claude Code 配置 | `claude-config.html` |
-| CSV 数据清洗器 | `data-cleaner.html` |
+| 工具 | 文件夹 |
+|------|--------|
+| 五虾流水线（自媒体） | `五虾流水线/` |
+| 信用评级查询 | `信用评级查询/` |
+| Claude Code 配置 | `Claude Code个人配置/` |
+| CSV 数据清洗器 | `CSV数据清洗器/` |
 
 ### 实用工具
-| 工具 | 文件 |
-|------|------|
-| 批量文件重命名 | `file-renamer.html` |
-| 图片工具箱 | `image-toolbox.html` |
-| 智能待办 | `smart-todo.html` |
-| 日志分析器 | `log-analyzer.html` |
-| 服务器指南 | `server-guide.html` |
-| 使用帮助 | `help.html` |
+| 工具 | 文件夹 |
+|------|--------|
+| 批量文件重命名 | `批量文件重命名工具/` |
+| 图片工具箱 | `图片批量压缩工具/` |
+| 智能待办 | `智能待办/` |
+| 日志分析器 | `日志分析器/` |
+| 使用帮助 | `使用说明与操作指引/` |
 
-## 🔒 密码
-所有 HTML 文件统一密码：**Asd#522128**
-（输入一次后同浏览器其他页面自动解锁）
+### 内联工具（在 index.html 中）
+- PDF 多功能工具箱
+- 应收账款账龄分析
+
+### ❌ 已删除
+- 审计项目工时任务协同系统（audit-hub.html）
 
 ## 🚀 信用评级查询工具启动
 ```
+cd 信用评级查询/
 双击 start_server.bat
 浏览器打开 http://localhost:5000
 ```

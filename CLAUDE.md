@@ -14,8 +14,9 @@ GitHub 仓库：`https://github.com/Bgu253518/my-app-hub`
 
 ## 架构
 - **主站**: `index.html` — 单页应用，通过 `apps.json` 加载工具列表
-- **数据源**: `apps.json?v=6`（缓存版本持续递增）
+- **数据源**: `apps.json?v=10`（缓存版本持续递增）
 - **部署方式**：git push origin main → GitHub Pages 自动发布
+- **文件结构**：每个工具独立文件夹（中文命名），对应 HTML 文件在文件夹内
 
 ## 技术栈
 - 纯前端（HTML + CSS + JS），无框架
@@ -23,26 +24,38 @@ GitHub 仓库：`https://github.com/Bgu253518/my-app-hub`
 - SheetJS CDN 做 Excel 读写 (`cdn.sheetjs.com/xlsx-0.20.1`)
 - 后端：Flask + SQLite（团队模式）
 
-## 当前已上线工具（共14个）
-### ✅ 已完成 & 完整上线
-1. **📄 PDF多功能工具箱** — pdf-lib + pdf.js（合并/拆分/提取/加密/解密）
-2. **🖼️ 图片批量压缩工具** — 压缩/转PDF/HEIC转换（image-toolbox.html）
-3. **🧹 CSV数据清洗器** — 去空格/去重/标准化日期数字/填充空值（data-cleaner.html）
-4. **📝 批量文件重命名工具** — 查找替换/序号/模板（file-renamer.html）
-5. **📊 ROU租赁测算器** — CAS 21/IFRS 16（rou-calculator.html）
-6. **🎯 审计抽凭助手** — MUS/随机抽样双模式（audit-sampling.html）
-7. **📊 TB自动上数器** — 科目映射/自动填入/借贷校验（tb-autofill.html）
-8. **📋 BKD底稿滚存与上数助手** — 期末→期初（bkd-rollforward.html）
-9. **📊 Word报告上数与校验工作台** — 附注表格上数/加计校验（word-checkbench.html）
-10. **📋 GDC审计任务工时管理系统** — 4步闭环+团队模式（gdc-task-system.html）
-11. **📋 审计项目工时任务协同系统** — 多角色/复核/归档（audit-hub.html）
-12. **⚙️ Claude Code个人配置** — 一键配置第三方API（claude-setup-tool.html）
-13. **🤖 离线AI助手** — 纯本地润色/翻译/总结（offline-ai.html）
-14. **📋 智能待办** — AI解析/桌面提醒/邮件识别（smart-todo.html）
-15. **📋 日志分析器** — Nginx/Apache/JSON日志可视化（log-analyzer.html）
-16. **📖 使用说明与操作指引** — 完整操作手册/可导出PDF（help.html）
+## 📁 文件结构（按工具分文件夹）
+
+```
+my-app-hub/
+├── index.html                    # 主入口
+├── apps.json                     # 工具配置清单
+├── CLAUDE.md / README.md         # 文档
+├── 使用说明与操作指引/             → help.html
+├── 审计抽凭助手/                   → audit-sampling.html
+├── TB自动上数器/                   → tb-autofill.html
+├── BKD底稿滚存与上数助手/          → bkd-rollforward.html
+├── Word报告上数与校验工作台/        → word-checkbench.html
+├── GDC审计任务工时管理系统/         → gdc-task-system.html
+├── 智能待办/                       → smart-todo.html
+├── 批量文件重命名工具/              → file-renamer.html
+├── CSV数据清洗器/                  → data-cleaner.html
+├── 图片批量压缩工具/               → image-toolbox.html
+├── 日志分析器/                     → log-analyzer.html
+├── PDF多功能工具箱                 （内联在 index.html）
+├── ROU租赁测算器/                  → rou-calculator.html
+├── 应收账款账龄分析                 （内联在 index.html）
+├── Excel多文件合并工具/            → excel-merger.html
+├── 文件批量提取工具/               → file-collector.html
+├── 智能筛选汇总工具/               → smart-filter.html
+├── 批量解压工具/                   → batch-unzip.html
+├── 五虾流水线/                     → 五虾流水线.html
+├── 信用评级查询/                   → rating_tool.html + rating_server.py
+├── Claude Code个人配置/            → claude-setup-tool.html
+```
 
 ### ❌ 已删除
+- 审计项目工时任务协同系统（audit-hub.html）
 - weather-cli（命令行天气预报）
 - todo-web（简易待办事项Web应用）
 - ai-todo（智能待办解析器 — 功能已合并到 smart-todo.html）
@@ -54,5 +67,5 @@ GitHub 仓库：`https://github.com/Bgu253518/my-app-hub`
 ## 注意事项
 - GitHub HTTPS 经常连不上，用 SSH push
 - 所有工具均为纯浏览器端处理，数据不离开用户电脑
-- index.html 约 2800+ 行，修改时注意函数名冲突和缓存版本号递增
-- 新工具上线需同步更新：apps.json → index.html externalPages → 缓存版本号+1
+- 每个工具独立文件夹（中文命名），新工具上线时：创建文件夹 → 放入 HTML → 更新 apps.json → 更新 index.html externalPages 路径 → 缓存版本号+1
+- index.html 中 externalPages 路径已更新为中文文件夹路径

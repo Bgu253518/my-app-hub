@@ -1295,7 +1295,7 @@ textarea:focus-visible,
 
 <script>
 /* ============ Configuration ============ */
-const DATA_URL = 'apps.json?v=10';
+const DATA_URL = 'apps.json?v=11';
 
 /* ============ Category Config ============ */
 const CATEGORIES = {
@@ -1664,23 +1664,22 @@ function openToolPanel(appId) {
 
   // 独立页面的工具：先跳转，不显示面板（避免闪现 PDF 拖拽区）
   const externalPages = {
-    'rou-calc': 'rou-calculator.html',
-    'img-compressor': 'image-toolbox.html',
-    'data-cleaner': 'data-cleaner.html',
-    'file-renamer': 'file-renamer.html',
-    'smart-todo': 'smart-todo.html',
-    'audit-hub': 'audit-hub.html',
-    'word-checkbench': 'word-checkbench.html',
-    'bkd-rollforward': 'bkd-rollforward.html',
-    'tb-autofill': 'tb-autofill.html',
-    'help': 'help.html',
-    'audit-sampling': 'audit-sampling.html',
-    'gdc-task-system': 'gdc-task-system.html',
-    'log-analyzer': 'log-analyzer.html',
-    'excel-merger': 'excel-merger.html',
-    'file-collector': 'file-collector.html',
-    'smart-filter': 'smart-filter.html',
-    'batch-unzip': 'batch-unzip.html',
+    'rou-calc': 'ROU租赁测算器/rou-calculator.html',
+    'img-compressor': '图片批量压缩工具/image-toolbox.html',
+    'data-cleaner': 'CSV数据清洗器/data-cleaner.html',
+    'file-renamer': '批量文件重命名工具/file-renamer.html',
+    'smart-todo': '智能待办/smart-todo.html',
+    'word-checkbench': 'Word报告上数与校验工作台/word-checkbench.html',
+    'bkd-rollforward': 'BKD底稿滚存与上数助手/bkd-rollforward.html',
+    'tb-autofill': 'TB自动上数器/tb-autofill.html',
+    'help': '使用说明与操作指引/help.html',
+    'audit-sampling': '审计抽凭助手/audit-sampling.html',
+    'gdc-task-system': 'GDC审计任务工时管理系统/gdc-task-system.html',
+    'log-analyzer': '日志分析器/log-analyzer.html',
+    'excel-merger': 'Excel多文件合并工具/excel-merger.html',
+    'file-collector': '文件批量提取工具/file-collector.html',
+    'smart-filter': '智能筛选汇总工具/smart-filter.html',
+    'batch-unzip': '批量解压工具/batch-unzip.html',
   };
   if (externalPages[appId]) { window.open(externalPages[appId], '_self'); return; }
 
