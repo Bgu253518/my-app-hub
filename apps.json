@@ -130,19 +130,6 @@
     "download": ""
   },
   {
-    "id": "log-analyzer",
-    "name": "日志分析器",
-    "shortDesc": "浏览器端解析 Nginx/Apache/JSON 日志，可视化图表、IP排行、状态码分布、导出报告",
-    "fullDesc": "纯浏览器端运行的日志分析工具。支持粘贴或上传 Nginx、Apache、自定义格式、JSON 格式的日志文件。自动识别日志格式，实时统计：总请求数、独立 IP 数、状态码分布（环形图）、Top 10 IP 排行、每小时请求趋势（折线图）、请求方法分布、错误率、平均响应时间。支持多文件合并分析，结果可导出为 Excel 报告。所有数据在本地处理，日志不会上传到任何服务器。",
-    "category": "data",
-    "status": "done",
-    "version": "v2.0.0",
-    "icon": "📋",
-    "onlineTool": true,
-    "github": "https://github.com/Bgu253518/my-app-hub",
-    "download": ""
-  },
-  {
     "id": "pdf-tool",
     "name": "PDF 多功能工具箱",
     "shortDesc": "合并、拆分、提取文字、读取信息、加解密一站式处理",
