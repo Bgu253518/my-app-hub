@@ -75,84 +75,6 @@ textarea:focus-visible,
 }
 .card:focus-visible { border-radius: var(--radius); }
 
-/* ============ Password Gate ============ */
-#password-gate {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background: var(--gradient-bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 24px;
-}
-
-#password-gate::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at center, rgba(124, 92, 252, 0.1) 0%, transparent 60%);
-  pointer-events: none;
-}
-
-.gate-icon { font-size: 64px; animation: pulse 2s ease-in-out infinite; }
-@keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } }
-
-.gate-box {
-  position: relative;
-  background: var(--bg-card);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius);
-  padding: 40px 36px;
-  width: 380px;
-  max-width: 90vw;
-  backdrop-filter: blur(20px);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  animation: slideUp 0.5s ease;
-}
-
-.gate-box h2 { text-align: center; font-size: 22px; font-weight: 600; }
-.gate-box .hint { text-align: center; font-size: 13px; color: var(--text-secondary); }
-
-.gate-box input {
-  width: 100%;
-  padding: 12px 16px;
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-  background: rgba(0, 0, 0, 0.3);
-  color: var(--text-primary);
-  font-size: 15px;
-  outline: none;
-  transition: var(--transition);
-}
-
-.gate-box input:focus { border-color: var(--accent-1); box-shadow: 0 0 0 3px rgba(124, 92, 252, 0.15); }
-
-.gate-box .btn {
-  padding: 12px;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: var(--accent-1);
-  color: #fff;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.gate-box .btn:hover { background: #9578ff; transform: translateY(-1px); }
-.gate-box .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-.gate-box .error { color: #fc5c9c; font-size: 13px; text-align: center; display: none; }
-
-
-.hidden { display: none !important; }
-
-#main-content { display: none; }
-#main-content.unlocked { display: block; }
-
 /* ============ Navbar ============ */
 .navbar {
   position: fixed;
@@ -1144,46 +1066,10 @@ textarea:focus-visible,
 }
 </style>
 <script>
-(function() {
-  if (sessionStorage.getItem('myapp_unlocked')) return;
-  var overlay = document.createElement('div');
-  overlay.id = 'pwd-overlay';
-  overlay.innerHTML = '<div style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0a0a1a;z-index:999999;display:flex;align-items:center;justify-content:center;"><div style="background:#16213e;padding:40px;border-radius:16px;border:1px solid #D2691E;max-width:360px;width:90%%;text-align:center;"><div style="font-size:40px;margin-bottom:10px;">🔒</div><h2 style="color:#D2691E;margin-bottom:12px;font-size:18px;">请输入密码</h2><input type="password" id="pwd-input" style="width:100%%;padding:12px;border-radius:8px;border:1px solid #3a3a5a;background:#0f3460;color:#e0e0e0;font-size:16px;text-align:center;box-sizing:border-box;" placeholder="输入密码" autofocus><button id="pwd-btn" style="margin-top:12px;width:100%%;padding:10px;border:none;border-radius:8px;background:#D2691E;color:#fff;font-size:15px;cursor:pointer;">解锁</button><p id="pwd-error" style="color:#c62828;font-size:13px;margin-top:8px;display:none;">密码错误，请重试</p></div></div>';
-  document.documentElement.appendChild(overlay);
-  
-  async function checkPwd() {
-    var pwd = document.getElementById('pwd-input').value;
-    var buf = new TextEncoder().encode(pwd);
-    var hash = await crypto.subtle.digest('SHA-256', buf);
-    var hex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
-    if (hex === '5f6f2138aac618ff50a0751b76144e91468d5139ee38db42b0947ba123e37aaf') {
-      sessionStorage.setItem('myapp_unlocked', '1');
-      overlay.style.display = 'none';
-    } else {
-      document.getElementById('pwd-error').style.display = 'block';
-    }
-  }
-  
-  document.getElementById('pwd-btn').onclick = checkPwd;
-  document.getElementById('pwd-input').onkeydown = function(e) {
-    if (e.key === 'Enter') checkPwd();
-  };
-})();
+
 </script>
 </head>
 <body>
-
-<!-- ============ Password Gate ============ -->
-<div id="password-gate">
-  <div class="gate-icon">🔐</div>
-  <div class="gate-box">
-    <h2>顾力菡的工具箱</h2>
-    <p class="hint">请输入访问密码以查看内容</p>
-    <input type="password" id="gate-input" placeholder="请输入密码..." autofocus>
-    <button class="btn" id="gate-btn">验 证</button>
-    <p class="error" id="gate-error">密码错误，请重试</p>
-  </div>
-</div>
 
 <!-- ============ Main Content ============ -->
 <div id="main-content">
@@ -1410,41 +1296,6 @@ textarea:focus-visible,
 <script>
 /* ============ Configuration ============ */
 const DATA_URL = 'apps.json?v=10';
-// 密码（base64 编码，运行时解码后直接对比，避免编码问题）
-const _k = 'R2xoQDI1MzUxOA==';
-
-/* ============ Password Gate ============ */
-(function initGate() {
-  const gateEl = document.getElementById('password-gate');
-  const inputEl = document.getElementById('gate-input');
-  const btnEl = document.getElementById('gate-btn');
-  const errorEl = document.getElementById('gate-error');
-  const mainContent = document.getElementById('main-content');
-  const PASSWORD = atob(_k);
-
-  if (sessionStorage.getItem('app_hub_auth') === '1') {
-    gateEl.style.display = 'none';
-    mainContent.classList.add('unlocked');
-    initApp();
-    return;
-  }
-
-  function tryUnlock() {
-    if (inputEl.value.trim() === PASSWORD) {
-      sessionStorage.setItem('app_hub_auth', '1');
-      gateEl.style.display = 'none';
-      mainContent.classList.add('unlocked');
-      initApp();
-    } else {
-      errorEl.style.display = 'block';
-      inputEl.value = '';
-      inputEl.focus();
-    }
-  }
-
-  btnEl.addEventListener('click', tryUnlock);
-  inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
-})();
 
 /* ============ Category Config ============ */
 const CATEGORIES = {
