@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>批量文件重命名工具</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-deep: #0a0a14;
+  --bg-card: rgba(22, 22, 44, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --text-primary: #e8e8f0;
+  --text-secondary: #9999b0;
+  --accent-1: #7c5cfc;
+  --accent-2: #5cfca0;
+  --accent-3: #fc5c9c;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --transition: 0.2s ease;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: linear-gradient(160deg, #0a0a14 0%, #12122a 30%, #16163a 60%, #0d0d24 100%);
+  color: var(--text-primary); min-height: 100vh; line-height: 1.6;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 20% 20%, rgba(124, 92, 252, 0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 60%, rgba(252, 92, 156, 0.04) 0%, transparent 50%);
+  pointer-events: none; z-index: 0;
+}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(124, 92, 252, 0.25); border-radius: 3px; }
+
+/* Header */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10, 10, 20, 0.8); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 0 24px; height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header .brand { font-size: 17px; font-weight: 700; }
+.header a { color: var(--text-secondary); text-decoration: none; font-size: 13px; }
+.header a:hover { color: var(--text-primary); }
+
+/* Main */
+.main { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+/* Section */
+.section {
+  background: var(--bg-card); border: 1px solid var(--glass-border);
+  border-radius: var(--radius); padding: 24px; margin-bottom: 20px;
+  backdrop-filter: blur(10px);
+}
+.section-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.section-hint { font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; }
+.section-warn { font-size: 12px; color: var(--accent-3); margin-bottom: 16px; }
+
+/* Folder Picker */
+.folder-zone {
+  border: 2px dashed rgba(124,92,252,0.3); border-radius: var(--radius);
+  padding: 40px 24px; text-align: center; cursor: pointer; transition: var(--transition);
+}
+.folder-zone:hover, .folder-zone.dragover { border-color: var(--accent-1); background: rgba(124,92,252,0.05); }
+.folder-zone .fz-icon { font-size: 36px; margin-bottom: 8px; }
+.folder-zone .fz-text { font-size: 15px; font-weight: 600; }
+.folder-zone .fz-hint { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+.folder-zone .fz-note { font-size: 11px; color: #fce45c; margin-top: 8px; }
+
+/* Folder Info */
+.folder-info {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; background: rgba(124,92,252,0.08);
+  border: 1px solid rgba(124,92,252,0.2); border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+}
+.folder-info .fi-icon { font-size: 24px; }
+.folder-info .fi-name { font-size: 14px; font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; }
+.folder-info .fi-count { font-size: 12px; color: var(--accent-2); }
+.folder-info .fi-remove { background: none; border: none; color: var(--accent-3); cursor: pointer; font-size: 18px; padding: 4px; }
+
+/* Stats */
+.stat-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.stat-card {
+  flex: 1; min-width: 100px; text-align: center; padding: 14px;
+  border-radius: var(--radius-sm); background: rgba(255,255,255,0.03);
+  border: 1px solid var(--glass-border);
+}
+.stat-card .sc-val { font-size: 22px; font-weight: 700; }
+.stat-card .sc-lbl { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+.stat-card .sc-val.conflict { color: var(--accent-3); }
+.stat-card .sc-val.ok { color: var(--accent-2); }
+
+/* Rename Modes */
+.mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.mode-card {
+  padding: 16px; border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border); cursor: pointer; transition: var(--transition);
+  background: rgba(255,255,255,0.02);
+}
+.mode-card:hover { background: rgba(255,255,255,0.05); }
+.mode-card.active { border-color: var(--accent-1); background: rgba(124,92,252,0.1); }
+.mode-card .mc-name { font-size: 14px; font-weight: 600; }
+.mode-card .mc-desc { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+
+/* Form */
+.form-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.form-row label { font-size: 13px; color: var(--text-secondary); min-width: 70px; }
+.form-row input, .form-row select {
+  background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+  color: var(--text-primary); padding: 8px 12px; border-radius: 6px; font-size: 13px;
+  outline: none; transition: var(--transition); flex: 1; min-width: 120px;
+}
+.form-row input:focus, .form-row select:focus { border-color: var(--accent-1); }
+.form-row input[type="number"] { flex: 0 0 80px; }
+.form-row input[type="checkbox"] { flex: 0 0 auto; accent-color: var(--accent-1); }
+.form-row .chk-label { font-size: 13px; cursor: pointer; user-select: none; }
+.form-hint { font-size: 11px; color: var(--text-secondary); margin: -8px 0 12px 80px; }
+
+/* Ext filter */
+.ext-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.ext-tag {
+  padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer;
+  background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+  transition: var(--transition); user-select: none;
+}
+.ext-tag:hover { background: rgba(255,255,255,0.07); }
+.ext-tag.active { background: rgba(124,92,252,0.2); border-color: var(--accent-1); }
+
+/* Preview Table */
+.table-wrap {
+  overflow-x: auto; border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+  max-height: 420px; overflow-y: auto; margin-bottom: 16px;
+}
+table.preview { width: 100%; border-collapse: collapse; font-size: 12px; }
+table.preview th, table.preview td {
+  padding: 6px 10px; border: 1px solid rgba(255,255,255,0.06);
+  text-align: left; white-space: nowrap;
+}
+table.preview th {
+  position: sticky; top: 0; background: rgba(30,30,60,0.95);
+  font-weight: 600; font-size: 11px; color: var(--accent-2); z-index: 2;
+}
+table.preview td.num { text-align: center; color: var(--text-secondary); }
+table.preview td.old-name { color: var(--accent-3); }
+table.preview td.new-name { color: var(--accent-2); }
+table.preview td.no-change { color: var(--text-secondary); }
+
+/* Checkbox in table */
+table.preview input[type="checkbox"] { accent-color: var(--accent-1); }
+
+/* Buttons */
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 20px; border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 600; border: none; cursor: pointer;
+  transition: var(--transition); text-decoration: none;
+}
+.btn-primary { background: linear-gradient(135deg, var(--accent-1), #6a4ad9); color: #fff; }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(124,92,252,0.3); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-secondary { background: rgba(255,255,255,0.06); color: var(--text-primary); border: 1px solid var(--glass-border); }
+.btn-secondary:hover { background: rgba(255,255,255,0.1); }
+.btn-success { background: linear-gradient(135deg, var(--accent-2), #3da87a); color: #0a0a14; }
+.btn-success:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(92,252,160,0.3); }
+.btn-success:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-danger { background: linear-gradient(135deg, var(--accent-3), #d04a7a); color: #fff; }
+.btn-danger:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-sm { padding: 6px 14px; font-size: 12px; }
+
+/* Loading */
+.loading {
+  display: none; text-align: center; padding: 40px;
+}
+.loading.show { display: block; }
+.loading .spin {
+  display: inline-block; width: 32px; height: 32px;
+  border: 3px solid var(--glass-border); border-top-color: var(--accent-1);
+  border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading .lt { font-size: 14px; margin-top: 12px; color: var(--text-secondary); }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  padding: 12px 24px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600; z-index: 200;
+  background: rgba(22,22,44,0.95); border: 1px solid var(--glass-border);
+  backdrop-filter: blur(12px);
+  display: none; animation: toastUp 0.3s ease;
+}
+.toast.show { display: block; }
+.toast.success { border-color: var(--accent-2); }
+.toast.error { border-color: var(--accent-3); }
+@keyframes toastUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+/* Undo indicator */
+.undo-bar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; border-radius: var(--radius-sm);
+  background: rgba(252,202,92,0.1); border: 1px solid rgba(252,202,92,0.2);
+  margin-bottom: 16px;
+}
+.undo-bar .ub-icon { font-size: 18px; }
+.undo-bar .ub-text { flex: 1; font-size: 13px; }
+.undo-bar .ub-text strong { color: #fce45c; }
+
+/* Hidden */
+.hidden { display: none !important; }
+
+@media (max-width: 640px) {
+  .main { padding: 12px; }
+  .section { padding: 16px; }
+  .mode-grid { grid-template-columns: 1fr; }
+  .form-row { flex-direction: column; align-items: stretch; }
+  .form-row label { min-width: auto; }
+  .form-row input, .form-row select { min-width: auto; }
+}
+</style>
+<script>
+(function() {
+  if (sessionStorage.getItem('myapp_unlocked')) return;
+  var overlay = document.createElement('div');
+  overlay.id = 'pwd-overlay';
+  overlay.innerHTML = '<div style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0a0a1a;z-index:999999;display:flex;align-items:center;justify-content:center;"><div style="background:#16213e;padding:40px;border-radius:16px;border:1px solid #D2691E;max-width:360px;width:90%%;text-align:center;"><div style="font-size:40px;margin-bottom:10px;">🔒</div><h2 style="color:#D2691E;margin-bottom:12px;font-size:18px;">请输入密码</h2><input type="password" id="pwd-input" style="width:100%%;padding:12px;border-radius:8px;border:1px solid #3a3a5a;background:#0f3460;color:#e0e0e0;font-size:16px;text-align:center;box-sizing:border-box;" placeholder="输入密码" autofocus><button id="pwd-btn" style="margin-top:12px;width:100%%;padding:10px;border:none;border-radius:8px;background:#D2691E;color:#fff;font-size:15px;cursor:pointer;">解锁</button><p id="pwd-error" style="color:#c62828;font-size:13px;margin-top:8px;display:none;">密码错误，请重试</p></div></div>';
+  document.documentElement.appendChild(overlay);
+  
+  async function checkPwd() {
+    var pwd = document.getElementById('pwd-input').value;
+    var buf = new TextEncoder().encode(pwd);
+    var hash = await crypto.subtle.digest('SHA-256', buf);
+    var hex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+    if (hex === '5f6f2138aac618ff50a0751b76144e91468d5139ee38db42b0947ba123e37aaf') {
+      sessionStorage.setItem('myapp_unlocked', '1');
+      overlay.style.display = 'none';
+    } else {
+      document.getElementById('pwd-error').style.display = 'block';
+    }
+  }
+  
+  document.getElementById('pwd-btn').onclick = checkPwd;
+  document.getElementById('pwd-input').onkeydown = function(e) {
+    if (e.key === 'Enter') checkPwd();
+  };
+})();
+</script>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">📝 批量文件重命名</div>
+  <a href="index.html">← 返回首页</a>
+</div>
+
+<div class="main">
+
+<!-- Step 1: Pick Folder -->
+<div class="section" id="step-folder">
+  <div class="section-title">📂 第一步：选择文件夹</div>
+  <div class="section-hint">选择一个文件夹，工具会列出所有文件供你预览和重命名</div>
+  <div class="section-warn">⚠️ 需要 Chrome / Edge 浏览器，目前仅支持在支持 File System Access API 的浏览器中运行</div>
+  <div class="folder-zone" id="folderZone">
+    <div class="fz-icon">📁</div>
+    <div class="fz-text">点击选择文件夹</div>
+    <div class="fz-hint">支持任意文件夹，所有操作只在你的电脑本地执行</div>
+    <div class="fz-note">🔒 本工具不会上传任何文件到服务器</div>
+  </div>
+</div>
+
+<!-- Step 2: Files + Rename Options -->
+<div class="section hidden" id="step-rename">
+  <div class="section-title">🔄 第二步：设置重命名规则</div>
+
+  <div class="folder-info" id="folderInfo">
+    <span class="fi-icon">📁</span>
+    <span class="fi-name" id="fiName">文件夹</span>
+    <span class="fi-count" id="fiCount">0 个文件</span>
+    <button class="fi-remove" id="resetFolder" title="重新选择文件夹">✕</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stat-row" id="statRow">
+    <div class="stat-card"><div class="sc-val" id="stTotal">0</div><div class="sc-lbl">📄 文件总数</div></div>
+    <div class="stat-card"><div class="sc-val" id="stSelected">0</div><div class="sc-lbl">✅ 已选</div></div>
+    <div class="stat-card"><div class="sc-val ok" id="stToRename">0</div><div class="sc-lbl">🔄 将重命名</div></div>
+    <div class="stat-card"><div class="sc-val conflict" id="stConflict">0</div><div class="sc-lbl">⚠️ 命名冲突</div></div>
+  </div>
+
+  <!-- Ext filter -->
+  <div class="section-title" style="margin-top:16px;font-size:14px;">📌 文件类型过滤</div>
+  <div class="ext-tags" id="extTags">
+    <span class="ext-tag active" data-ext="all">全部</span>
+  </div>
+  <div class="form-row" style="margin-top:-4px">
+    <input type="text" id="extCustom" placeholder="自定义扩展名，如 .log .tmp（空格分隔）" style="flex:1;font-size:12px;">
+    <button class="btn btn-sm btn-secondary" id="btnAddExt">添加</button>
+  </div>
+
+  <!-- Rename mode -->
+  <div class="section-title" style="margin-top:16px;font-size:14px;">🎯 重命名方式</div>
+  <div class="mode-grid" id="modeGrid">
+    <div class="mode-card active" data-mode="replace">
+      <div class="mc-name">🔍 查找替换</div>
+      <div class="mc-desc">输入关键词或正则表达式，替换为新的文字</div>
+    </div>
+    <div class="mode-card" data-mode="prefix">
+      <div class="mc-name">🔢 序号前缀</div>
+      <div class="mc-desc">在文件名前面或后面添加序号（001, 002...）</div>
+    </div>
+    <div class="mode-card" data-mode="template">
+      <div class="mc-name">📋 自定义模板</div>
+      <div class="mc-desc">使用模板变量自由组合：{name}{num}{ext} 等</div>
+    </div>
+  </div>
+
+  <!-- Replace options -->
+  <div id="opts-replace">
+    <div class="form-row">
+      <label>查找</label>
+      <input type="text" id="repFind" placeholder="输入要查找的文字（支持正则）">
+      <label style="flex:0 0 auto;min-width:auto"><input type="checkbox" id="repRegex"> 正则模式</label>
+    </div>
+    <div class="form-row">
+      <label>替换为</label>
+      <input type="text" id="repReplace" placeholder="替换后的文字">
+    </div>
+  </div>
+
+  <!-- Prefix options -->
+  <div id="opts-prefix" class="hidden">
+    <div class="form-row">
+      <label>起始序号</label>
+      <input type="number" id="pfStart" value="1" min="1">
+      <label>位数</label>
+      <input type="number" id="pfPad" value="3" min="1" max="10">
+      <label>位置</label>
+      <select id="pfPos">
+        <option value="prefix">前缀（文件名前）</option>
+        <option value="suffix">后缀（文件名后、扩展名前）</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label>分隔符</label>
+      <input type="text" id="pfSep" value="_" style="flex:0 0 60px;">
+      <label style="flex:0 0 auto;min-width:auto"><input type="checkbox" id="pfKeepName"> 保留原名</label>
+    </div>
+    <div class="form-row">
+      <label>排序依据</label>
+      <select id="pfSort">
+        <option value="name">文件名</option>
+        <option value="date">修改日期</option>
+        <option value="size">文件大小</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Template options -->
+  <div id="opts-template" class="hidden">
+    <div class="form-row">
+      <label>模板</label>
+      <input type="text" id="tpTemplate" value="{num}_{name}{ext}" placeholder='可用变量: {name} {num} {ext} {date} {parent}'>
+    </div>
+    <div class="form-row">
+      <label>起始序号</label>
+      <input type="number" id="tpStart" value="1" min="1">
+      <label>位数</label>
+      <input type="number" id="tpPad" value="3" min="1" max="10">
+    </div>
+    <div class="form-hint">模板变量：<code>{name}</code> 原文件名 · <code>{num}</code> 序号 · <code>{ext}</code> 扩展名 · <code>{date}</code> 修改日期 · <code>{parent}</code> 父文件夹</div>
+  </div>
+
+  <!-- Preview -->
+  <div class="section-title" style="margin-top:16px;">👁️ 预览</div>
+  <div class="table-wrap">
+    <table class="preview" id="previewTable">
+      <thead>
+        <tr>
+          <th style="width:32px"><input type="checkbox" id="selAll" checked></th>
+          <th style="width:40px">#</th>
+          <th>原文件名</th>
+          <th>新文件名</th>
+          <th style="width:80px">大小</th>
+          <th style="width:80px">修改日期</th>
+        </tr>
+      </thead>
+      <tbody id="previewBody"></tbody>
+    </table>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" id="btnApply">🚀 执行重命名</button>
+    <button class="btn btn-secondary" id="btnRefresh">🔄 刷新预览</button>
+  </div>
+</div>
+
+<!-- Step 3: Result -->
+<div class="section hidden" id="step-result">
+  <div class="section-title">✅ 第三步：执行结果</div>
+  <div class="undo-bar" id="undoBar">
+    <span class="ub-icon">↩️</span>
+    <span class="ub-text" id="undoText">已重命名 <strong>0</strong> 个文件，可以撤销</span>
+    <button class="btn btn-sm btn-danger" id="btnUndo">↩ 撤销</button>
+  </div>
+  <div class="table-wrap">
+    <table class="preview" id="resultTable">
+      <thead><tr><th style="width:40px">#</th><th>原文件名</th><th>新文件名</th><th style="width:60px">状态</th></tr></thead>
+      <tbody id="resultBody"></tbody>
+    </table>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-secondary" id="btnBack">↩ 返回继续重命名</button>
+    <button class="btn btn-secondary" id="btnNewFolder">📂 选择其他文件夹</button>
+  </div>
+</div>
+
+<!-- Loading -->
+<div class="loading" id="loadingOverlay">
+  <div class="spin"></div>
+  <div class="lt">处理中，请稍候...</div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+</div>
+
+<script>
+// ============================================================
+// State
+// ============================================================
+let dirHandle = null;
+let files = [];           // [{name, handle, size, date}]
+let filteredFiles = [];   // after ext filter
+let changes = [];         // [{oldName, newName, success}]
+let undoStack = [];       // for undo
+let currentMode = 'replace';
+let currentExtFilter = 'all';
+
+// ============================================================
+// DOM refs
+// ============================================================
+const folderZone = document.getElementById('folderZone');
+const stepFolder = document.getElementById('step-folder');
+const stepRename = document.getElementById('step-rename');
+const stepResult = document.getElementById('step-result');
+
+const fiName = document.getElementById('fiName');
+const fiCount = document.getElementById('fiCount');
+const resetFolderBtn = document.getElementById('resetFolder');
+
+const stTotal = document.getElementById('stTotal');
+const stSelected = document.getElementById('stSelected');
+const stToRename = document.getElementById('stToRename');
+const stConflict = document.getElementById('stConflict');
+
+const extTags = document.getElementById('extTags');
+const extCustom = document.getElementById('extCustom');
+const btnAddExt = document.getElementById('btnAddExt');
+
+const modeGrid = document.getElementById('modeGrid');
+const optsReplace = document.getElementById('opts-replace');
+const optsPrefix = document.getElementById('opts-prefix');
+const optsTemplate = document.getElementById('opts-template');
+
+const repFind = document.getElementById('repFind');
+const repReplace = document.getElementById('repReplace');
+const repRegex = document.getElementById('repRegex');
+
+const pfStart = document.getElementById('pfStart');
+const pfPad = document.getElementById('pfPad');
+const pfPos = document.getElementById('pfPos');
+const pfSep = document.getElementById('pfSep');
+const pfKeepName = document.getElementById('pfKeepName');
+const pfSort = document.getElementById('pfSort');
+
+const tpTemplate = document.getElementById('tpTemplate');
+const tpStart = document.getElementById('tpStart');
+const tpPad = document.getElementById('tpPad');
+
+const previewBody = document.getElementById('previewBody');
+const selAll = document.getElementById('selAll');
+const btnApply = document.getElementById('btnApply');
+const btnRefresh = document.getElementById('btnRefresh');
+const btnBack = document.getElementById('btnBack');
+const btnNewFolder = document.getElementById('btnNewFolder');
+const btnUndo = document.getElementById('btnUndo');
+
+const loadingOverlay = document.getElementById('loadingOverlay');
+const toast = document.getElementById('toast');
+const undoBar = document.getElementById('undoBar');
+const undoText = document.getElementById('undoText');
+const resultBody = document.getElementById('resultBody');
+
+// ============================================================
+// Folder Picker
+// ============================================================
+folderZone.addEventListener('click', pickFolder);
+resetFolderBtn.addEventListener('click', resetToPick);
+btnNewFolder.addEventListener('click', resetToPick);
+btnBack.addEventListener('click', () => {
+  stepResult.classList.add('hidden');
+  stepRename.classList.remove('hidden');
+});
+
+async function pickFolder() {
+  try {
+    dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    await loadFiles();
+  } catch (err) {
+    if (err.name !== 'AbortError' && err.name !== 'SecurityError') {
+      showToast('选择文件夹失败：' + err.message, 'error');
+    }
+  }
+}
+
+async function loadFiles() {
+  loadingOverlay.classList.add('show');
+
+  try {
+    files = [];
+    for await (const entry of dirHandle.values()) {
+      if (entry.kind === 'file') {
+        const file = await entry.getFile();
+        files.push({
+          handle: entry,
+          name: entry.name,
+          size: file.size,
+          date: file.lastModified
+        });
+      }
+    }
+
+    // Sort by name by default
+    files.sort((a, b) => a.name.localeCompare(b.name));
+
+    // Update folder info
+    fiName.textContent = dirHandle.name;
+    fiCount.textContent = files.length + ' 个文件';
+
+    // Build ext tags
+    buildExtTags();
+
+    // Show rename step
+    stepFolder.classList.add('hidden');
+    stepRename.classList.remove('hidden');
+    stepResult.classList.add('hidden');
+
+    // Apply filter and render
+    applyExtFilter();
+    renderPreview();
+
+  } catch (err) {
+    showToast('读取文件夹失败：' + err.message, 'error');
+  }
+  loadingOverlay.classList.remove('show');
+}
+
+function resetToPick() {
+  dirHandle = null;
+  files = [];
+  filteredFiles = [];
+  changes = [];
+  undoStack = [];
+  stepFolder.classList.remove('hidden');
+  stepRename.classList.add('hidden');
+  stepResult.classList.add('hidden');
+}
+
+// ============================================================
+// Extension Filter
+// ============================================================
+function buildExtTags() {
+  const extSet = new Set();
+  files.forEach(f => {
+    const dot = f.name.lastIndexOf('.');
+    if (dot > 0) extSet.add(f.name.slice(dot).toLowerCase());
+    else extSet.add('(无扩展名)');
+  });
+
+  let html = '<span class="ext-tag active" data-ext="all">全部</span>';
+  const sorted = Array.from(extSet).sort();
+  sorted.forEach(ext => {
+    const count = files.filter(f => (f.name.slice(f.name.lastIndexOf('.')).toLowerCase() === ext) || (ext === '(无扩展名)' && !f.name.includes('.'))).length;
+    html += `<span class="ext-tag" data-ext="${escAttr(ext)}">${escHtml(ext)} (${count})</span>`;
+  });
+  extTags.innerHTML = html;
+
+  // Click handler
+  extTags.querySelectorAll('.ext-tag').forEach(tag => {
+    tag.addEventListener('click', () => {
+      extTags.querySelectorAll('.ext-tag').forEach(t => t.classList.remove('active'));
+      tag.classList.add('active');
+      currentExtFilter = tag.dataset.ext;
+      applyExtFilter();
+      renderPreview();
+    });
+  });
+}
+
+btnAddExt.addEventListener('click', () => {
+  const val = extCustom.value.trim();
+  if (!val) return;
+  const exts = val.split(/\s+/).filter(Boolean);
+  exts.forEach(ext => {
+    const clean = ext.startsWith('.') ? ext.toLowerCase() : '.' + ext.toLowerCase();
+    if (!extTags.querySelector(`[data-ext="${clean}"]`)) {
+      const tag = document.createElement('span');
+      tag.className = 'ext-tag active';
+      tag.dataset.ext = clean;
+      tag.textContent = clean;
+      tag.addEventListener('click', () => applyExtSingleTag(tag));
+      extTags.appendChild(tag);
+    }
+  });
+  extCustom.value = '';
+  currentExtFilter = exts[0].startsWith('.') ? exts[0].toLowerCase() : '.' + exts[0].toLowerCase();
+  extTags.querySelectorAll('.ext-tag').forEach(t => t.classList.remove('active'));
+  extTags.querySelectorAll(`[data-ext="${currentExtFilter}"]`).forEach(t => t.classList.add('active'));
+  applyExtFilter();
+  renderPreview();
+});
+
+function applyExtSingleTag(tag) {
+  extTags.querySelectorAll('.ext-tag').forEach(t => t.classList.remove('active'));
+  tag.classList.add('active');
+  currentExtFilter = tag.dataset.ext;
+  applyExtFilter();
+  renderPreview();
+}
+
+function applyExtFilter() {
+  if (currentExtFilter === 'all') {
+    filteredFiles = [...files];
+  } else if (currentExtFilter === '(无扩展名)') {
+    filteredFiles = files.filter(f => !f.name.includes('.'));
+  } else {
+    filteredFiles = files.filter(f => f.name.toLowerCase().endsWith(currentExtFilter));
+  }
+}
+
+// ============================================================
+// Rename Mode Switching
+// ============================================================
+modeGrid.addEventListener('click', e => {
+  const card = e.target.closest('.mode-card');
+  if (!card) return;
+  modeGrid.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
+  card.classList.add('active');
+  currentMode = card.dataset.mode;
+  optsReplace.classList.toggle('hidden', currentMode !== 'replace');
+  optsPrefix.classList.toggle('hidden', currentMode !== 'prefix');
+  optsTemplate.classList.toggle('hidden', currentMode !== 'template');
+  renderPreview();
+});
+
+// ============================================================
+// Preview Generation
+// ============================================================
+selAll.addEventListener('change', () => {
+  const checked = selAll.checked;
+  previewBody.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = checked);
+  updateStats();
+});
+
+function getNewName(file, index) {
+  const dot = file.name.lastIndexOf('.');
+  const baseName = dot > 0 ? file.name.slice(0, dot) : file.name;
+  const ext = dot > 0 ? file.name.slice(dot) : '';
+
+  if (currentMode === 'replace') {
+    const find = repFind.value;
+    if (!find) return file.name;
+    try {
+      let replaced;
+      if (repRegex.checked) {
+        const flags = document.getElementById('repRegex')?.checked ? 'g' : 'g';
+        const regex = new RegExp(find, 'g');
+        replaced = baseName.replace(regex, repReplace.value);
+      } else {
+        replaced = baseName.split(find).join(repReplace.value);
+      }
+      return replaced + ext;
+    } catch {
+      return file.name;
+    }
+  }
+
+  if (currentMode === 'prefix') {
+    const start = parseInt(pfStart.value) || 1;
+    const pad = parseInt(pfPad.value) || 3;
+    const sep = pfSep.value || '_';
+    const pos = pfPos.value;
+    const keep = pfKeepName.checked;
+    const num = String(start + (pfSort.value === 'name' ? index : index)).padStart(pad, '0');
+    if (pos === 'prefix') {
+      return num + sep + (keep ? file.name : baseName) + ext;
+    } else {
+      return (keep ? baseName : '') + sep + num + ext;
+    }
+  }
+
+  if (currentMode === 'template') {
+    const tmpl = tpTemplate.value || '{num}_{name}{ext}';
+    const start = parseInt(tpStart.value) || 1;
+    const pad = parseInt(tpPad.value) || 3;
+    const num = String(start + index).padStart(pad, '0');
+    const date = new Date(file.date);
+    const dateStr = date.getFullYear() + '-' +
+      String(date.getMonth() + 1).padStart(2, '0') + '-' +
+      String(date.getDate()).padStart(2, '0');
+    const parent = dirHandle ? dirHandle.name : '';
+    let result = tmpl
+      .replace(/\{name\}/g, baseName)
+      .replace(/\{num\}/g, num)
+      .replace(/\{ext\}/g, ext)
+      .replace(/\{date\}/g, dateStr)
+      .replace(/\{parent\}/g, parent);
+    // Clean double dots
+    result = result.replace(/\.\.+/g, '.');
+    return result;
+  }
+
+  return file.name;
+}
+
+function renderPreview() {
+  // Sort if needed
+  if (currentMode === 'prefix') {
+    const sortBy = pfSort.value;
+    if (sortBy === 'date') filteredFiles.sort((a, b) => a.date - b.date);
+    else if (sortBy === 'size') filteredFiles.sort((a, b) => a.size - b.size);
+    else filteredFiles.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  let html = '';
+  let renameCount = 0;
+  let conflictCount = 0;
+  const newNames = new Set();
+
+  // Check conflicts
+  const nameMap = filteredFiles.map((f, i) => ({
+    idx: i,
+    oldName: f.name,
+    newName: getNewName(f, i)
+  }));
+
+  // Count conflicts
+  nameMap.forEach(item => {
+    if (item.newName !== item.oldName) {
+      if (newNames.has(item.newName)) conflictCount++;
+      newNames.add(item.newName);
+    }
+  });
+
+  nameMap.forEach((item, i) => {
+    const changed = item.newName !== item.oldName;
+    if (changed) renameCount++;
+    const f = filteredFiles[i];
+    const sizeStr = f.size > 1024 * 1024
+      ? (f.size / 1024 / 1024).toFixed(1) + ' MB'
+      : (f.size / 1024).toFixed(1) + ' KB';
+    const dateStr = new Date(f.date).toLocaleDateString('zh-CN');
+    html += `<tr>
+      <td class="num"><input type="checkbox" class="file-cb" data-idx="${i}" ${changed ? 'checked' : ''}></td>
+      <td class="num">${i + 1}</td>
+      <td class="${changed ? 'old-name' : 'no-change'}">${escHtml(item.oldName)}</td>
+      <td class="${changed ? 'new-name' : 'no-change'}">${escHtml(changed ? item.newName : '— 不变 —')}</td>
+      <td>${sizeStr}</td>
+      <td>${dateStr}</td>
+    </tr>`;
+  });
+
+  previewBody.innerHTML = html;
+
+  // Stats
+  stTotal.textContent = filteredFiles.length;
+  stSelected.textContent = filteredFiles.length;
+  stToRename.textContent = renameCount;
+  stConflict.textContent = conflictCount;
+
+  // Update stat colors
+  document.querySelector('#stToRename').closest('.stat-card').querySelector('.sc-val').className =
+    'sc-val ' + (renameCount > 0 ? 'ok' : '');
+  document.querySelector('#stConflict').closest('.stat-card').querySelector('.sc-val').className =
+    'sc-val ' + (conflictCount > 0 ? 'conflict' : '');
+
+  // Attach checkbox events
+  previewBody.querySelectorAll('.file-cb').forEach(cb => {
+    cb.addEventListener('change', updateStats);
+  });
+}
+
+// Events that trigger preview refresh
+[repFind, repReplace, repRegex].forEach(el => el.addEventListener('input', renderPreview));
+[pfStart, pfPad, pfPos, pfSep, pfKeepName, pfSort].forEach(el => {
+  if (el) el.addEventListener('change', renderPreview);
+  if (el?.tagName === 'INPUT' && el.type === 'text') el.addEventListener('input', renderPreview);
+  if (el?.tagName === 'INPUT' && el.type === 'number') el.addEventListener('input', renderPreview);
+});
+[tpTemplate, tpStart, tpPad].forEach(el => {
+  if (el) el.addEventListener('input', renderPreview);
+});
+btnRefresh.addEventListener('click', renderPreview);
+
+function updateStats() {
+  const total = previewBody.querySelectorAll('.file-cb').length;
+  const checked = previewBody.querySelectorAll('.file-cb:checked').length;
+  stSelected.textContent = checked;
+}
+
+// ============================================================
+// Apply Rename
+// ============================================================
+btnApply.addEventListener('click', async () => {
+  const selected = [];
+  previewBody.querySelectorAll('.file-cb:checked').forEach(cb => {
+    const idx = parseInt(cb.dataset.idx);
+    const f = filteredFiles[idx];
+    const newName = getNewName(f, idx);
+    if (newName !== f.name) selected.push({ file: f, newName, idx });
+  });
+
+  if (selected.length === 0) {
+    showToast('没有选中的文件需要重命名', 'error');
+    return;
+  }
+
+  // Check conflicts
+  const names = selected.map(s => s.newName);
+  const dupes = names.filter((n, i) => names.indexOf(n) !== i);
+  if (dupes.length > 0) {
+    showToast('存在命名冲突：' + [...new Set(dupes)].join(', '), 'error');
+    return;
+  }
+
+  loadingOverlay.classList.add('show');
+  changes = [];
+  const undoBatch = [];
+
+  for (let i = 0; i < selected.length; i++) {
+    const { file, newName } = selected[i];
+    try {
+      // Create new file handle
+      const newHandle = await dirHandle.getFileHandle(newName, { create: true });
+      const writable = await newHandle.createWritable();
+      const blob = await file.handle.getFile();
+      await writable.write(blob);
+      await writable.close();
+
+      // Remove old file
+      await dirHandle.removeEntry(file.name);
+
+      changes.push({ oldName: file.name, newName, success: true });
+      undoBatch.push({ oldName: newName, newName: file.name, handle: newHandle });
+
+    } catch (err) {
+      changes.push({ oldName: file.name, newName, success: false, error: err.message });
+    }
+  }
+
+  undoStack.push(undoBatch);
+
+  // Show result
+  showResult();
+  loadingOverlay.classList.remove('show');
+});
+
+// ============================================================
+// Undo
+// ============================================================
+btnUndo.addEventListener('click', async () => {
+  const batch = undoStack.pop();
+  if (!batch || batch.length === 0) return;
+
+  loadingOverlay.classList.add('show');
+  let undoCount = 0;
+
+  for (const item of batch) {
+    try {
+      const newHandle = await dirHandle.getFileHandle(item.oldName, { create: true });
+      const writable = await newHandle.createWritable();
+      const blob = await item.handle.getFile();
+      await writable.write(blob);
+      await writable.close();
+      await dirHandle.removeEntry(item.newName);
+      undoCount++;
+    } catch (err) {
+      console.error('撤销失败:', item, err);
+    }
+  }
+
+  // Reload files
+  await loadFiles();
+  showToast(`已撤销 ${undoCount} 个文件的重命名`, 'success');
+  loadingOverlay.classList.remove('show');
+});
+
+// ============================================================
+// Result View
+// ============================================================
+function showResult() {
+  stepFolder.classList.add('hidden');
+  stepRename.classList.add('hidden');
+  stepResult.classList.remove('hidden');
+
+  const successCount = changes.filter(c => c.success).length;
+  const failCount = changes.filter(c => !c.success).length;
+
+  undoBar.classList.toggle('hidden', undoStack.length === 0);
+  undoText.innerHTML = `已重命名 <strong>${successCount}</strong> 个文件${undoStack.length > 0 ? '，可以撤销' : ''}`;
+
+  let html = '';
+  changes.forEach((c, i) => {
+    const status = c.success ? '✅' : '❌ ' + escHtml(c.error || '失败');
+    html += `<tr>
+      <td class="num">${i + 1}</td>
+      <td class="old-name">${escHtml(c.oldName)}</td>
+      <td class="new-name">${escHtml(c.newName)}</td>
+      <td>${status}</td>
+    </tr>`;
+  });
+  resultBody.innerHTML = html;
+}
+
+// ============================================================
+// Toast
+// ============================================================
+function showToast(msg, type) {
+  toast.textContent = msg;
+  toast.className = 'toast show ' + (type || '');
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ============================================================
+// Utils
+// ============================================================
+function escHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function escAttr(s) {
+  return String(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// ============================================================
+// Init
+// ============================================================
+console.log('📝 批量文件重命名工具已就绪');
+console.log('💡 需要 Chrome/Edge 浏览器，使用 File System Access API');
+</script>
+</body>
+</html>

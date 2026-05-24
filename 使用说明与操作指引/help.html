@@ -1,0 +1,563 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My App Hub 完整操作指引手册</title>
+<style>
+:root {
+  --text: #1a1d23; --text2: #4a5568; --accent: #2c5282; --accent2: #3182ce;
+  --bg: #fff; --bg2: #f7fafc; --border: #e2e8f0; --warn: #dd6b20; --danger: #c53030;
+  --success: #2f855a; --info: #2b6cb0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', 'Segoe UI', system-ui, sans-serif;
+  color: var(--text); background: #f0f2f5; line-height: 1.7; font-size: 15px;
+}
+.manual-wrap {
+  max-width: 900px; margin: 0 auto; padding: 40px 20px 80px;
+}
+@media screen {
+  .manual-wrap { background: var(--bg); box-shadow: 0 0 40px rgba(0,0,0,0.08); min-height: 100vh; }
+}
+.cover {
+  text-align: center; padding: 80px 40px 60px; page-break-after: always;
+  border-bottom: 2px solid var(--border); margin-bottom: 40px;
+}
+.cover h1 { font-size: 2.4rem; font-weight: 800; color: var(--accent); margin-bottom: 12px; letter-spacing: 1px; }
+.cover .subtitle { font-size: 1.1rem; color: var(--text2); margin-bottom: 8px; }
+.cover .meta { font-size: 0.85rem; color: #999; margin-top: 32px; }
+.cover .version-badge {
+  display: inline-block; background: var(--accent); color: #fff; padding: 4px 16px; border-radius: 20px;
+  font-size: 0.8rem; font-weight: 600; margin: 16px 0;
+}
+.toc { margin: 32px 0; page-break-after: always; }
+.toc h2 { font-size: 1.5rem; border-bottom: 2px solid var(--accent); padding-bottom: 8px; margin-bottom: 20px; }
+.toc ol { list-style: none; counter-reset: toc-counter; }
+.toc ol li { counter-increment: toc-counter; padding: 4px 0; }
+.toc ol li::before { content: counter(toc-counter) ". "; font-weight: 700; color: var(--accent); }
+.toc a { color: var(--text); text-decoration: none; }
+.toc a:hover { color: var(--accent2); text-decoration: underline; }
+
+.tool-chapter { margin: 48px 0; padding-top: 20px; page-break-before: always; }
+.tool-chapter:first-of-type { page-break-before: avoid; }
+.chapter-header { border-left: 5px solid var(--accent); padding-left: 16px; margin-bottom: 24px; }
+.chapter-header h2 { font-size: 1.6rem; color: var(--accent); }
+.chapter-header .ch-icon { font-size: 1.5rem; }
+.chapter-header .ch-desc { color: var(--text2); font-size: 0.95rem; margin-top: 4px; }
+
+.info-box {
+  background: #ebf8ff; border: 1px solid #bee3f8; border-radius: 8px; padding: 14px 18px;
+  margin: 16px 0; font-size: 0.9rem;
+}
+.info-box.warn { background: #fffaf0; border-color: #fbd38d; }
+.info-box.tip { background: #f0fff4; border-color: #c6f6d5; }
+.info-box strong { display: block; margin-bottom: 4px; }
+
+.step-list { list-style: none; counter-reset: step; margin: 16px 0; }
+.step-list li { counter-increment: step; padding: 12px 0 12px 52px; position: relative; border-bottom: 1px solid var(--border); }
+.step-list li::before {
+  content: counter(step);
+  position: absolute; left: 0; top: 12px;
+  width: 34px; height: 34px; background: var(--accent); color: #fff; border-radius: 50%;
+  text-align: center; line-height: 34px; font-weight: 700; font-size: 0.85rem;
+}
+.step-list li strong { display: block; margin-bottom: 4px; font-size: 0.95rem; }
+.step-list li p { color: var(--text2); font-size: 0.88rem; margin: 0; }
+
+.param-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.88rem; }
+.param-table th { background: var(--accent); color: #fff; padding: 10px 12px; text-align: left; font-weight: 600; }
+.param-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+.param-table tr:nth-child(even) td { background: var(--bg2); }
+.param-table tr:hover td { background: #edf2f7; }
+
+.kbd { display: inline-block; background: #edf2f7; border: 1px solid #cbd5e0; border-radius: 4px;
+  padding: 1px 7px; font-family: 'Cascadia Code', monospace; font-size: 0.82rem; }
+
+@media print {
+  body { background: #fff; font-size: 13px; line-height: 1.6; }
+  .manual-wrap { max-width: 100%; padding: 0; box-shadow: none; }
+  .cover { padding: 40px 20px 30px; }
+  .cover h1 { font-size: 2rem; }
+  .tool-chapter { margin: 24px 0; }
+  .step-list li { padding: 8px 0 8px 42px; }
+  .step-list li::before { width: 28px; height: 28px; line-height: 28px; font-size: 0.75rem; }
+  .param-table { font-size: 0.8rem; }
+  .param-table th { padding: 6px 8px; }
+  .param-table td { padding: 5px 8px; }
+  a { color: var(--text); text-decoration: none; }
+  @page { margin: 1.8cm 1.5cm; size: A4; }
+  @page :first { margin-top: 1.5cm; }
+}
+@media (max-width: 700px) {
+  .cover { padding: 40px 16px 30px; }
+  .cover h1 { font-size: 1.6rem; }
+  .manual-wrap { padding: 20px 12px 60px; }
+}
+</style>
+<script>
+(function() {
+  if (sessionStorage.getItem('myapp_unlocked')) return;
+  var overlay = document.createElement('div');
+  overlay.id = 'pwd-overlay';
+  overlay.innerHTML = '<div style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0a0a1a;z-index:999999;display:flex;align-items:center;justify-content:center;"><div style="background:#16213e;padding:40px;border-radius:16px;border:1px solid #D2691E;max-width:360px;width:90%%;text-align:center;"><div style="font-size:40px;margin-bottom:10px;">🔒</div><h2 style="color:#D2691E;margin-bottom:12px;font-size:18px;">请输入密码</h2><input type="password" id="pwd-input" style="width:100%%;padding:12px;border-radius:8px;border:1px solid #3a3a5a;background:#0f3460;color:#e0e0e0;font-size:16px;text-align:center;box-sizing:border-box;" placeholder="输入密码" autofocus><button id="pwd-btn" style="margin-top:12px;width:100%%;padding:10px;border:none;border-radius:8px;background:#D2691E;color:#fff;font-size:15px;cursor:pointer;">解锁</button><p id="pwd-error" style="color:#c62828;font-size:13px;margin-top:8px;display:none;">密码错误，请重试</p></div></div>';
+  document.documentElement.appendChild(overlay);
+  
+  async function checkPwd() {
+    var pwd = document.getElementById('pwd-input').value;
+    var buf = new TextEncoder().encode(pwd);
+    var hash = await crypto.subtle.digest('SHA-256', buf);
+    var hex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+    if (hex === '5f6f2138aac618ff50a0751b76144e91468d5139ee38db42b0947ba123e37aaf') {
+      sessionStorage.setItem('myapp_unlocked', '1');
+      overlay.style.display = 'none';
+    } else {
+      document.getElementById('pwd-error').style.display = 'block';
+    }
+  }
+  
+  document.getElementById('pwd-btn').onclick = checkPwd;
+  document.getElementById('pwd-input').onkeydown = function(e) {
+    if (e.key === 'Enter') checkPwd();
+  };
+})();
+</script>
+</head>
+<body>
+<div class="manual-wrap">
+
+<!-- ============ 封面 ============ -->
+<div class="cover">
+  <h1>📖 My App Hub 完整操作指引</h1>
+  <div class="subtitle">顾力菡 · 应用工坊 — 全部已上线工具从 0 到 1 详细指南</div>
+  <div style="margin-top:8px;color:var(--text2)">涵盖 PDF 工具箱、图片压缩、数据清洗、审计抽凭、TB上数、BKD滚存、<br>Word上数校验、ROU测算、工时管理、文件重命名、文件目录扫描对比等全系列工具</div>
+  <div class="version-badge">版本 v2.0 · 2026年5月</div>
+  <div class="meta">全部工具均为纯浏览器端运行 · 数据永不离开您的电脑<br>GitHub: github.com/Bgu253518/my-app-hub</div>
+</div>
+
+<!-- ============ 目录 ============ -->
+<div class="toc">
+  <h2>📑 目录</h2>
+  <ol>
+    <li><a href="#ch-pdf">PDF 多功能工具箱 — 合并/拆分/提取/加解密</a></li>
+    <li><a href="#ch-img">图片批量压缩工具 — 压缩/转PDF/HEIC转换</a></li>
+    <li><a href="#ch-cleaner">CSV 数据清洗器 — 清洗/标准化/去重/导出</a></li>
+    <li><a href="#ch-renamer">批量文件重命名工具 — 查找替换/序号/模板</a></li>
+    <li><a href="#ch-rou">ROU 租赁测算器 — CAS 21 / IFRS 16 标准化测算</a></li>
+    <li><a href="#ch-sampling">审计抽凭助手 — MUS随机抽样/单家批量双模式</a></li>
+    <li><a href="#ch-tb">TB 自动上数器 — 科目映射/自动填入/借贷校验</a></li>
+    <li><a href="#ch-bkd">BKD 底稿滚存与上数助手 — 期末→期初/科目映射</a></li>
+    <li><a href="#ch-word">Word 报告上数与校验工作台 — 自动上数/合计校验</a></li>
+    <li><a href="#ch-gdc">GDC 审计任务工时管理系统 — 任务/工时/分摊/仪表盘</a></li>
+    <li><a href="#ch-audit-hub">审计项目工时任务协同系统 — 多角色/复核/归档</a></li>
+	    <li><a href="#ch-smart-todo">智能待办 — AI 解析/桌面提醒/导入导出</a></li>
+  </ol>
+</div>
+
+<!-- ====================================================================== -->
+<!-- 1. PDF 多功能工具箱 -->
+<!-- ====================================================================== -->
+<div class="tool-chapter" id="ch-pdf">
+<div class="chapter-header">
+  <span class="ch-icon">📄</span>
+  <h2>1. PDF 多功能工具箱</h2>
+  <div class="ch-desc">纯浏览器端 PDF 综合处理 — 合并、拆分、提取文字、查看信息、加解密，一站式解决</div>
+</div>
+<div class="info-box"><strong>🔐 隐私安全</strong>所有文件在您的浏览器本地处理，不会上传到任何服务器。处理大型 PDF 也不消耗流量。</div>
+<h3>功能一览</h3>
+<table class="param-table">
+  <tr><th>功能</th><th>说明</th><th>输入</th><th>输出</th></tr>
+  <tr><td>📎 合并 PDF</td><td>将多个 PDF 文件按顺序合并为一个</td><td>2+ 个 PDF 文件</td><td>1 个合并后的 .pdf</td></tr>
+  <tr><td>✂️ 拆分 PDF</td><td>按页码范围提取指定部分为独立文件</td><td>1 个 PDF + 页码范围</td><td>1 个拆分后的 .pdf</td></tr>
+  <tr><td>📝 提取文字</td><td>提取 PDF 中所有可复制文字内容</td><td>1 个 PDF 文件</td><td>.txt 文本文件</td></tr>
+  <tr><td>ℹ️ 文件信息</td><td>查看元数据（页数、作者、创建时间等）</td><td>1 个 PDF 文件</td><td>屏幕展示</td></tr>
+  <tr><td>🔒 加密保护</td><td>为 PDF 添加 AES-256 密码保护</td><td>1 个 PDF + 密码</td><td>1 个加密 .pdf</td></tr>
+  <tr><td>🔓 解密移除</td><td>移除 PDF 的打开密码（需知道密码）</td><td>1 个加密 PDF + 密码</td><td>1 个解密 .pdf</td></tr>
+</table>
+<h3>操作步骤</h3>
+<ol class="step-list">
+  <li><strong>选择功能</strong><p>在顶部标签栏点击对应功能：合并 / 拆分 / 提取文字 / 信息 / 加密 / 解密。默认进入「合并」。</p></li>
+  <li><strong>上传文件</strong><p>将 PDF 文件拖拽到「拖拽 PDF 文件到此处」区域，或点击该区域选择文件。支持多选（合并模式下）。上传后右侧会预览 PDF 前几页。</p></li>
+  <li><strong>配置参数（按需）</strong><p>拆分模式：输入页码范围（如 <span class="kbd">1-5,8,10-12</span>）。加密模式：输入密码（至少 4 位）。解密模式：输入原密码。</p></li>
+  <li><strong>执行处理</strong><p>点击底部操作按钮（如「合并并下载」）。处理过程中按钮会显示进度状态。</p></li>
+  <li><strong>下载结果</strong><p>处理完成后自动触发浏览器下载。检查下载文件夹中的输出文件。</p></li>
+</ol>
+<div class="info-box tip"><strong>💡 提示</strong>拆分页码范围支持多种格式：单页 <span class="kbd">5</span>、范围 <span class="kbd">3-8</span>、多组 <span class="kbd">1-3,7,10-15</span>。页码从 1 开始计数。</div>
+<div class="info-box warn"><strong>⚠ 注意</strong>加密采用 AES-256 标准。密码一旦丢失无法找回，请妥善保管。解密需提供原密码。</div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- 2. 图片批量压缩工具 -->
+<!-- ====================================================================== -->
+<div class="tool-chapter" id="ch-img">
+<div class="chapter-header">
+  <span class="ch-icon">🖼️</span>
+  <h2>2. 图片批量压缩工具</h2>
+  <div class="ch-desc">批量压缩 JPG/PNG/HEIC 图片，合并转 PDF，HEIC 格式转换，纯浏览器端处理</div>
+</div>
+<h3>功能一览</h3>
+<table class="param-table">
+  <tr><th>功能</th><th>说明</th></tr>
+  <tr><td>🗜️ 批量压缩</td><td>对多张图片同时压缩，可调质量（10%-100%），预览压缩前后大小对比</td></tr>
+  <tr><td>📄 转 PDF</td><td>将多张图片合并为一个 PDF 文件，可调页面尺寸和方向</td></tr>
+  <tr><td>📱 HEIC 转换</td><td>将 iPhone 拍摄的 HEIC 格式自动转换为通用 JPG/PNG 格式</td></tr>
+</table>
+<h3>操作步骤 — 批量压缩</h3>
+<ol class="step-list">
+  <li><strong>上传图片</strong><p>拖拽图片文件（JPG/PNG/WebP/HEIC）到上传区域，或点击选择。支持一次选择多张。</p></li>
+  <li><strong>调节压缩质量</strong><p>使用滑动条调节质量（10%-100%）。越低压缩率越高、文件越小、画质越低。右侧实时显示预估大小。</p></li>
+  <li><strong>（可选）调整尺寸</strong><p>可设置最大宽度/高度（像素），超出会等比缩放。不设为保持原尺寸。</p></li>
+  <li><strong>预览对比</strong><p>每张图片下方显示「原始大小 → 压缩后预估大小」的对比。</p></li>
+  <li><strong>下载</strong><p>点击「批量下载」打包为 ZIP 一次性下载所有压缩后的图片。</p></li>
+</ol>
+<h3>操作步骤 — 图片转 PDF</h3>
+<ol class="step-list">
+  <li><strong>切换到「图片转PDF」标签</strong></li>
+  <li><strong>上传图片</strong><p>拖拽需要合并的图片。可拖拽调整图片顺序（排序影响 PDF 中的页面顺序）。</p></li>
+  <li><strong>选择页面设置</strong><p>纸张尺寸（A4/Letter/原始）、方向（纵向/横向）、边距。</p></li>
+  <li><strong>生成并下载</strong><p>点击「生成 PDF」，自动下载合并后的 PDF 文件。</p></li>
+</ol>
+<div class="info-box tip"><strong>💡 技巧</strong>建议质量设为 70-85%，文件大小可减少 60-80% 而肉眼几乎看不出差异。HEIC 格式会自动识别并转换。</div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- 3. CSV 数据清洗器 -->
+<!-- ====================================================================== -->
+<div class="tool-chapter" id="ch-cleaner">
+<div class="chapter-header">
+  <span class="ch-icon">🧹</span>
+  <h2>3. CSV 数据清洗器</h2>
+  <div class="ch-desc">上传表格自动扫描问题，一键清洗：去空格、去重、标准化日期/数字、填充空值，导出 Power BI 就绪数据</div>
+</div>
+<h3>支持的文件格式</h3>
+<p>CSV（逗号/制表符分隔）、XLS、XLSX。自动检测编码（UTF-8、GBK、BIG5 等）。</p>
+<h3>清洗功能详解</h3>
+<table class="param-table">
+  <tr><th>清洗项</th><th>作用</th><th>示例</th></tr>
+  <tr><td>去除首尾空格</td><td>删除单元格内容前后的空白字符</td><td><span class="kbd">" 张三 "</span> → <span class="kbd">"张三"</span></td></tr>
+  <tr><td>删除空行</td><td>移除所有单元格都为空的行</td><td>—</td></tr>
+  <tr><td>去重</td><td>按所有列检测并删除完全重复的行</td><td>保留首次出现的行</td></tr>
+  <tr><td>标准化日期</td><td>将各种日期格式统一为 YYYY-MM-DD</td><td><span class="kbd">2024.12.31</span> → <span class="kbd">2024-12-31</span></td></tr>
+  <tr><td>标准化数字</td><td>去除千位分隔符、统一小数点、处理百分比</td><td><span class="kbd">¥1,234.56</span> → <span class="kbd">1234.56</span></td></tr>
+  <tr><td>清理不可见字符</td><td>去除零宽空格、制表符、换行符等</td><td>—</td></tr>
+  <tr><td>填充空值</td><td>将空单元格填充为指定值（0/上下行/自定义）</td><td>空 → 0 或用上行值填充</td></tr>
+  <tr><td>删除全空列</td><td>移除整列都无数据的列</td><td>—</td></tr>
+</table>
+<h3>操作步骤</h3>
+<ol class="step-list">
+  <li><strong>上传文件</strong><p>拖拽 CSV/Excel 文件到上传区域。系统自动扫描并显示数据预览和问题统计（空值数、重复行数、日期格式问题数等）。</p></li>
+  <li><strong>勾选清洗项</strong><p>默认已全选推荐的清洗项。可根据需要取消勾选不需要的操作。</p></li>
+  <li><strong>（可选）配置填充策略</strong><p>如果选择「填充空值」，可选择填充方式：填充为 0、用上一行值填充、用下一行值填充、填充自定义值。</p></li>
+  <li><strong>预览对比</strong><p>切换「原始数据 / 清洗后数据」标签查看清洗前后对比。问题行会用颜色高亮标记。</p></li>
+  <li><strong>执行清洗</strong><p>点击「一键清洗」按钮。系统按勾选的清洗项依次处理，完成后显示清洗报告。</p></li>
+  <li><strong>导出结果</strong><p>点击「导出 CSV」下载清洗后的数据。也可选择「导出报告 Excel」获得包含清洗前后对比 + 清洗日志的完整 Excel 文件。</p></li>
+</ol>
+<div class="info-box warn"><strong>⚠ 注意</strong>清洗操作不可撤销。建议先导出原始数据备份，或使用「导出报告 Excel」保留清洗前的数据对照。</div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- 4. 批量文件重命名工具 -->
+<!-- ====================================================================== -->
+<div class="tool-chapter" id="ch-renamer">
+<div class="chapter-header">
+  <span class="ch-icon">📝</span>
+  <h2>4. 批量文件重命名工具</h2>
+  <div class="ch-desc">浏览器中一键批量重命名文件：查找替换、序号前缀、自定义模板三种模式，支持预览和撤销</div>
+</div>
+<div class="info-box"><strong>🌐 浏览器要求</strong>需使用 Chrome 或 Edge 浏览器（需要 File System Access API）。Firefox 和 Safari 暂不支持。</div>
+<h3>三种重命名模式</h3>
+<table class="param-table">
+  <tr><th>模式</th><th>适用场景</th><th>示例</th></tr>
+  <tr><td>🔍 查找替换</td><td>批量替换文件名中的特定文字</td><td>将 "草稿_" 替换为 "终版_"；支持正则表达式</td></tr>
+  <tr><td>🔢 序号前缀</td><td>添加统一前缀 + 自动编号</td><td><span class="kbd">报告_001.pdf, 报告_002.pdf...</span></td></tr>
+  <tr><td>📐 自定义模板</td><td>用变量自由组合文件名</td><td><span class="kbd">{num}-{name}-{date}.{ext}</span></td></tr>
+</table>
+<h3>模板变量说明</h3>
+<table class="param-table">
+  <tr><th>变量</th><th>含义</th><th>示例</th></tr>
+  <tr><td><span class="kbd">{name}</span></td><td>原文件名（不含扩展名）</td><td>report</td></tr>
+  <tr><td><span class="kbd">{ext}</span></td><td>原扩展名</td><td>pdf</td></tr>
+  <tr><td><span class="kbd">{num}</span></td><td>自动序号（从起始值递增）</td><td>001, 002, 003...</td></tr>
+  <tr><td><span class="kbd">{date}</span></td><td>当前日期</td><td>2026-05-17</td></tr>
+  <tr><td><span class="kbd">{parent}</span></td><td>所在文件夹名称</td><td>审计底稿</td></tr>
+</table>
+<h3>操作步骤</h3>
+<ol class="step-list">
+  <li><strong>选择文件夹</strong><p>点击「选择文件夹」按钮，浏览器会弹出文件夹选择对话框。选择一个文件夹后，系统列出其中所有文件。</p></li>
+  <li><strong>（可选）过滤文件类型</strong><p>在扩展名过滤框中输入要处理的文件类型（如 <span class="kbd">.pdf,.xlsx</span>），只显示匹配的文件。</p></li>
+  <li><strong>选择重命名模式</strong><p>切换标签选择模式：查找替换 / 序号前缀 / 自定义模板。</p></li>
+  <li><strong>配置规则</strong><p>按模式填写参数。查找替换可勾选「正则表达式」进行高级匹配。序号模式可设置起始编号和位数。</p></li>
+  <li><strong>预览结果</strong><p>右侧表格会实时显示「原文件名 → 新文件名」的映射。检查是否有冲突（红色标记）。</p></li>
+  <li><strong>执行重命名</strong><p>点击「执行重命名」。完成后可点击「撤销」恢复到原名。</p></li>
+</ol>
+<div class="info-box warn"><strong>⚠ 注意</strong>操作的是本地文件系统中的真实文件。重命名后关闭页面即无法撤销，建议先预览确认无误再执行。</div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- 5. ROU 租赁测算器 -->
+<!-- ====================================================================== -->
+<div class="tool-chapter" id="ch-rou">
+<div class="chapter-header">
+  <span class="ch-icon">📊</span>
+  <h2>5. ROU 租赁测算器</h2>
+  <div class="ch-desc">基于 CAS 21（IFRS 16）新租赁准则的标准化测算工具 — 多合同批量测算，自动生成完整摊销明细表</div>
+</div>
+<h3>支持的租赁参数</h3>
+<table class="param-table">
+  <tr><th>参数</th><th>说明</th><th>典型值</th></tr>
+  <tr><td>租赁年限</td><td>租赁合同总时长</td><td>3年 / 5年 / 10年</td></tr>
+  <tr><td>付款频率</td><td>每年付款次数</td><td>月付(12) / 季付(4) / 半年付(2) / 年付(1)</td></tr>
+  <tr><td>付款时点</td><td>期初付款或期末付款</td><td>期初 / 期末</td></tr>
+  <tr><td>折现率</td><td>计算租赁负债现值的利率</td><td>4.5% - 8%（增量借款利率）</td></tr>
+  <tr><td>每期付款额</td><td>定期支付的租金金额</td><td>如月付 ¥50,000</td></tr>
+  <tr><td>复原成本</td><td>租赁期满预计的复原费用</td><td>可选，如 ¥100,000</td></tr>
+  <tr><td>租赁激励</td><td>出租方给予的优惠</td><td>可选，如免租期</td></tr>
+  <tr><td>余值担保</td><td>承租方担保的残值</td><td>可选</td></tr>
+</table>
+<h3>操作步骤</h3>
+<ol class="step-list">
+  <li><strong>添加合同</strong><p>点击「添加合同」，输入合同名称（如"办公室租赁-XX大厦"）、起租日期、租赁年限等基本信息。</p></li>
+  <li><strong>配置付款参数</strong><p>设置年付款额、付款频率（月/季/半年/年）、付款时点（期初/期末）。系统自动计算每期付款额。</p></li>
+  <li><strong>设置折现率</strong><p>输入适用的折现率（通常为增量借款利率）。这是计算租赁负债现值的关键参数。</p></li>
+  <li><strong>（可选）添加其他参数</strong><p>如有复原成本、租赁激励或余值担保，勾选并填写对应金额。</p></li>
+  <li><strong>自动计算</strong><p>系统自动计算：租赁负债现值、ROU 资产原值、以及完整的逐期摊销明细表。</p></li>
+  <li><strong>查看摊销明细</strong><p>切换到「摊销明细」标签查看每期的利息费用、本金偿还、折旧金额和 ROU 净值。</p></li>
+  <li><strong>批量管理</strong><p>可添加多个合同，每个独立计算。支持从 Excel 批量导入合同参数。</p></li>
+  <li><strong>导出结果</strong><p>点击「导出 Excel」下载包含所有合同的完整测算工作簿（含摊销明细 + 会计分录参考）。</p></li>
+</ol>
+<div class="info-box"><strong>📐 计算原理</strong>租赁负债 = 各期付款按折现率折现到起租日的现值之和。ROU 资产 = 租赁负债 + 复原成本现值 - 租赁激励。折旧按直线法在租赁期内摊销。</div>
+<div class="info-box tip"><strong>💡 审计提示</strong>导出的 Excel 包含计算公式（非死数），可直接放入底稿归档。修改参数后公式自动更新。</div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- 6. 审计抽凭助手 -->
+<!-- ====================================================================== -->
+<div class="tool-chapter" id="ch-sampling">
+<div class="chapter-header">
+  <span class="ch-icon">🎯</span>
+  <h2>6. 审计抽凭助手</h2>
+  <div class="ch-desc">MUS / 随机抽样双模式，单家 + 批量多公司，Seeded PRNG 可复现，导出日志与抽样清单</div>
+</div>
+<h3>两种抽样方法</h3>
+<table class="param-table">
+  <tr><th>方法</th><th>原理</th><th>适用场景</th></tr>
+  <tr><td>🎯 MUS（货币单位抽样）</td><td>按金额权重在累计数轴上投射样本，高价值项目自动高概率选中</td><td>实质性测试、大额项目筛查</td></tr>
+  <tr><td>🎲 随机抽样</td><td>Fisher-Yates 洗牌算法，给定种子可复现随机序列</td><td>控制测试、设定规模抽样</td></tr>
+</table>
+<h3>参数说明</h3>
+<table class="param-table">
+  <tr><th>参数</th><th>说明</th></tr>
+  <tr><td>风险系数 (RF)</td><td>用于 MUS 方法计算样本量。可从内置映射表选择或手动输入</td></tr>
+  <tr><td>随机种子 (Seed)</td><td>相同种子 + 相同数据 = 相同抽样结果。建议使用日期如 <span class="kbd">20260517</span></td></tr>
+  <tr><td>高价值阈值 (PM)</td><td>金额超过此值的项目 100% 选取（MUS 模式）</td></tr>
+  <tr><td>样本量/比例</td><td>设定规模随机抽样：直接指定样本数量；未设定规模：按 N=项目数×比例/RF 自动计算</td></tr>
+</table>
+<h3>操作步骤 — 单家公司</h3>
+<ol class="step-list">
+  <li><strong>录入/导入数据</strong><p>手动逐行添加凭证（凭证号、金额、摘要），或从 Excel/CSV 批量导入。至少需要凭证号和金额两列。</p></li>
+  <li><strong>选择抽样方法</strong><p>切换 MUS 或随机抽样标签。MUS 需设置 RF 和 PM；随机抽样需设置种子和样本量（或比例）。</p></li>
+  <li><strong>执行抽样</strong><p>点击「执行抽样」。结果表格展示被选中的凭证列表，含命中原因（MUS 模式标注"高价值"或"MUS命中"）。</p></li>
+  <li><strong>导出</strong><p>导出 Excel 包含「抽样清单」Sheet（被选中凭证明细）+「抽样日志」Sheet（参数、种子、命中原因）。</p></li>
+</ol>
+<h3>操作步骤 — 批量多家公司</h3>
+<ol class="step-list">
+  <li><strong>上传批量文件</strong><p>上传包含多家公司数据的 Excel（每家公司一个 Sheet，或一列标识公司名称）。</p></li>
+  <li><strong>配置参数表</strong><p>系统自动解析出所有公司，每个公司独立设置抽样参数（方法、RF、种子等）。支持向下填充快速配置。</p></li>
+  <li><strong>批量执行</strong><p>点击「批量抽样」，逐公司执行并显示进度条。</p></li>
+  <li><strong>导出</strong><p>导出 Excel 包含每个公司的抽样清单 + 抽样日志 + 抽样汇总 Sheet + 全局参数 Sheet。</p></li>
+</ol>
+<div class="info-box tip"><strong>💡 复现技巧</strong>需要复现上次抽样结果时，只需使用相同的随机种子和数据即可。建议将种子记录在审计底稿中。</div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- 7. TB 自动上数器 -->
+<!-- ====================================================================== -->
+<div class="tool-chapter" id="ch-tb">
+<div class="chapter-header">
+  <span class="ch-icon">📊</span>
+  <h2>7. TB 自动上数器</h2>
+  <div class="ch-desc">科目映射模板匹配、客户余额表自动填入 TB、公式保护、借贷自动校验</div>
+</div>
+<h3>核心概念</h3>
+<p><strong>科目映射模板</strong>：将客户自定义科目编码对应到标准 TB 科目的一套规则。维护一次，多期复用。</p>
+<h3>操作步骤</h3>
+<ol class="step-list">
+  <li><strong>维护科目映射模板</strong><p>首次使用需建立映射表。手动添加科目映射（客户科目代码 → 标准科目代码），或从 Excel 导入已有映射。系统会保存到浏览器本地存储，下次打开仍在。</p></li>
+  <li><strong>上传客户余额表</strong><p>上传客户的科目余额表 Excel/CSV。系统自动识别列头（科目代码、科目名称、期末余额、发生额等）。如有未识别列可手动指定。</p></li>
+  <li><strong>上传 TB 底稿</strong><p>上传已有的 TB 底稿 Excel（或点「自动生成 TB 模板」创建一个空 TB 结构）。系统自动检测已有公式，公式单元格上数时会被跳过保护。</p></li>
+  <li><strong>执行上数</strong><p>点击「自动上数」。系统根据映射模板匹配科目：资产/负债/权益类填入期末余额；收入/费用类填入本期发生额。自动处理借贷方向正负号。</p></li>
+  <li><strong>查看未匹配项</strong><p>上数完成后，未匹配的科目以红色高亮展示，并提供模糊匹配 Top 3 推荐。可一键添加到映射模板并重新上数。</p></li>
+  <li><strong>校验</strong><p>自动执行借贷平衡校验。如有不平衡会高亮提示差额。</p></li>
+  <li><strong>下载</strong><p>导出填好的 TB（公式和格式完整保留）+ 未匹配清单 + 校验报告。</p></li>
+</ol>
+<div class="info-box warn"><strong>⚠ 关键注意</strong>TB 底稿中已有的公式单元格上数时会自动跳过，不会被覆盖。这是审计底稿数据完整性的核心保障。</div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- 8. BKD 底稿滚存与上数助手 -->
+<!-- ====================================================================== -->
+<div class="tool-chapter" id="ch-bkd">
+<div class="chapter-header">
+  <span class="ch-icon">📋</span>
+  <h2>8. BKD 底稿滚存与上数助手</h2>
+  <div class="ch-desc">BKD 底稿日期列自动识别、期末数→期初数滚存、科目映射上数、借贷校验</div>
+</div>
+<h3>操作步骤</h3>
+<ol class="step-list">
+  <li><strong>上传 BKD 底稿</strong><p>上传包含多个 Sheet 的 BKD 底稿 Excel。系统自动扫描表头，正则匹配日期列（支持 <span class="kbd">2024.12.31</span>、<span class="kbd">2024-12-31</span>、<span class="kbd">24.12.31</span> 等格式）。</p></li>
+  <li><strong>确认年份识别</strong><p>系统展示每个 Sheet 识别到的年份和日期列。如有识别错误可手动修正。</p></li>
+  <li><strong>配置滚存规则</strong><p>指定源列（如"2024年末"）→ 目标列（如"2025年初"）。一个源列可对应多个目标列。</p></li>
+  <li><strong>执行滚存</strong><p>系统将期末数硬拷贝为目标列期初数（死数），清空源列数据区（公式保留结构，死数清空），自动更新列标题至新年份。</p></li>
+  <li><strong>导入本期余额表</strong><p>上传本期科目余额表，选择已维护的科目映射模板。系统自动匹配标准科目并在底稿中定位行。</p></li>
+  <li><strong>执行上数</strong><p>根据科目映射自动填入本期数值。公式单元格自动跳过。根据借贷方向处理正负号。</p></li>
+  <li><strong>校验</strong><p>自动校验借贷平衡和年初年末一致性。不平衡或钩稽不符的项目高亮报警。</p></li>
+  <li><strong>下载</strong><p>导出完整的底稿 Excel（公式完整保留）+ 校验报告。</p></li>
+</ol>
+<div class="info-box"><strong>📋 滚存逻辑</strong>"滚存"是指将上期期末数复制为本期期初数。例如：2024年末审定数 → 2025年初数。这是 BKD 底稿年度更新的核心操作。</div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- 9. Word 报告上数与校验工作台 -->
+<!-- ====================================================================== -->
+<div class="tool-chapter" id="ch-word">
+<div class="chapter-header">
+  <span class="ch-icon">📊</span>
+  <h2>9. Word 报告上数与校验工作台</h2>
+  <div class="ch-desc">Word 附注表格自动上数、科目映射匹配、合计行加总校验、导出 .docx 和校验 Excel</div>
+</div>
+<h3>操作步骤</h3>
+<ol class="step-list">
+  <li><strong>上传 Word 报告</strong><p>上传 .docx 格式的审计报告。系统自动提取所有表格。也可直接粘贴 Word 表格内容。</p></li>
+  <li><strong>配置列映射</strong><p>系统展示表格列表，为每个表格指定「科目名称列」（用来匹配）和「待填数值列」（目标填充位置）。</p></li>
+  <li><strong>上传数据源</strong><p>上传审定 TB 或科目余额表 Excel 作为上数数据源。系统自动解析科目代码和金额列。</p></li>
+  <li><strong>执行上数</strong><p>系统按科目名称自动匹配（去空格、全半角统一），将数据源数值填入报告表格空白单元格。已填单元格浅绿色标识，合计行浅黄色背景。</p></li>
+  <li><strong>加计校验</strong><p>系统自动识别合计行，向上寻找明细行，逐列加总对比。差异超过 0.01 的单元格红底闪烁标记。</p></li>
+  <li><strong>处理差异</strong><p>检查红底标记的单元格，判断是上数错误还是报告本身差异。可手动修正后重新校验。</p></li>
+  <li><strong>导出</strong><p>导出填好的 Word 报告（.docx）+ 加计校验 Excel（校验报告 Sheet + 差异清单 Sheet）。</p></li>
+</ol>
+<div class="info-box warn"><strong>⚠ 注意</strong>系统按科目「名称」（而非代码）匹配，因为 Word 报告中通常不包含科目代码。匹配时已自动处理常见差异（空格、全半角括号等），但特殊写法可能需手动配对。</div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- 10. GDC 审计任务工时管理系统 -->
+<!-- ====================================================================== -->
+<div class="tool-chapter" id="ch-gdc">
+<div class="chapter-header">
+  <span class="ch-icon">📋</span>
+  <h2>10. GDC 审计任务工时管理系统</h2>
+  <div class="ch-desc">四步闭环：唯一识别码 → 工时记录（自动带出类型/科目）→ 项目分摊 → 多维度管理仪表盘 + AI 智能问答</div>
+</div>
+<h3>系统四步设计</h3>
+<ol class="step-list">
+  <li><strong>第一步：建立项目与任务</strong><p>先在「项目信息管理」中添加项目（编号 + 名称）。再在「任务与工作流」中创建任务，选择关联项目、任务类型（DWW TOD/SAP/Sampling/Levvia），填写科目代码。点击「自动生成识别码」生成唯一编码（格式：<span class="kbd">项目编号_类型_科目_序号</span>）。</p></li>
+  <li><strong>第二步：成员填写工时</strong><p>切换到「工时记录」标签。选择任务后系统自动带出任务类型和负责科目（浅蓝底色只读），成员只需填写姓名、日期和工时。填报人输入过的名字会被自动补全。</p></li>
+  <li><strong>第三步：配置项目分摊</strong><p>切换到「项目工时分摊」标签。一个任务Code 可分摊到多个项目，设置比例（总和应为 100%）。系统自动计算有效工时 = 原始工时 × 分摊比例。</p></li>
+  <li><strong>第四步：查看仪表盘</strong><p>切换到「管理仪表盘」。4 个统计卡片 + 4 个图表（成员工时排名/类型分布/项目工时 TOP10/成员效能对比）+ 详细数据表。</p></li>
+</ol>
+<h3>AI 智能问答支持的查询</h3>
+<table class="param-table">
+  <tr><th>查询类型</th><th>示例问法</th></tr>
+  <tr><td>成员工时排行</td><td>"总工时排行" / "工时最多的成员是谁"</td></tr>
+  <tr><td>任务类型分布</td><td>"任务类型工时分布" / "DWW TOD占比多少"</td></tr>
+  <tr><td>项目投入 TOP</td><td>"项目投入TOP5" / "哪个项目工时最多"</td></tr>
+  <tr><td>成员明细</td><td>"张三的工时明细" / "李四做了哪些任务"</td></tr>
+  <tr><td>月度汇总</td><td>"2026年5月工时汇总"</td></tr>
+</table>
+<div class="info-box tip"><strong>💡 导出</strong>任务清单和工时记录均支持 CSV 导出，可导入 Excel 或 Power BI 做进一步分析。</div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- 11. 审计项目工时任务协同系统 -->
+<!-- ====================================================================== -->
+<div class="tool-chapter" id="ch-audit-hub">
+<div class="chapter-header">
+  <span class="ch-icon">📋</span>
+  <h2>11. 审计项目工时任务协同系统</h2>
+  <div class="ch-desc">多角色审计项目管理、任务分配、工时追踪、复核流程、一键导出快照归档</div>
+</div>
+<h3>角色体系</h3>
+<table class="param-table">
+  <tr><th>角色</th><th>权限与视角</th></tr>
+  <tr><td>所长/合伙人</td><td>全局视图，所有项目和成员数据，关注整体效率</td></tr>
+  <tr><td>组长/经理</td><td>管辖范围内项目，可分配任务、审批工时、查看组员效能</td></tr>
+  <tr><td>项目经理</td><td>负责项目详情，创建任务清单、跟踪进度</td></tr>
+  <tr><td>复核人</td><td>审核已完成任务，确认或退回</td></tr>
+  <tr><td>审计员</td><td>查看分配给自己的任务，上报进度、填写工时</td></tr>
+</table>
+<h3>操作步骤</h3>
+<ol class="step-list">
+  <li><strong>切换角色</strong><p>顶部角色选择器切换身份。不同角色看到不同的数据和操作界面。</p></li>
+  <li><strong>创建项目</strong><p>（项目经理）填写项目信息，可勾选「从科目映射自动生成任务清单」快速创建标准化任务列表。</p></li>
+  <li><strong>分配任务</strong><p>（组长/经理）将任务分配给团队成员。支持均分按钮一键平均分配。每个任务可指定负责人和截止日期。</p></li>
+  <li><strong>报工与追踪</strong><p>（审计员）在自己的「今日待办」中看到任务，完成后上报进度和工时。系统自动累加工时和更新任务状态。</p></li>
+  <li><strong>复核闭环</strong><p>（复核人）审核已完成任务，确认通过或退回修改。通过后任务正式关闭。</p></li>
+  <li><strong>导出归档</strong><p>（组长/经理）一键导出全景快照 Excel（含项目概览 + 任务进度 + 工时汇总 + 问题日志 4 个 Sheet）+ JSON 备份 + PDF 报告。归档前自动完整性校验。</p></li>
+</ol>
+<div class="info-box"><strong>📦 数据存储</strong>所有数据存储在浏览器 localStorage。不同角色在同一浏览器中切换即生效。数据可通过 JSON 备份跨设备迁移。</div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- 12. 智能待办 -->
+<!-- ====================================================================== -->
+<div class="tool-chapter" id="ch-smart-todo">
+<div class="chapter-header">
+  <span class="ch-icon">📋</span>
+  <h2>12. 智能待办</h2>
+  <div class="ch-desc">AI 自然语言解析任务、桌面提醒通知、邮件格式智能识别、CSV/JSON 导入导出</div>
+</div>
+<h3>功能一览</h3>
+<table class="param-table">
+  <tr><th>功能</th><th>说明</th></tr>
+  <tr><td>🤖 AI 解析</td><td>粘贴自然语言或邮件，自动提取任务、截止日期、优先级、标签</td></tr>
+  <tr><td>📧 邮件识别</td><td>自动跳过 From/To/Subject 等邮件头、签名、免责声明，只解析正文中的任务</td></tr>
+  <tr><td>🔔 桌面提醒</td><td>浏览器通知权限授权后，定时弹出待办提醒（可配间隔和时段）</td></tr>
+  <tr><td>📥 批量导入</td><td>CSV 格式粘贴、JSON 文件导入、示例数据加载</td></tr>
+  <tr><td>📤 导出备份</td><td>导出 CSV / JSON，可用于数据迁移</td></tr>
+  <tr><td>🎯 优先级</td><td>高/中/低三级，逾期红色标记，临近黄色提醒</td></tr>
+</table>
+<h3>操作步骤 — AI 解析</h3>
+<ol class="step-list">
+  <li><strong>粘贴文本</strong><p>在顶部文本框粘贴自然语言（如"明天下午3点前完成审计报告，高优先级 #审计"）或整封工作邮件。</p></li>
+  <li><strong>点击 AI 解析</strong><p>系统优先尝试本地 AI 模型。如模型未就绪则自动降级为本地正则解析（同样有效）。</p></li>
+  <li><strong>查看结果</strong><p>解析出的任务自动添加到待办列表，包含任务名称、截止日期、优先级和标签。</p></li>
+</ol>
+<h3>操作步骤 — 设置桌面提醒</h3>
+<ol class="step-list">
+  <li><strong>打开设置</strong><p>点击右上角齿轮图标 ⚙️。</p></li>
+  <li><strong>请求权限</strong><p>点击「请求权限」→ 浏览器弹出通知权限提示 → 点击「允许」。</p></li>
+  <li><strong>测试提醒</strong><p>点击「🧪 测试提醒」验证通知是否正常弹出（屏幕右下角）。</p></li>
+  <li><strong>配置参数</strong><p>设置每日首次提醒时间（如 9 点）、提醒间隔（如 4 小时）、提前提醒截止前小时数（如 24 小时）。</p></li>
+  <li><strong>保持页面打开</strong><p>页面需保持打开状态（可最小化），系统会按设定的间隔自动检查并推送提醒。</p></li>
+</ol>
+<h3>邮件解析示例</h3>
+<div class="info-box">
+<strong>📧 输入邮件：</strong><br>
+From: manager@firm.com<br>
+Subject: 本周审计任务分配<br>
+各位同事，请在本周五前完成以下工作：<br>
+1. 底稿科目 Cash 和 AR 的 TOD 测试<br>
+2. 提交 Sampling 样本清单给复核人<br>
+3. 更新 BKD 底稿至 2025 年度<br>
+谢谢！—— 张经理
+</div>
+<p style="margin-top:8px">系统会自动跳过邮件头（From/Subject）和签名（谢谢！——张经理），只提取 3 条任务正文进行解析。</p>
+<div class="info-box tip"><strong>💡 快捷操作</strong>输入框支持 <span class="kbd">Enter</span> 快捷添加。表单支持粘贴多行文本批量解析。点击待办项左侧圆圈可标记完成。</div>
+</div>
+
+<!-- ============ 尾部 ============ -->
+<div style="text-align:center;padding:40px 0;color:var(--text2);font-size:0.85rem;border-top:2px solid var(--border);margin-top:60px">
+  <p><strong>My App Hub</strong> — 顾力菡 · 应用工坊</p>
+  <p>全部工具在浏览器本地运行 · 数据永不离开您的电脑</p>
+  <p style="margin-top:8px">
+    <a href="https://bgu253518.github.io/my-app-hub/" style="color:var(--accent2)">🏠 返回首页</a> &nbsp;·&nbsp;
+    <a href="https://github.com/Bgu253518/my-app-hub" style="color:var(--accent2)">📂 GitHub 源码</a>
+  </p>
+  <p style="margin-top:12px;color:#999">版本 v2.0 · 最后更新 2026年5月 · 共 12 个工具完整指引</p>
+  <p style="color:#999">💡 提示：在浏览器中按 <span class="kbd">Ctrl+P</span> → 另存为 PDF，即可导出精美的离线操作手册</p>
+</div>
+
+</div><!-- /.manual-wrap -->
+</body>
+</html>
+

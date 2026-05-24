@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>图片工具箱 · 压缩 / 转PDF / HEIC转换</title>
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-deep: #0a0a14;
+  --bg-card: rgba(22, 22, 44, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --text-primary: #e8e8f0;
+  --text-secondary: #9999b0;
+  --accent-1: #7c5cfc;
+  --accent-2: #5cfca0;
+  --accent-3: #fc5c9c;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --transition: 0.2s ease;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: linear-gradient(160deg, #0a0a14 0%, #12122a 30%, #16163a 60%, #0d0d24 100%);
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 20% 20%, rgba(124, 92, 252, 0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 60%, rgba(252, 92, 156, 0.04) 0%, transparent 50%);
+  pointer-events: none; z-index: 0;
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(124, 92, 252, 0.25); border-radius: 3px; }
+
+/* Header */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10, 10, 20, 0.8);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 0 24px; height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header .brand { font-size: 17px; font-weight: 700; }
+.header a { color: var(--text-secondary); text-decoration: none; font-size: 13px; }
+.header a:hover { color: var(--text-primary); }
+
+/* Tabs */
+.tabs {
+  position: relative; z-index: 1;
+  display: flex; gap: 4px; padding: 16px 24px 0;
+  border-bottom: 1px solid var(--glass-border);
+  max-width: 1200px; margin: 0 auto; overflow-x: auto;
+}
+.tab {
+  padding: 10px 20px; border: 1px solid transparent; border-radius: 10px 10px 0 0;
+  background: transparent; color: var(--text-secondary); font-size: 14px;
+  cursor: pointer; transition: var(--transition); white-space: nowrap; border-bottom: none;
+}
+.tab:hover { color: var(--text-primary); background: rgba(255,255,255,0.03); }
+.tab.active { color: #fff; background: rgba(124, 92, 252, 0.15); border-color: rgba(124, 92, 252, 0.25); }
+
+/* Main */
+.main {
+  position: relative; z-index: 1;
+  max-width: 1200px; margin: 0 auto; padding: 24px;
+}
+
+/* Section */
+.section {
+  background: var(--bg-card); border: 1px solid var(--glass-border);
+  border-radius: var(--radius); padding: 24px; margin-bottom: 20px;
+  backdrop-filter: blur(10px);
+}
+.section-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+.section-hint { font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; }
+
+/* Drop Zone */
+.drop-zone {
+  border: 2px dashed rgba(124,92,252,0.3); border-radius: var(--radius);
+  padding: 40px 24px; text-align: center; cursor: pointer; transition: var(--transition);
+}
+.drop-zone:hover, .drop-zone.dragover { border-color: var(--accent-1); background: rgba(124,92,252,0.05); }
+.drop-zone .dz-icon { font-size: 36px; margin-bottom: 8px; }
+.drop-zone .dz-text { font-size: 15px; font-weight: 600; }
+.drop-zone .dz-hint { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+/* Buttons */
+.btn {
+  padding: 10px 20px; border: none; border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 600; cursor: pointer; transition: var(--transition);
+  display: inline-flex; align-items: center; gap: 6px; font-family: inherit;
+}
+.btn-primary { background: var(--accent-1); color: #fff; }
+.btn-primary:hover { background: #9578ff; }
+.btn-secondary { background: rgba(255,255,255,0.06); color: var(--text-primary); border: 1px solid var(--glass-border); }
+.btn-secondary:hover { background: rgba(255,255,255,0.12); }
+.btn-success { background: var(--accent-2); color: #000; }
+.btn-success:hover { opacity: 0.9; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+
+/* Form */
+.form-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: end; margin-top: 12px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group label { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+.form-group input, .form-group select {
+  padding: 8px 12px; border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+  background: rgba(0,0,0,0.3); color: var(--text-primary); font-size: 14px;
+  outline: none; transition: var(--transition); font-family: inherit;
+}
+.form-group input:focus, .form-group select:focus { border-color: var(--accent-1); }
+.form-group select { cursor: pointer; }
+input[type="range"] { accent-color: var(--accent-1); width: 180px; }
+
+/* Image Grid */
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px; margin-top: 16px;
+}
+.image-item {
+  background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm); padding: 8px; text-align: center;
+  cursor: grab; transition: var(--transition); position: relative;
+}
+.image-item:active { cursor: grabbing; }
+.image-item.dragging { opacity: 0.4; }
+.image-item.drag-over { border-color: var(--accent-1); background: rgba(124,92,252,0.08); }
+.image-item img {
+  width: 100%; height: 100px; object-fit: cover; border-radius: 4px;
+}
+.image-item .item-name {
+  font-size: 10px; color: var(--text-secondary); margin-top: 4px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.image-item .item-badge {
+  font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-top: 3px; display: inline-block;
+}
+.badge-heic { background: rgba(252,200,92,0.15); color: #fcc85c; }
+.badge-png  { background: rgba(92,202,252,0.15); color: #8ad4ff; }
+.badge-jpg  { background: rgba(92,252,160,0.15); color: var(--accent-2); }
+.image-item .item-remove {
+  position: absolute; top: 4px; right: 4px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(0,0,0,0.7); color: var(--accent-3); border: none;
+  font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+
+/* ============ compress preview ============ */
+.compress-compare { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 16px; }
+.compress-card {
+  flex: 1; min-width: 200px; padding: 14px;
+  background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+  text-align: center;
+}
+.compress-card img { max-width: 100%; max-height: 200px; border-radius: 4px; margin-bottom: 8px; }
+.compress-card .label { font-size: 11px; color: var(--text-secondary); }
+.compress-card .size { font-size: 18px; font-weight: 700; color: var(--accent-1); }
+.compress-card .size-after { color: var(--accent-2); }
+
+/* Messages */
+.msg { padding: 12px 16px; border-radius: var(--radius-sm); font-size: 13px; display: none; margin-top: 12px; }
+.msg.show { display: block; }
+.msg-success { background: rgba(92,252,160,0.06); border: 1px solid rgba(92,252,160,0.2); color: var(--accent-2); }
+.msg-error { background: rgba(252,92,156,0.06); border: 1px solid rgba(252,92,156,0.2); color: var(--accent-3); }
+.msg-info  { background: rgba(92,202,252,0.06); border: 1px solid rgba(92,202,252,0.2); color: #8ad4ff; }
+
+/* Loading */
+.loading { display: none; text-align: center; padding: 20px; }
+.loading.show { display: block; }
+.spinner {
+  width: 32px; height: 32px; margin: 0 auto 8px;
+  border: 3px solid rgba(124,92,252,0.2); border-top-color: var(--accent-1);
+  border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Sort order indicator */
+.sort-num {
+  position: absolute; top: 4px; left: 4px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--accent-1); color: #fff; font-size: 10px;
+  display: flex; align-items: center; justify-content: center; font-weight: 700;
+}
+
+.hidden { display: none !important; }
+.text-center { text-align: center; }
+.text-secondary { color: var(--text-secondary); font-size: 13px; }
+
+@media (max-width: 768px) {
+  .header { padding: 0 14px; }
+  .tabs { padding: 12px 14px 0; gap: 2px; }
+  .tab { padding: 8px 12px; font-size: 12px; }
+  .main { padding: 14px; }
+  .section { padding: 16px; }
+  .compress-compare { flex-direction: column; }
+  .image-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+}
+</style>
+<script>
+(function() {
+  if (sessionStorage.getItem('myapp_unlocked')) return;
+  var overlay = document.createElement('div');
+  overlay.id = 'pwd-overlay';
+  overlay.innerHTML = '<div style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0a0a1a;z-index:999999;display:flex;align-items:center;justify-content:center;"><div style="background:#16213e;padding:40px;border-radius:16px;border:1px solid #D2691E;max-width:360px;width:90%%;text-align:center;"><div style="font-size:40px;margin-bottom:10px;">🔒</div><h2 style="color:#D2691E;margin-bottom:12px;font-size:18px;">请输入密码</h2><input type="password" id="pwd-input" style="width:100%%;padding:12px;border-radius:8px;border:1px solid #3a3a5a;background:#0f3460;color:#e0e0e0;font-size:16px;text-align:center;box-sizing:border-box;" placeholder="输入密码" autofocus><button id="pwd-btn" style="margin-top:12px;width:100%%;padding:10px;border:none;border-radius:8px;background:#D2691E;color:#fff;font-size:15px;cursor:pointer;">解锁</button><p id="pwd-error" style="color:#c62828;font-size:13px;margin-top:8px;display:none;">密码错误，请重试</p></div></div>';
+  document.documentElement.appendChild(overlay);
+  
+  async function checkPwd() {
+    var pwd = document.getElementById('pwd-input').value;
+    var buf = new TextEncoder().encode(pwd);
+    var hash = await crypto.subtle.digest('SHA-256', buf);
+    var hex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+    if (hex === '5f6f2138aac618ff50a0751b76144e91468d5139ee38db42b0947ba123e37aaf') {
+      sessionStorage.setItem('myapp_unlocked', '1');
+      overlay.style.display = 'none';
+    } else {
+      document.getElementById('pwd-error').style.display = 'block';
+    }
+  }
+  
+  document.getElementById('pwd-btn').onclick = checkPwd;
+  document.getElementById('pwd-input').onkeydown = function(e) {
+    if (e.key === 'Enter') checkPwd();
+  };
+})();
+</script>
+</head>
+<body>
+
+<header class="header">
+  <div class="brand">🖼️ 图片工具箱</div>
+  <a href="index.html">← 返回应用工坊</a>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-tab="tab-compress" onclick="switchTab('tab-compress')">🗜️ 图片压缩</button>
+  <button class="tab" data-tab="tab-pdf" onclick="switchTab('tab-pdf')">📄 图片转PDF</button>
+  <button class="tab" data-tab="tab-heic" onclick="switchTab('tab-heic')">🔄 HEIC转JPG</button>
+</nav>
+
+<main class="main">
+
+<!-- ============ Tab 1: Image Compress ============ -->
+<div id="tab-compress">
+  <div class="section">
+    <div class="section-title">🗜️ 图片批量压缩</div>
+    <div class="section-hint">支持 JPG / PNG / HEIC / WebP / BMP，iPhone 的 HEIC 照片会自动转换后压缩。所有处理在浏览器本地完成。</div>
+    <div class="drop-zone" id="compress-drop">
+      <div class="dz-icon">📂</div>
+      <div class="dz-text">拖入图片或点击选择</div>
+      <div class="dz-hint">支持批量上传，HEIC 自动识别转换</div>
+    </div>
+    <input type="file" id="compress-input" accept="image/*" multiple hidden>
+    <div class="form-row" id="compress-settings" style="display:none">
+      <div class="form-group">
+        <label>输出格式</label>
+        <select id="compress-format">
+          <option value="image/jpeg">JPG</option>
+          <option value="image/png">PNG</option>
+          <option value="image/webp">WebP</option>
+          <option value="original">保持原格式</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>压缩质量 <span id="quality-label">80%</span></label>
+        <input type="range" id="compress-quality" min="10" max="100" value="80" oninput="document.getElementById('quality-label').textContent=this.value+'%'">
+      </div>
+      <div class="form-group">
+        <label>缩放尺寸</label>
+        <select id="compress-resize">
+          <option value="0">原始尺寸</option>
+          <option value="1920">最大宽度 1920px</option>
+          <option value="1280">最大宽度 1280px</option>
+          <option value="800">最大宽度 800px</option>
+          <option value="50">缩放至 50%</option>
+        </select>
+      </div>
+      <div>
+        <button class="btn btn-primary" onclick="startCompress()">🔧 开始压缩</button>
+      </div>
+    </div>
+    <div class="loading" id="compress-loading"><div class="spinner"></div>正在压缩...</div>
+    <div class="msg" id="compress-msg"></div>
+    <div id="compress-preview"></div>
+  </div>
+</div>
+
+<!-- ============ Tab 2: Images to PDF ============ -->
+<div id="tab-pdf" class="hidden">
+  <div class="section">
+    <div class="section-title" id="pdf-title-static">📄 多图合并为 PDF</div>
+    <div class="section-hint">上传多张图片，每张图片生成一页 PDF。文件名显示在每页右上角（加粗/红色下划线），图片居中放置。支持 HEIC 自动转换。可拖拽调整图片顺序。</div>
+    <div class="drop-zone" id="pdf-drop">
+      <div class="dz-icon">📂</div>
+      <div class="dz-text">拖入图片或点击选择</div>
+      <div class="dz-hint">支持批量上传，拖拽图片可调整顺序</div>
+    </div>
+    <input type="file" id="pdf-input" accept="image/*" multiple hidden>
+
+    <div id="pdf-image-grid"></div>
+
+    <div class="form-row" id="pdf-settings" style="display:none">
+      <div class="form-group">
+        <label>页面尺寸</label>
+        <select id="pdf-page-size">
+          <option value="a4">A4 (595×842)</option>
+          <option value="letter">Letter (612×792)</option>
+          <option value="auto">适配图片大小</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>图片缩放 (%)</label>
+        <input type="range" id="pdf-img-scale" min="30" max="100" value="85" oninput="document.getElementById('scale-label').textContent=this.value+'%'">
+        <span id="scale-label" style="font-size:11px;color:var(--text-secondary)">85%</span>
+      </div>
+      <div class="form-group">
+        <label>标题字号</label>
+        <select id="pdf-font-size">
+          <option value="10">10pt</option>
+          <option value="12" selected>12pt</option>
+          <option value="14">14pt</option>
+          <option value="16">16pt</option>
+        </select>
+      </div>
+      <div>
+        <button class="btn btn-success" onclick="startPdfGenerate()" style="font-size:15px">📄 生成 PDF</button>
+      </div>
+    </div>
+    <div class="loading" id="pdf-loading"><div class="spinner"></div>正在生成 PDF...</div>
+    <div class="msg" id="pdf-msg"></div>
+  </div>
+</div>
+
+<!-- ============ Tab 3: HEIC to JPG ============ -->
+<div id="tab-heic" class="hidden">
+  <div class="section">
+    <div class="section-title">🔄 HEIC 转 JPG / PNG</div>
+    <div class="section-hint">专门解决 iPhone 照片在 Windows 电脑上打不开的问题。拖入 HEIC 文件，自动转换为通用格式。也支持批量转换。</div>
+    <div class="drop-zone" id="heic-drop">
+      <div class="dz-icon">📱</div>
+      <div class="dz-text">拖入 HEIC 照片或点击选择</div>
+      <div class="dz-hint">iPhone 实况照片也支持 · 自动转换为 JPG/PNG</div>
+    </div>
+    <input type="file" id="heic-input" accept="image/*,.heic,.heif" multiple hidden>
+    <div class="form-row" id="heic-settings" style="display:none">
+      <div class="form-group">
+        <label>输出格式</label>
+        <select id="heic-out-format">
+          <option value="image/jpeg">JPG</option>
+          <option value="image/png">PNG</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>质量 <span id="heic-quality-label">90%</span></label>
+        <input type="range" id="heic-quality" min="10" max="100" value="90" oninput="document.getElementById('heic-quality-label').textContent=this.value+'%'">
+      </div>
+      <div>
+        <button class="btn btn-primary" onclick="startHeicConvert()">🔄 开始转换</button>
+        <button class="btn btn-secondary" onclick="downloadAllHeic()">📥 批量下载</button>
+      </div>
+    </div>
+    <div class="loading" id="heic-loading"><div class="spinner"></div>正在转换 HEIC...</div>
+    <div class="msg" id="heic-msg"></div>
+    <div id="heic-preview"></div>
+  </div>
+</div>
+
+</main>
+
+<script>
+/* ============ Shared State & Helpers ============ */
+
+// --- for compress tab ---
+let compressFiles = [];
+let compressedResults = []; // { name, blob, oldSize, newSize }
+
+// --- for pdf tab ---
+let pdfFiles = []; // { file, name, size }
+
+// --- for heic tab ---
+let heicResults = []; // { name, blob, size }
+
+function escHtml(s) {
+  if (!s) return '';
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function fmtSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+}
+
+function isHeic(file) {
+  return file.type === 'image/heic' || file.type === 'image/heif'
+    || /\.(heic|heif)$/i.test(file.name);
+}
+
+function isImage(file) {
+  return file.type.startsWith('image/') || /\.(jpg|jpeg|png|gif|bmp|webp|tiff?|heic|heif)$/i.test(file.name);
+}
+
+function getExt(name) { return (name.split('.').pop() || '').toLowerCase(); }
+
+/* Convert HEIC to JPEG blob */
+async function heicToJpeg(file, quality) {
+  if (!isHeic(file)) {
+    // Not HEIC, just return as-is
+    return new Blob([await file.arrayBuffer()], { type: file.type || 'image/jpeg' });
+  }
+  const blob = await heic2any({ blob: file, toType: 'image/jpeg', quality: quality || 0.9 });
+  return Array.isArray(blob) ? blob[0] : blob;
+}
+
+/* Load image from file (auto-convert HEIC) and return HTMLImageElement */
+function loadImage(file, quality) {
+  return new Promise(async (resolve, reject) => {
+    let blob;
+    try {
+      if (isHeic(file)) {
+        blob = await heicToJpeg(file, quality || 0.9);
+      } else {
+        blob = file;
+      }
+    } catch (e) {
+      reject(new Error(`HEIC转换失败: ${e.message}`));
+      return;
+    }
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve({ img, blob }); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('图片加载失败')); };
+    img.src = url;
+  });
+}
+
+/* ============ Tab Switching ============ */
+function switchTab(targetId) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`[data-tab="${targetId}"]`).classList.add('active');
+  ['tab-compress','tab-pdf','tab-heic'].forEach(id => {
+    document.getElementById(id).classList.toggle('hidden', id !== targetId);
+  });
+}
+
+/* ============ Drop Zone Helpers ============ */
+function setupDrop(zoneId, inputId, handler, filter) {
+  const zone = document.getElementById(zoneId);
+  const input = document.getElementById(inputId);
+
+  const processFiles = (files) => {
+    const filtered = filter ? files.filter(filter) : Array.from(files).filter(isImage);
+    if (filtered.length > 0) handler(filtered);
+    else handler([]);
+  };
+
+  zone.onclick = () => input.click();
+  input.onchange = () => processFiles(Array.from(input.files));
+
+  zone.ondragover = e => { e.preventDefault(); zone.classList.add('dragover'); };
+  zone.ondragleave = () => zone.classList.remove('dragover');
+  zone.ondrop = e => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) processFiles(Array.from(e.dataTransfer.files));
+  };
+}
+
+/* ============ Tab 1: Compress ============ */
+(function initCompress() {
+  setupDrop('compress-drop', 'compress-input', (files) => {
+    if (files.length === 0) return;
+    compressFiles = [...compressFiles, ...files];
+    document.getElementById('compress-settings').style.display = 'flex';
+    document.getElementById('compress-msg').classList.remove('show');
+    renderCompressPreview();
+  });
+})();
+
+function renderCompressPreview() {
+  const div = document.getElementById('compress-preview');
+  if (compressFiles.length === 0) { div.innerHTML = ''; return; }
+  let html = `<div class="section-title" style="margin-top:16px">已选择 ${compressFiles.length} 张图片</div><div class="image-grid">`;
+  compressFiles.forEach((f, i) => {
+    const ext = getExt(f.name);
+    const badgeClass = isHeic(f) ? 'badge-heic' : ext === 'png' ? 'badge-png' : 'badge-jpg';
+    const badgeText = isHeic(f) ? 'HEIC' : ext.toUpperCase();
+    html += `<div class="image-item">
+      <button class="item-remove" onclick="compressFiles.splice(${i},1);renderCompressPreview();if(compressFiles.length===0)document.getElementById('compress-settings').style.display='none'">✕</button>
+      <img src="${URL.createObjectURL(f)}" alt="">
+      <div class="item-name">${escHtml(f.name)}</div>
+      <span class="item-badge ${badgeClass}">${badgeText} · ${fmtSize(f.size)}</span>
+    </div>`;
+  });
+  html += '</div>';
+  div.innerHTML = html;
+}
+
+async function startCompress() {
+  if (compressFiles.length === 0) return;
+  const msg = document.getElementById('compress-msg');
+  const loading = document.getElementById('compress-loading');
+  const preview = document.getElementById('compress-preview');
+  const format = document.getElementById('compress-format').value;
+  const quality = parseInt(document.getElementById('compress-quality').value) / 100;
+  const resize = document.getElementById('compress-resize').value;
+
+  msg.classList.remove('show');
+  loading.classList.add('show');
+
+  try {
+    const results = [];
+    for (const file of compressFiles) {
+      const { img } = await loadImage(file, 0.95);
+
+      // Resize
+      let w = img.naturalWidth, h = img.naturalHeight;
+      if (resize === '50') { w = Math.round(w * 0.5); h = Math.round(h * 0.5); }
+      else if (resize !== '0') {
+        const maxW = parseInt(resize);
+        if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+
+      const mimeType = format === 'original'
+        ? (file.type && file.type.startsWith('image/') ? file.type : 'image/jpeg')
+        : format;
+
+      const newBlob = await new Promise(resolve => canvas.toBlob(resolve, mimeType, quality));
+
+      const outName = file.name.replace(/\.[^.]+$/, '') + (mimeType === 'image/jpeg' ? '.jpg' : mimeType === 'image/png' ? '.png' : '.webp');
+
+      results.push({ name: outName, blob: newBlob, oldSize: file.size, newSize: newBlob.size, url: URL.createObjectURL(newBlob) });
+    }
+
+    compressedResults = results;
+
+    // Render comparison
+    let html = '<div class="section-title" style="margin-top:16px">✅ 压缩完成</div>';
+    html += `<div class="text-secondary" style="margin-bottom:12px">共处理 ${results.length} 张图片，总节省 ${fmtSize(results.reduce((s,r)=>s+(r.oldSize-r.newSize),0))}</div>`;
+    results.forEach((r, i) => {
+      const saved = r.oldSize - r.newSize;
+      const pct = r.oldSize > 0 ? Math.round(saved / r.oldSize * 100) : 0;
+      html += `<div class="compress-compare">
+        <div class="compress-card">
+          <div class="label">压缩前</div>
+          <div class="size">${fmtSize(r.oldSize)}</div>
+        </div>
+        <div class="compress-card">
+          <div class="label">压缩后</div>
+          <div class="size size-after">${fmtSize(r.newSize)}</div>
+          <div class="label">节省 ${pct}%</div>
+        </div>
+        <div style="text-align:center;display:flex;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--text-secondary)">${escHtml(r.name)}</span>
+          <button class="btn btn-sm btn-primary" onclick="downloadOne(${i})">⬇ 下载</button>
+        </div>
+      </div>`;
+    });
+    html += `<div class="btn-row"><button class="btn btn-success" onclick="downloadAllCompressed()">📥 打包下载全部</button></div>`;
+    preview.innerHTML = html;
+
+    msg.className = 'msg msg-success show';
+    msg.textContent = `✅ 压缩完成！总大小从 ${fmtSize(results.reduce((s,r)=>s+r.oldSize,0))} 降至 ${fmtSize(results.reduce((s,r)=>s+r.newSize,0))}`;
+  } catch (err) {
+    msg.className = 'msg msg-error show';
+    msg.textContent = '❌ 压缩失败: ' + err.message;
+  } finally {
+    loading.classList.remove('show');
+  }
+}
+
+function downloadOne(idx) {
+  const r = compressedResults[idx];
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(r.blob); a.download = r.name; a.click();
+}
+
+async function downloadAllCompressed() {
+  const zip = new JSZip();
+  compressedResults.forEach(r => zip.file(r.name, r.blob));
+  const zipBlob = await zip.generateAsync({ type: 'blob' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(zipBlob);
+  a.download = '压缩图片_批量.zip';
+  a.click();
+}
+
+/* ============ Tab 2: Images to PDF ============ */
+let pdfDragIdx = -1;
+
+(function initPdf() {
+  setupDrop('pdf-drop', 'pdf-input', (files) => {
+    if (files.length === 0) return;
+    pdfFiles = [...pdfFiles, ...files.map(f => ({ file: f, name: f.name, size: f.size }))];
+    document.getElementById('pdf-settings').style.display = 'flex';
+    document.getElementById('pdf-msg').classList.remove('show');
+    renderPdfGrid();
+  });
+})();
+
+function renderPdfGrid() {
+  const grid = document.getElementById('pdf-image-grid');
+  if (pdfFiles.length === 0) { grid.innerHTML = ''; return; }
+  let html = `<div class="section-title" style="margin-top:16px">已选择 ${pdfFiles.length} 张图片 <span class="text-secondary">（拖拽图片可调整顺序）</span></div><div class="image-grid">`;
+  pdfFiles.forEach((item, i) => {
+    const ext = getExt(item.name);
+    const badgeClass = isHeic(item.file) ? 'badge-heic' : ext === 'png' ? 'badge-png' : 'badge-jpg';
+    const badgeText = isHeic(item.file) ? 'HEIC' : ext.toUpperCase();
+    html += `<div class="image-item" draggable="true" data-idx="${i}"
+      ondragstart="dragStart(event,${i})" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event,${i})" ondragend="dragEnd()">
+      <span class="sort-num">${i + 1}</span>
+      <button class="item-remove" onclick="event.stopPropagation();pdfFiles.splice(${i},1);renderPdfGrid();if(pdfFiles.length===0)document.getElementById('pdf-settings').style.display='none'">✕</button>
+      <img src="${URL.createObjectURL(item.file)}" alt="">
+      <div class="item-name">${escHtml(item.name)}</div>
+      <span class="item-badge ${badgeClass}">${badgeText} · ${fmtSize(item.size)}</span>
+    </div>`;
+  });
+  html += '</div>';
+  grid.innerHTML = html;
+}
+
+function dragStart(e, idx) {
+  pdfDragIdx = idx;
+  e.target.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', idx);
+}
+function dragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const el = e.target.closest('.image-item');
+  if (el) el.classList.add('drag-over');
+}
+function dragLeave(e) {
+  const el = e.target.closest('.image-item');
+  if (el) el.classList.remove('drag-over');
+}
+function drop(e, targetIdx) {
+  e.preventDefault();
+  document.querySelectorAll('.image-item').forEach(el => el.classList.remove('drag-over'));
+  if (pdfDragIdx < 0 || pdfDragIdx === targetIdx) return;
+  const [item] = pdfFiles.splice(pdfDragIdx, 1);
+  pdfFiles.splice(targetIdx, 0, item);
+  pdfDragIdx = -1;
+  renderPdfGrid();
+}
+function dragEnd() {
+  document.querySelectorAll('.image-item').forEach(el => el.classList.remove('dragging','drag-over'));
+  pdfDragIdx = -1;
+}
+
+/* --- PDF Generation --- */
+const PAGE_SIZES = {
+  a4:     { w: 595, h: 842, label: 'A4' },
+  letter: { w: 612, h: 792, label: 'Letter' },
+  auto:   { w: 0, h: 0, label: '自动' },
+};
+
+async function startPdfGenerate() {
+  if (pdfFiles.length === 0) return;
+  const msg = document.getElementById('pdf-msg');
+  const loading = document.getElementById('pdf-loading');
+  msg.classList.remove('show');
+  loading.classList.add('show');
+  const pageOpt = document.getElementById('pdf-page-size').value;
+  const imgScale = parseInt(document.getElementById('pdf-img-scale').value) / 100;
+  const fontSize = parseInt(document.getElementById('pdf-font-size').value);
+  const rightMargin = 25;
+  const topMargin = 22;
+  const titleBottomGap = 12;
+  const underlineColor = [1, 0, 0]; // PDF-lib uses 0-1 range
+
+  try {
+    const { PDFDocument, StandardFonts, rgb } = PDFLib;
+    const pdfDoc = await PDFDocument.create();
+    const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+    for (const item of pdfFiles) {
+      // Load image
+      const { img, blob } = await loadImage(item.file, 0.95);
+      let imgW = img.naturalWidth;
+      let imgH = img.naturalHeight;
+
+      // Embed image in PDF
+      let pdfImg;
+      const ext = getExt(item.name);
+      if (ext === 'png') {
+        pdfImg = await pdfDoc.embedPng(await blob.arrayBuffer());
+      } else {
+        pdfImg = await pdfDoc.embedJpg(await blob.arrayBuffer());
+      }
+
+      // Determine page size
+      let pw, ph;
+      if (pageOpt === 'auto') {
+        // Fit to image + title area
+        const titleH = fontSize + titleBottomGap + 4; // text + underline + gap
+        pw = Math.max(400, imgW * imgScale + rightMargin * 2);
+        ph = imgH * imgScale + titleH + topMargin + 20;
+      } else {
+        const ps = PAGE_SIZES[pageOpt];
+        pw = ps.w; ph = ps.h;
+      }
+
+      const page = pdfDoc.addPage([pw, ph]);
+      const text = item.name;
+      const textWidth = font.widthOfTextAtSize(text, fontSize);
+      const textX = pw - rightMargin - textWidth;
+      const textY = ph - topMargin;
+
+      // Draw filename text (top-right, bold)
+      page.drawText(text, {
+        x: textX,
+        y: textY,
+        size: fontSize,
+        font: font,
+        color: rgb(0, 0, 0),
+      });
+
+      // Draw red underline
+      const ulY = textY - 2;
+      page.drawLine({
+        start: { x: textX, y: ulY },
+        end:   { x: textX + textWidth, y: ulY },
+        thickness: 2,
+        color: rgb(1, 0, 0),
+      });
+
+      // Calculate image area
+      const titleAreaH = fontSize + titleBottomGap + 4;
+      const availW = (pw - rightMargin * 2) * imgScale;
+      const availH = ph - topMargin - titleAreaH - 20;
+      const scale = Math.min(availW / imgW, availH / imgH, 1);
+      const drawW = imgW * scale;
+      const drawH = imgH * scale;
+      const imgX = (pw - drawW) / 2;
+      const imgY = ph - topMargin - titleAreaH - drawH;
+
+      page.drawImage(pdfImg, {
+        x: imgX, y: imgY,
+        width: drawW, height: drawH,
+      });
+
+      URL.revokeObjectURL(img.src);
+    }
+
+    const pdfBytes = await pdfDoc.save();
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '图片合并.pdf';
+    a.click();
+
+    msg.className = 'msg msg-success show';
+    msg.textContent = `✅ PDF 已生成！${pdfFiles.length} 张图片 → ${pdfDoc.getPageCount()} 页`;
+  } catch (err) {
+    msg.className = 'msg msg-error show';
+    msg.textContent = '❌ 生成失败: ' + err.message;
+    console.error(err);
+  } finally {
+    loading.classList.remove('show');
+  }
+}
+
+/* ============ Tab 3: HEIC to JPG ============ */
+(function initHeic() {
+  setupDrop('heic-drop', 'heic-input', (files) => {
+    if (files.length === 0) return;
+    document.getElementById('heic-settings').style.display = 'flex';
+    document.getElementById('heic-msg').classList.remove('show');
+    heicResults = []; // reset
+    // Show selected files
+    const preview = document.getElementById('heic-preview');
+    let html = `<div class="section-title" style="margin-top:16px">已选择 ${files.length} 个文件</div><div class="image-grid">`;
+    files.forEach(f => {
+      const heicBadge = isHeic(f) ? '<span class="item-badge badge-heic" style="margin-right:3px">HEIC</span>' : '';
+      html += `<div class="image-item">
+        <div class="item-name">${heicBadge}${escHtml(f.name)}</div>
+        <span class="item-badge badge-jpg">${fmtSize(f.size)}</span>
+      </div>`;
+    });
+    html += '</div>';
+    preview.innerHTML = html;
+    // Store files for processing
+    heicResults = files.map(f => ({ file: f, blob: null, converted: false }));
+  });
+})();
+
+async function startHeicConvert() {
+  const files = heicResults.map(r => r.file);
+  if (files.length === 0) return;
+  const msg = document.getElementById('heic-msg');
+  const loading = document.getElementById('heic-loading');
+  const outFormat = document.getElementById('heic-out-format').value;
+  const quality = parseInt(document.getElementById('heic-quality').value) / 100;
+  msg.classList.remove('show');
+  loading.classList.add('show');
+
+  try {
+    const results = [];
+    for (const file of files) {
+      let blob;
+      if (isHeic(file)) {
+        const jpgBlob = await heicToJpeg(file, quality);
+        if (outFormat === 'image/png') {
+          // Convert JPG blob to PNG via canvas
+          const url = URL.createObjectURL(jpgBlob);
+          const img = await new Promise((resolve, reject) => {
+            const i = new Image();
+            i.onload = () => resolve(i);
+            i.onerror = reject;
+            i.src = url;
+          });
+          URL.revokeObjectURL(url);
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        } else {
+          blob = jpgBlob;
+        }
+      } else {
+        // Already a standard format, optionally re-encode
+        blob = file;
+      }
+
+      const ext = outFormat === 'image/png' ? '.png' : '.jpg';
+      const outName = file.name.replace(/\.[^.]+$/, '') + ext;
+      results.push({ name: outName, blob, size: blob.size, url: URL.createObjectURL(blob), wasHeic: isHeic(file) });
+    }
+
+    heicResults = results.map((r, i) => ({ file: files[i], blob: r.blob, converted: true }));
+    const preview = document.getElementById('heic-preview');
+    let html = '<div class="section-title" style="margin-top:16px">✅ 转换完成</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">';
+    results.forEach((r, i) => {
+      html += `<div style="display:flex;align-items:center;gap:12px;padding:8px 12px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid var(--glass-border)">
+        <span style="flex:1;font-size:13px">${r.wasHeic ? '🔄' : '📄'} ${escHtml(r.name)}</span>
+        <span style="font-size:12px;color:var(--text-secondary)">${fmtSize(r.size)}</span>
+        <button class="btn btn-sm btn-primary" onclick="downloadHeicOne(${i})">⬇ 下载</button>
+      </div>`;
+    });
+    html += '</div>';
+    html += '<div class="btn-row"><button class="btn btn-success" onclick="downloadAllHeic()">📥 打包下载全部</button></div>';
+    preview.innerHTML = html;
+    msg.className = 'msg msg-success show';
+    msg.textContent = `✅ 转换完成！${results.filter(r=>r.wasHeic).length} 个 HEIC 已转换`;
+  } catch(err) {
+    msg.className = 'msg msg-error show';
+    msg.textContent = '❌ 转换失败: ' + err.message;
+    console.error(err);
+  } finally {
+    loading.classList.remove('show');
+  }
+}
+
+function downloadHeicOne(idx) {
+  const r = heicResults[idx];
+  if (!r.blob) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(r.blob);
+  a.download = r.file.name.replace(/\.[^.]+$/, '') + '.jpg';
+  a.click();
+}
+
+async function downloadAllHeic() {
+  const zip = new JSZip();
+  heicResults.forEach(r => {
+    if (r.blob) {
+      const outName = r.file.name.replace(/\.[^.]+$/, '') + '.jpg';
+      zip.file(outName, r.blob);
+    }
+  });
+  const zipBlob = await zip.generateAsync({ type: 'blob' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(zipBlob);
+  a.download = 'HEIC转换结果.zip';
+  a.click();
+}
+</script>
+</body>
+</html>

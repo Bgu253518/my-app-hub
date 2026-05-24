@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🦞 五虾流水线 · 自媒体创作系统</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+  font-family: -apple-system, 'Microsoft YaHei', sans-serif;
+  background: #1a1a2e; color: #e0e0e0; min-height: 100vh;
+}
+.header {
+  background: linear-gradient(135deg, #4a2c1a, #1a1a2e);
+  padding: 24px 20px 16px; text-align: center;
+  border-bottom: 1px solid #3a2a1a;
+}
+.header h1 { font-size: 24px; color: #D2691E; }
+.header p { font-size: 13px; color: #8B7355; margin-top: 4px; }
+.container { max-width: 900px; margin: 0 auto; padding: 12px; }
+
+/* 侧边栏样式 */
+.sidebar {
+  background: #16213e; border-radius: 12px; padding: 16px;
+  margin-bottom: 16px; border: 1px solid #2a2a4a;
+}
+.sidebar h2 { font-size: 16px; color: #D2691E; margin-bottom: 12px; }
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 13px; color: #a0a0c0; margin-bottom: 4px; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; padding: 10px 12px; border-radius: 8px;
+  border: 1px solid #3a3a5a; background: #0f3460; color: #e0e0e0;
+  font-size: 14px;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  outline: none; border-color: #D2691E;
+}
+.form-group textarea { min-height: 100px; resize: vertical; font-family: inherit; }
+.btn {
+  display: inline-block; padding: 10px 24px; border: none; border-radius: 8px;
+  font-size: 15px; cursor: pointer; transition: all 0.2s;
+}
+.btn-primary { background: #D2691E; color: #fff; width: 100%; }
+.btn-primary:hover { background: #B86114; }
+.btn-primary:disabled { background: #5a4a3a; cursor: not-allowed; }
+.btn-small { padding: 6px 14px; font-size: 13px; background: #2a2a4a; color: #ccc; }
+.btn-small:hover { background: #3a3a5a; }
+
+/* 流水线卡片 */
+.pipeline { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.shrimp-card {
+  border-radius: 12px; padding: 16px; background: #16213e;
+  border: 1px solid #2a2a4a; transition: all 0.3s;
+}
+.shrimp-card.waiting { border-left: 4px solid #5a5a7a; }
+.shrimp-card.running { border-left: 4px solid #F9A825; background: #1a2a1a; }
+.shrimp-card.done { border-left: 4px solid #2E7D32; background: #1a2a1a; }
+.shrimp-card.fail { border-left: 4px solid #c62828; background: #2a1a1a; }
+.shrimp-header {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.shrimp-title { font-size: 16px; font-weight: bold; }
+.shrimp-status {
+  font-size: 12px; padding: 3px 12px; border-radius: 12px;
+}
+.status-waiting { background: #3a3a5a; color: #999; }
+.status-running { background: #4a3a1a; color: #F9A825; }
+.status-done { background: #1a3a1a; color: #4CAF50; }
+.shrimp-desc { font-size: 13px; color: #8B7355; margin: 6px 0 4px; }
+.shrimp-output { 
+  margin-top: 10px; padding: 10px; background: #0f3460; border-radius: 8px;
+  font-size: 13px; color: #ccc; max-height: 200px; overflow-y: auto;
+  white-space: pre-wrap; display: none;
+}
+.shrimp-output.show { display: block; }
+
+/* 进度条 */
+.progress-bar {
+  height: 6px; background: #2a2a4a; border-radius: 3px; margin: 8px 0; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; background: linear-gradient(90deg, #D2691E, #F9A825);
+  border-radius: 3px; transition: width 0.5s; width: 0%;
+}
+
+/* 输出区域 */
+.output-area {
+  background: #16213e; border-radius: 12px; padding: 16px;
+  border: 1px solid #2a2a4a; margin-bottom: 16px;
+}
+.output-area h3 { font-size: 15px; color: #D2691E; margin-bottom: 8px; }
+.output-content {
+  background: #0f3460; border-radius: 8px; padding: 12px;
+  font-size: 13px; line-height: 1.7; white-space: pre-wrap;
+  max-height: 400px; overflow-y: auto; color: #ccc;
+}
+
+/* 信源管理 */
+.source-list { margin-bottom: 12px; }
+.source-item {
+  display: flex; align-items: center; padding: 8px 10px;
+  background: #0f3460; border-radius: 6px; margin-bottom: 6px; font-size: 13px;
+}
+.source-item .name { color: #D2691E; font-weight: bold; margin-right: 8px; flex-shrink: 0; }
+.source-item .url { color: #888; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.source-item .del { margin-left: auto; cursor: pointer; color: #c62828; font-size: 16px; padding: 0 4px; }
+
+/* 选项卡 */
+.tabs { display: flex; gap: 4px; margin-bottom: 12px; }
+.tab {
+  padding: 8px 16px; border-radius: 8px 8px 0 0; cursor: pointer;
+  font-size: 13px; background: #2a2a4a; color: #888;
+}
+.tab.active { background: #16213e; color: #D2691E; border-bottom: 2px solid #D2691E; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: #333; color: #fff; padding: 12px 24px; border-radius: 8px;
+  font-size: 14px; display: none; z-index: 999;
+}
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+@media (max-width: 600px) {
+  .container { padding: 8px; }
+  .header h1 { font-size: 20px; }
+}
+</style>
+<script>
+(function() {
+  if (sessionStorage.getItem('myapp_unlocked')) return;
+  var overlay = document.createElement('div');
+  overlay.id = 'pwd-overlay';
+  overlay.innerHTML = '<div style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0a0a1a;z-index:999999;display:flex;align-items:center;justify-content:center;"><div style="background:#16213e;padding:40px;border-radius:16px;border:1px solid #D2691E;max-width:360px;width:90%%;text-align:center;"><div style="font-size:40px;margin-bottom:10px;">🔒</div><h2 style="color:#D2691E;margin-bottom:12px;font-size:18px;">请输入密码</h2><input type="password" id="pwd-input" style="width:100%%;padding:12px;border-radius:8px;border:1px solid #3a3a5a;background:#0f3460;color:#e0e0e0;font-size:16px;text-align:center;box-sizing:border-box;" placeholder="输入密码" autofocus><button id="pwd-btn" style="margin-top:12px;width:100%%;padding:10px;border:none;border-radius:8px;background:#D2691E;color:#fff;font-size:15px;cursor:pointer;">解锁</button><p id="pwd-error" style="color:#c62828;font-size:13px;margin-top:8px;display:none;">密码错误，请重试</p></div></div>';
+  document.documentElement.appendChild(overlay);
+  
+  async function checkPwd() {
+    var pwd = document.getElementById('pwd-input').value;
+    var buf = new TextEncoder().encode(pwd);
+    var hash = await crypto.subtle.digest('SHA-256', buf);
+    var hex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+    if (hex === '5f6f2138aac618ff50a0751b76144e91468d5139ee38db42b0947ba123e37aaf') {
+      sessionStorage.setItem('myapp_unlocked', '1');
+      overlay.style.display = 'none';
+    } else {
+      document.getElementById('pwd-error').style.display = 'block';
+    }
+  }
+  
+  document.getElementById('pwd-btn').onclick = checkPwd;
+  document.getElementById('pwd-input').onkeydown = function(e) {
+    if (e.key === 'Enter') checkPwd();
+  };
+})();
+</script>
+</head>
+<body>
+
+<div class="header">
+  <h1>🦞 五虾流水线</h1>
+  <p>全自动自媒体创作系统 · 纯网页版</p>
+</div>
+
+<div class="container">
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<!-- 设置 -->
+<div class="sidebar">
+  <h2>⚙️ 设置</h2>
+  <div class="form-group">
+    <label>🔑 API 密钥（DeepSeek）</label>
+    <input type="password" id="apiKey" placeholder="输入你的 DeepSeek API Key">
+  </div>
+  <div class="form-group">
+    <label>📄 选择话题编号（用于虾2创作）</label>
+    <select id="topicIndex">
+      <option value="1">第 1 个话题</option>
+      <option value="2">第 2 个话题</option>
+      <option value="3">第 3 个话题</option>
+    </select>
+  </div>
+  <button class="btn btn-primary" id="runBtn" onclick="runPipeline()">🚀 一键生成全部</button>
+</div>
+
+<!-- 进度 -->
+<div class="sidebar" style="text-align:center;padding:12px;">
+  <span style="font-size:14px;">流水线进度：</span>
+  <span id="progressText" style="font-size:20px;font-weight:bold;color:#D2691E;">0 / 6</span>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+</div>
+
+<!-- 选项卡 -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('sources')">📡 信源管理</div>
+  <div class="tab" onclick="switchTab('pipeline')">🦞 流水线</div>
+  <div class="tab" onclick="switchTab('output')">📦 发布包</div>
+</div>
+
+<!-- 信源管理 -->
+<div id="tab-sources" class="tab-content active">
+  <div class="sidebar">
+    <h2>📡 我的信源</h2>
+    <p style="font-size:13px;color:#8B7355;margin-bottom:10px;">添加文章链接，虾1会分析这些来源</p>
+    <div class="source-list" id="sourceList"></div>
+    <div style="display:flex;gap:8px;">
+      <input type="text" id="newSourceUrl" placeholder="粘贴文章链接" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid #3a3a5a;background:#0f3460;color:#e0e0e0;font-size:13px;">
+      <input type="text" id="newSourceName" placeholder="来源名称" style="width:120px;padding:8px 12px;border-radius:8px;border:1px solid #3a3a5a;background:#0f3460;color:#e0e0e0;font-size:13px;">
+      <button class="btn btn-small" onclick="addSource()">添加</button>
+    </div>
+    <div style="margin-top:10px;">
+      <button class="btn btn-small" onclick="loadPresetSources()">📋 加载预设9个信源</button>
+    </div>
+  </div>
+</div>
+
+<!-- 流水线 -->
+<div id="tab-pipeline" class="tab-content">
+  <div class="pipeline" id="pipeline"></div>
+</div>
+
+<!-- 发布包 -->
+<div id="tab-output" class="tab-content">
+  <div class="output-area">
+    <h3>📦 公众号发布包</h3>
+    <div id="finalOutput" class="output-content">点击「一键生成」后，最终产物会显示在这里</div>
+    <div style="margin-top:10px;display:flex;gap:8px;">
+      <button class="btn btn-small" onclick="downloadOutput('md')">📥 下载 .md</button>
+      <button class="btn btn-small" onclick="downloadOutput('txt')">📥 下载 .txt</button>
+      <button class="btn btn-small" onclick="copyOutput()">📋 复制</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ====== 状态 ======
+const state = {
+  sources: [],
+  step: 0,
+  running: false,
+  results: {},
+  outputText: ''
+};
+
+// ====== 预设信源 ======
+const PRESET_SOURCES = [
+  {name: '新华网银龄频道', url: 'http://www.news.cn/yinling/', cat: '官方媒体'},
+  {name: '河南日报-老有意思啦', url: 'https://newpaper.dahe.cn/hnrb/html/2024-10/12/content_12_1696189.htm', cat: '官方媒体'},
+  {name: '经济参考报', url: 'http://www.jjckb.cn/', cat: '官方媒体'},
+  {name: '红松APP/学堂', url: 'https://www.hongsong.club/', cat: '社交平台'},
+  {name: '美篇', url: 'https://www.meipian.cn/', cat: '社交平台'},
+  {name: '闲趣岛', url: 'https://www.xianqudao.com/', cat: '社交平台'},
+  {name: '夕阳红论坛', url: 'http://www.lnlt.cn/', cat: '社交平台'},
+  {name: '上海中年吧', url: 'https://tieba.baidu.com/f?kw=%E4%B8%8A%E6%B5%B7%E4%B8%AD%E5%B9%B4', cat: '社交平台'},
+  {name: '老年人之家', url: 'http://www.lnrzj.net/', cat: '社交平台'}
+];
+
+// ====== 五虾配置 ======
+const SHRIMP_CONFIG = [
+  {id: 1, emoji: '🦞1', name: '侦察热点', desc: '扫描信源 → AI分析 → 生成话题池', file: '1_话题池.md'},
+  {id: 2, emoji: '🦞2', name: '创作内容', desc: '读取话题 → AI扩写 → 生成600-800字文章', file: '2_初稿.md'},
+  {id: 3, emoji: '🦞3', name: '格式化排版', desc: '标题格式化 → 插入图片占位符', file: '3_排版版.md'},
+  {id: 4, emoji: '🦞4', name: '审核', desc: 'AI审核错别字/敏感词 → 评分', file: '4_审核报告.md'},
+  {id: 5, emoji: '🦞5', name: '保存日志', desc: '汇总耗时 → 清理完成', file: '日志文件'},
+  {id: 6, emoji: '📦', name: '生成发布包', desc: '打包终稿+审核报告', file: '6_发布包.txt'}
+];
+
+// ====== 工具函数 ======
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3000);
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.tab[onclick="switchTab('${name}')"]`).classList.add('active');
+  document.getElementById(`tab-${name}`).classList.add('active');
+}
+
+function updateProgress() {
+  const total = 6;
+  document.getElementById('progressText').textContent = `${state.step} / ${total}`;
+  document.getElementById('progressFill').style.width = `${(state.step / total) * 100}%`;
+}
+
+// ====== 信源管理 ======
+function renderSources() {
+  const el = document.getElementById('sourceList');
+  if (state.sources.length === 0) {
+    el.innerHTML = '<div style="color:#888;font-size:13px;padding:8px;">暂无信源，请添加链接</div>';
+    return;
+  }
+  el.innerHTML = state.sources.map((s, i) => 
+    `<div class="source-item">
+      <span class="name">${s.name||'未命名'}</span>
+      <span class="url">${s.url}</span>
+      <span class="del" onclick="removeSource(${i})">✕</span>
+    </div>`
+  ).join('');
+}
+
+function addSource() {
+  const url = document.getElementById('newSourceUrl').value.trim();
+  const name = document.getElementById('newSourceName').value.trim() || '来源' + (state.sources.length + 1);
+  if (!url) { toast('请输入链接'); return; }
+  if (!url.startsWith('http')) { toast('链接需以 http 开头'); return; }
+  state.sources.push({name, url, cat: '自定义'});
+  document.getElementById('newSourceUrl').value = '';
+  document.getElementById('newSourceName').value = '';
+  renderSources();
+  toast('已添加信源');
+}
+
+function removeSource(i) {
+  state.sources.splice(i, 1);
+  renderSources();
+}
+
+function loadPresetSources() {
+  state.sources = [...PRESET_SOURCES];
+  renderSources();
+  toast('已加载 9 个预设信源');
+}
+
+// ====== 流水线渲染 ======
+function renderPipeline() {
+  const el = document.getElementById('pipeline');
+  el.innerHTML = SHRIMP_CONFIG.map(sc => {
+    const result = state.results[sc.id];
+    let statusClass = 'waiting', statusText = '⏸ 等待中';
+    if (state.running && state.step >= sc.id) {
+      statusClass = state.step === sc.id ? 'running' : 'done';
+      statusText = state.step === sc.id ? '⏳ 运行中' : '✅ 已完成';
+    }
+    if (result === 'fail') { statusClass = 'fail'; statusText = '❌ 失败'; }
+    
+    return `<div class="shrimp-card ${statusClass}">
+      <div class="shrimp-header">
+        <span class="shrimp-title">${sc.emoji} ${sc.name}</span>
+        <span class="shrimp-status status-${statusClass}">${statusText}</span>
+      </div>
+      <div class="shrimp-desc">📋 ${sc.desc}</div>
+      <div class="shrimp-desc">📁 → ${sc.file}</div>
+      <div class="shrimp-output ${result && result !== 'fail' ? 'show' : ''}" id="output-${sc.id}">${result && result !== 'fail' ? result : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+// ====== 调用DeepSeek API ======
+async function callAI(prompt, systemPrompt = '', maxTokens = 2000) {
+  const key = document.getElementById('apiKey').value.trim();
+  if (!key) {
+    return `【演示模式】\n系统提示：${systemPrompt || '(无)'}\n用户请求：${prompt.slice(0, 100)}…\n\n💡 请输入 DeepSeek API Key 以获取真实AI回复`;
+  }
+  
+  const messages = [];
+  if (systemPrompt) messages.push({role: 'system', content: systemPrompt});
+  messages.push({role: 'user', content: prompt});
+  
+  try {
+    const resp = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${key}`
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: messages,
+        max_tokens: maxTokens,
+        temperature: 0.7
+      })
+    });
+    
+    if (!resp.ok) {
+      const err = await resp.text();
+      return `【API错误】HTTP ${resp.status}: ${err.slice(0, 100)}`;
+    }
+    
+    const data = await resp.json();
+    return data.choices[0].message.content;
+  } catch (e) {
+    return `【请求失败】${e.message}`;
+  }
+}
+
+// ====== 虾1: 侦察热点 ======
+async function shrimp1() {
+  if (state.sources.length === 0) {
+    state.sources = [{name: '示例信源', url: 'https://example.com', cat: '示例'}];
+  }
+  
+  let topics = [];
+  for (let i = 0; i < state.sources.length; i++) {
+    const s = state.sources[i];
+    const sourceTag = `${s.name}${s.cat !== '自定义' ? ' · ' + s.cat : ''}`;
+    
+    const result = await callAI(
+      `分析以下文章来源，生成一句话话题摘要并打标签。\n来源名称：${s.name}\n链接：${s.url}\n\n输出格式：[标签] 话题摘要\n可选标签：[隔代][婚恋][社交][代际][亲子][婆媳][职场][自我成长][金钱观][价值观]`,
+      '资深情感编辑',
+      500
+    );
+    
+    let line = result.trim();
+    if (!line.startsWith('[')) line = `[情感] ${line}`;
+    topics.push(`${line} — 来源：${sourceTag}`);
+  }
+  
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const output = `# 今日情感话题简报 - ${dateStr}\n\n${
+    topics.map((t, i) => `${i+1}. ${t}`).join('\n')
+  }\n\n---\n共 ${topics.length} 个话题 | ${now.toLocaleString()}`;
+  
+  state.results[1] = output;
+  document.getElementById('output-1').textContent = output;
+  return topics;
+}
+
+// ====== 虾2: 创作内容 ======
+async function shrimp2(topics) {
+  const idx = parseInt(document.getElementById('topicIndex').value) - 1;
+  let topic = topics[idx] || topics[0] || '[情感] 当代人的社交困境';
+  let sourceInfo = '';
+  
+  const sourceMatch = topic.match(/— 来源：(.*?)$/);
+  if (sourceMatch) {
+    sourceInfo = sourceMatch[1].trim();
+    topic = topic.replace(/\s*— 来源：.*$/, '');
+  }
+  
+  const draft = await callAI(
+    `以第一人称，写一篇600-800字公众号情感文章。\n话题：${topic}\n素材来源：${sourceInfo || '网络'}\n\n要求：\n1. 亲切温暖，像朋友聊天\n2. 在文章开头注明"本文素材来源于${sourceInfo || '网络整理'}"\n3. 用【】标记至少2处需手动修改\n4. 结尾设置互动提问`,
+    '公众号情感写手',
+    2500
+  );
+  
+  state.results[2] = draft;
+  document.getElementById('output-2').textContent = draft;
+  return draft;
+}
+
+// ====== 虾3: 格式化排版 ======
+async function shrimp3() {
+  const text = state.results[2] || '';
+  if (!text) { state.results[3] = '（初稿为空）'; return state.results[3]; }
+  
+  const paras = text.split('\n\n');
+  const output = [];
+  for (let i = 0; i < paras.length; i++) {
+    let p = paras[i].trim();
+    if (!p) { output.push(''); continue; }
+    if (i === 0 && p.length < 50 && !p.startsWith('#')) p = `## ${p}`;
+    output.push(p);
+    if (i === 1 || i === 3) {
+      if (/爱情|恋爱|婚姻|夫妻|伴侣/.test(p)) output.push('（此处建议配一张温馨的夫妻或情侣背影的图片）');
+      else if (/孩子|父母|老人|家庭|亲子/.test(p)) output.push('（此处建议配一张家庭聚会的温馨图片）');
+      else if (/工作|职场|同事|奋斗/.test(p)) output.push('（此处建议配一张咖啡厅或办公室的图片）');
+      else output.push('（此处建议配一张温暖的生活场景图片）');
+    }
+  }
+  
+  state.results[3] = output.join('\n\n');
+  document.getElementById('output-3').textContent = state.results[3];
+  return state.results[3];
+}
+
+// ====== 虾4: 审核 ======
+async function shrimp4() {
+  const text = (state.results[3] || '').slice(0, 3000);
+  const report = await callAI(
+    `审核以下公众号文章：\n${text}\n输出格式：\n## 审核报告\n### 错别字与语法\n### 敏感词检查\n### 情感浓度评估\n### 可读性评估\n### 修改建议\n### 综合评分：X/10`,
+    '内容审核编辑',
+    2000
+  );
+  
+  state.results[4] = report;
+  document.getElementById('output-4').textContent = report;
+  return report;
+}
+
+// ====== 虾5 + 发布包 ======
+async function shrimp5(report) {
+  const formatted = state.results[3] || '';
+  const title = formatted.split('\n').find(l => l.startsWith('## '))?.replace('## ', '').trim() || '（未提取到标题）';
+  
+  const pkg = `========================================
+  公众号发布包  ${new Date().toLocaleDateString()}
+========================================
+📰 标题：${title}
+
+📝 正文：
+${formatted}
+
+🔍 审核意见：
+${report || '（无审核报告）'}
+
+✅ 建议修改：
+1. 替换文中【】标记内容
+2. 处理审核报告中的问题
+3. 确认图片占位符
+`;
+  
+  state.results[5] = '✅ 生产日志已保存';
+  state.results[6] = pkg;
+  state.outputText = pkg;
+  
+  document.getElementById('output-5').textContent = '✅ 日志已生成';
+  document.getElementById('finalOutput').textContent = pkg;
+  document.getElementById('output-6').textContent = pkg;
+  
+  return pkg;
+}
+
+// ====== 主流程 ======
+async function runPipeline() {
+  if (state.running) return;
+  state.running = true;
+  state.step = 0;
+  state.results = {};
+  document.getElementById('runBtn').disabled = true;
+  
+  try {
+    // 虾1
+    state.step = 1; updateProgress(); renderPipeline();
+    const topics = await shrimp1();
+    
+    // 虾2
+    state.step = 2; updateProgress(); renderPipeline();
+    await shrimp2(topics);
+    
+    // 虾3
+    state.step = 3; updateProgress(); renderPipeline();
+    await shrimp3();
+    
+    // 虾4
+    state.step = 4; updateProgress(); renderPipeline();
+    const report = await shrimp4();
+    
+    // 虾5 + 发布包
+    state.step = 5; updateProgress(); renderPipeline();
+    state.step = 6; updateProgress();
+    await shrimp5(report);
+    
+    renderPipeline();
+    toast('🎉 全部完成！');
+  } catch (e) {
+    toast('❌ 出错：' + e.message);
+    console.error(e);
+  } finally {
+    state.running = false;
+    document.getElementById('runBtn').disabled = false;
+  }
+}
+
+// ====== 导出 ======
+function downloadOutput(format) {
+  if (!state.outputText) { toast('请先生成内容'); return; }
+  const ext = format === 'md' ? 'md' : 'txt';
+  const mime = format === 'md' ? 'text/markdown' : 'text/plain';
+  const blob = new Blob([state.outputText], {type: mime});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `五虾发布包.${ext}`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('已下载');
+}
+
+function copyOutput() {
+  if (!state.outputText) { toast('请先生成内容'); return; }
+  navigator.clipboard.writeText(state.outputText).then(() => toast('已复制'));
+}
+
+// ====== 初始化 ======
+renderSources();
+renderPipeline();
+updateProgress();
+</script>
+</body>
+</html>

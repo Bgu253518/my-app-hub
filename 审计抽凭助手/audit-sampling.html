@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>审计抽凭助手 — 顾力菡·应用工坊</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+<style>
+:root {
+  --bg-deep: #0a0a14; --bg-card: rgba(22,22,44,0.6); --glass-border: rgba(255,255,255,0.08);
+  --text-primary: #e8e8f0; --text-secondary: #9999b0;
+  --accent-1: #7c5cfc; --accent-2: #5cfca0; --accent-3: #fc5c9c; --radius: 14px; --radius-sm: 8px;
+}
+body {
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background: linear-gradient(160deg,#0a0a14 0%,#12122a 30%,#16163a 60%,#0d0d24 100%);
+  color: var(--text-primary); min-height:100vh; line-height:1.6;
+}
+body::before {
+  content:''; position:fixed; inset:0;
+  background: radial-gradient(ellipse at 20% 20%, rgba(124,92,252,0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 60%, rgba(252,92,156,0.04) 0%, transparent 50%);
+  pointer-events:none; z-index:0;
+}
+::-webkit-scrollbar { width:5px; } ::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(124,92,252,0.25); border-radius:3px; }
+
+.header {
+  position:sticky; top:0; z-index:50; background:rgba(10,10,20,0.85); backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--glass-border); padding:0 20px; height:56px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.header .brand { font-size:16px; font-weight:700; }
+.header a { color:var(--text-secondary); text-decoration:none; font-size:13px; }
+.header a:hover { color:var(--text-primary); }
+.main { position:relative; z-index:1; max-width:1500px; margin:0 auto; padding:20px; }
+
+.card {
+  background:var(--bg-card); border:1px solid var(--glass-border);
+  border-radius:var(--radius); padding:20px; margin-bottom:16px; backdrop-filter:blur(10px);
+}
+.card-title { font-size:15px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.card-hint { font-size:12px; color:var(--text-secondary); margin-bottom:12px; }
+
+.btn {
+  display:inline-flex; align-items:center; gap:4px; padding:7px 14px; border-radius:6px;
+  font-size:12px; font-weight:600; cursor:pointer; border:1px solid var(--glass-border);
+  background:rgba(255,255,255,0.05); color:var(--text-primary); transition:all 0.2s; white-space:nowrap;
+}
+.btn:hover { background:rgba(255,255,255,0.1); }
+.btn-primary { background:linear-gradient(135deg,#7c5cfc,#5ccafc); border:none; color:#fff; }
+.btn-primary:hover { opacity:0.9; transform:translateY(-1px); box-shadow:0 4px 16px rgba(124,92,252,0.3); }
+.btn-primary:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+.btn-xs { padding:3px 8px; font-size:10px; }
+.btn-sm { padding:5px 10px; font-size:11px; }
+
+input,select,textarea {
+  background:rgba(255,255,255,0.05); border:1px solid var(--glass-border);
+  border-radius:6px; padding:7px 10px; color:var(--text-primary); font-size:12px; outline:none;
+}
+input:focus,select:focus,textarea:focus { border-color:var(--accent-1); }
+select option { background:#1a1a2e; color:#e8e8f0; }
+
+.tabs { display:flex; gap:0; margin-bottom:20px; }
+.tab {
+  flex:1; text-align:center; padding:12px; cursor:pointer; font-size:14px;
+  background:rgba(255,255,255,0.03); border:1px solid var(--glass-border);
+  color:var(--text-secondary); transition:all 0.2s; font-weight:600;
+}
+.tab:first-child { border-radius:var(--radius) 0 0 var(--radius); }
+.tab:last-child { border-radius:0 var(--radius) var(--radius) 0; }
+.tab.active { background:rgba(124,92,252,0.15); border-color:var(--accent-1); color:#fff; }
+
+.table-wrap { max-height:500px; overflow:auto; border:1px solid var(--glass-border); border-radius:var(--radius-sm); }
+.table-wrap table { border-collapse:collapse; font-size:12px; width:max-content; min-width:100%; }
+.table-wrap th, .table-wrap td { border:1px solid rgba(255,255,255,0.1); padding:5px 8px; white-space:nowrap; }
+.table-wrap th { background:rgba(124,92,252,0.15); font-weight:600; position:sticky; top:0; z-index:1; }
+.table-wrap td { background:rgba(0,0,0,0.2); }
+.table-wrap td.highlight { background:rgba(252,196,92,0.15) !important; font-weight:600; }
+.table-wrap td.sampled { background:rgba(92,252,160,0.12) !important; }
+
+.progress-bar { height:8px; border-radius:4px; background:rgba(255,255,255,0.06); overflow:hidden; margin:8px 0; }
+.progress-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,#7c5cfc,#5ccafc); transition:width 0.3s; }
+
+.toast {
+  position:fixed; bottom:20px; right:20px; z-index:100;
+  background:rgba(22,22,44,0.95); border:1px solid var(--glass-border);
+  padding:10px 18px; border-radius:var(--radius-sm); font-size:12px;
+  backdrop-filter:blur(12px); transform:translateY(100px); opacity:0; transition:all 0.3s;
+}
+.toast.show { transform:translateY(0); opacity:1; }
+
+.hidden { display:none !important; }
+.flex-center { display:flex; align-items:center; gap:8px; }
+.gap2 { display:flex; gap:8px; flex-wrap:wrap; }
+.mt2 { margin-top:8px; } .mt3 { margin-top:12px; } .mb2 { margin-bottom:8px; }
+.text-sm { font-size:12px; } .text-xs { font-size:10px; }
+.text-secondary { color:var(--text-secondary); }
+.font-mono { font-family:monospace; }
+
+@media (max-width:768px) { .main { padding:12px; } }
+</style>
+<script>
+(function() {
+  if (sessionStorage.getItem('myapp_unlocked')) return;
+  var overlay = document.createElement('div');
+  overlay.id = 'pwd-overlay';
+  overlay.innerHTML = '<div style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0a0a1a;z-index:999999;display:flex;align-items:center;justify-content:center;"><div style="background:#16213e;padding:40px;border-radius:16px;border:1px solid #D2691E;max-width:360px;width:90%%;text-align:center;"><div style="font-size:40px;margin-bottom:10px;">🔒</div><h2 style="color:#D2691E;margin-bottom:12px;font-size:18px;">请输入密码</h2><input type="password" id="pwd-input" style="width:100%%;padding:12px;border-radius:8px;border:1px solid #3a3a5a;background:#0f3460;color:#e0e0e0;font-size:16px;text-align:center;box-sizing:border-box;" placeholder="输入密码" autofocus><button id="pwd-btn" style="margin-top:12px;width:100%%;padding:10px;border:none;border-radius:8px;background:#D2691E;color:#fff;font-size:15px;cursor:pointer;">解锁</button><p id="pwd-error" style="color:#c62828;font-size:13px;margin-top:8px;display:none;">密码错误，请重试</p></div></div>';
+  document.documentElement.appendChild(overlay);
+  
+  async function checkPwd() {
+    var pwd = document.getElementById('pwd-input').value;
+    var buf = new TextEncoder().encode(pwd);
+    var hash = await crypto.subtle.digest('SHA-256', buf);
+    var hex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+    if (hex === '5f6f2138aac618ff50a0751b76144e91468d5139ee38db42b0947ba123e37aaf') {
+      sessionStorage.setItem('myapp_unlocked', '1');
+      overlay.style.display = 'none';
+    } else {
+      document.getElementById('pwd-error').style.display = 'block';
+    }
+  }
+  
+  document.getElementById('pwd-btn').onclick = checkPwd;
+  document.getElementById('pwd-input').onkeydown = function(e) {
+    if (e.key === 'Enter') checkPwd();
+  };
+})();
+</script>
+</head>
+<body>
+
+<div class="header">
+  <span class="brand">🎯 审计抽凭助手</span>
+  <a href="index.html">← 返回应用工坊</a>
+</div>
+
+<div class="main">
+
+  <!-- Mode Tabs -->
+  <div class="tabs">
+    <div class="tab active" data-mode="single" onclick="switchMode('single')">🏢 单家公司抽样</div>
+    <div class="tab" data-mode="batch" onclick="switchMode('batch')">📊 多家公司批量抽样</div>
+  </div>
+
+  <!-- Global Seed -->
+  <div class="card">
+    <div class="card-title">🎲 全局设置</div>
+    <div class="flex-center gap2">
+      <span class="text-sm">随机种子:</span>
+      <input type="text" id="globalSeed" value="" placeholder="手动输入或点击生成" style="width:200px;font-family:monospace">
+      <button class="btn btn-xs" onclick="generateSeed()">🎲 生成随机种子</button>
+      <button class="btn btn-xs" onclick="showRiskTable()" id="riskBtn">📋 风险系数映射表</button>
+    </div>
+  </div>
+
+  <!-- Risk Table (collapsible) -->
+  <div class="card hidden" id="riskCard">
+    <div class="card-title">📋 风险系数映射表（可编辑）</div>
+    <div class="table-wrap" style="max-height:300px">
+      <table>
+        <thead><tr><th>风险水平</th><th>信赖控制</th><th>系数 (RF)</th></tr></thead>
+        <tbody id="riskBody"></tbody>
+      </table>
+    </div>
+    <button class="btn btn-xs mt2" onclick="addRiskRow()">➕ 添加行</button>
+  </div>
+
+  <!-- ====== SINGLE MODE ====== -->
+  <div id="singleMode">
+    <div class="card">
+      <div class="card-title">📂 上传抽样框 Excel</div>
+      <div class="gap2 mb2">
+        <label class="btn btn-sm" style="cursor:pointer">📤 上传 Excel<input type="file" accept=".xlsx,.xls" onchange="loadSingleFile(this)" class="hidden"></label>
+        <span class="text-sm text-secondary" id="singleFileInfo">未上传</span>
+      </div>
+      <div id="singleSheetSel" class="hidden mt2">
+        <span class="text-sm">选择 Sheet:</span>
+        <select id="singleSheet" onchange="previewSingleData()" class="ml-2"></select>
+        <span class="text-sm ml-4">样本编号列:</span><select id="singleIdCol"></select>
+        <span class="text-sm ml-2">金额列:</span><select id="singleAmtCol"></select>
+        <button class="btn btn-xs btn-primary ml-2" onclick="previewSingleData()">刷新预览</button>
+      </div>
+      <div class="table-wrap mt2" style="max-height:250px" id="singlePreview"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">⚙️ 抽样参数</div>
+      <div class="flex-center gap2 mb2">
+        <span class="text-sm">抽样方法:</span>
+        <select id="singleMethod" onchange="onMethodChange()">
+          <option value="MUS">货币单位抽样 (MUS)</option>
+          <option value="fixed">设定规模随机抽样</option>
+          <option value="calc">未设定规模随机抽样</option>
+        </select>
+      </div>
+      <!-- MUS params -->
+      <div id="musParams">
+        <div class="flex-center gap2 mb2" style="flex-wrap:wrap">
+          <span class="text-sm">重要性水平(PM):</span><input type="number" id="musPM" value="500000" step="any" style="width:120px">
+          <span class="text-sm">风险水平:</span><select id="musRisk"><option>高</option><option selected>中</option><option>低</option></select>
+          <span class="text-sm">信赖控制:</span><select id="musReliance"><option>否</option><option>是</option></select>
+          <span class="text-sm">选取超PM项目:</span><select id="musOverPM" onchange="document.getElementById('musOverPMVal').style.display=this.value==='是'?'':'none'"><option>否</option><option>是</option></select>
+          <span class="text-sm" id="musOverPMVal" style="display:none">阈值:<input type="number" id="musThreshold" step="any" style="width:100px"></span>
+        </div>
+        <div class="flex-center gap2">
+          <span class="text-sm">金额取值:</span><select id="musSign"><option value="abs">绝对值</option><option value="pos">正值</option><option value="neg">负值</option></select>
+        </div>
+      </div>
+      <!-- Fixed params -->
+      <div id="fixedParams" class="hidden">
+        <span class="text-sm">样本量:</span><input type="number" id="fixedN" value="30" min="1" style="width:100px">
+      </div>
+      <!-- Calc params -->
+      <div id="calcParams" class="hidden">
+        <div class="flex-center gap2">
+          <span class="text-sm">重要性水平(PM):</span><input type="number" id="calcPM" value="500000" step="any" style="width:120px">
+          <span class="text-sm">风险水平:</span><select id="calcRisk"><option>高</option><option selected>中</option><option>低</option></select>
+          <span class="text-sm">信赖控制:</span><select id="calcReliance"><option>否</option><option>是</option></select>
+          <span class="text-sm">基础比例:</span><input type="number" id="calcRatio" value="10" min="1" max="100" style="width:70px"><span class="text-xs text-secondary">%</span>
+        </div>
+      </div>
+      <button class="btn btn-primary mt3" onclick="runSingleSampling()">🚀 开始抽样</button>
+    </div>
+
+    <div id="singleResult" class="hidden"></div>
+  </div>
+
+  <!-- ====== BATCH MODE ====== -->
+  <div id="batchMode" class="hidden">
+    <div class="card">
+      <div class="card-title">📂 上传批量抽样框 Excel（多家公司分 Tab）</div>
+      <div class="gap2 mb2">
+        <label class="btn btn-sm" style="cursor:pointer">📤 上传 Excel<input type="file" accept=".xlsx,.xls" onchange="loadBatchFile(this)" class="hidden"></label>
+        <span class="text-sm text-secondary" id="batchFileInfo">未上传</span>
+        <button class="btn btn-sm btn-primary hidden" id="batchDemoBtn" onclick="loadBatchDemo()">🔬 加载演示数据</button>
+      </div>
+      <div id="batchSheetList" class="hidden mt2"></div>
+    </div>
+
+    <div class="card hidden" id="batchConfigCard">
+      <div class="card-title">⚙️ 批量参数配置表</div>
+      <div class="gap2 mb2">
+        <button class="btn btn-xs btn-primary" onclick="generateBatchConfig()">🔄 生成/刷新配置表</button>
+        <button class="btn btn-xs" onclick="fillDown()">⬇ 向下填充（首行→全部）</button>
+      </div>
+      <div class="table-wrap" id="batchConfigTable"></div>
+      <button class="btn btn-primary mt2" onclick="runBatchSampling()">🚀 开始批量抽样</button>
+      <div class="progress-bar hidden mt2" id="batchProgressBar"><div class="progress-fill" id="batchProgressFill" style="width:0%"></div></div>
+      <span class="text-xs text-secondary" id="batchProgressText"></span>
+    </div>
+
+    <div id="batchResult" class="hidden"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== TOAST ====================
+function toast(m){ const e=document.getElementById('toast'); e.textContent=m; e.className='toast show'; clearTimeout(e._t); e._t=setTimeout(()=>e.classList.remove('show'),2500); }
+
+// ==================== MODE SWITCH ====================
+function switchMode(mode){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.mode===mode));
+  document.getElementById('singleMode').classList.toggle('hidden',mode!=='single');
+  document.getElementById('batchMode').classList.toggle('hidden',mode!=='batch');
+}
+
+// ==================== SEEDED PRNG (Mulberry32) ====================
+function mulberry32(seed){
+  return function(){
+    seed|=0; seed=seed+0x6D2B79F5|0;
+    let t=Math.imul(seed^seed>>>15,1|seed);
+    t=t+Math.imul(t^t>>>7,61|t)^t;
+    return ((t^t>>>14)>>>0)/4294967296;
+  };
+}
+function hashSeed(s){ let h=0; for(let i=0;i<s.length;i++){ h=((h<<5)-h)+s.charCodeAt(i); h|=0; } return h>>>0; }
+
+function generateSeed(){
+  const s='s'+Date.now()+Math.random().toString(36).slice(2);
+  document.getElementById('globalSeed').value=s;
+  toast('已生成随机种子');
+}
+
+function getGlobalSeed(){
+  let s=document.getElementById('globalSeed').value.trim();
+  if(!s){ s='s'+Date.now(); document.getElementById('globalSeed').value=s; }
+  return s;
+}
+
+// ==================== RISK TABLE ====================
+const DEFAULT_RISK = [
+  {risk:'高',reliance:'否',rf:1.0},{risk:'高',reliance:'是',rf:1.5},
+  {risk:'中',reliance:'否',rf:1.5},{risk:'中',reliance:'是',rf:2.0},
+  {risk:'低',reliance:'否',rf:2.5},{risk:'低',reliance:'是',rf:3.0}
+];
+
+function getRiskTable(){
+  try{ const v=localStorage.getItem('as_risktable'); if(v) return JSON.parse(v); }catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT_RISK));
+}
+function saveRiskTable(t){ localStorage.setItem('as_risktable',JSON.stringify(t)); }
+
+function getRF(risk, reliance){
+  const t=getRiskTable();
+  const r=t.find(x=>x.risk===risk&&x.reliance===reliance);
+  return r?r.rf:2.0;
+}
+
+function showRiskTable(){
+  const card=document.getElementById('riskCard');
+  card.classList.toggle('hidden');
+  if(!card.classList.contains('hidden')) renderRiskTable();
+}
+function renderRiskTable(){
+  const t=getRiskTable();
+  document.getElementById('riskBody').innerHTML=t.map((r,i)=>`<tr>
+    <td><select data-ri="${i}" data-f="risk"><option value="高" ${r.risk==='高'?'selected':''}>高</option><option value="中" ${r.risk==='中'?'selected':''}>中</option><option value="低" ${r.risk==='低'?'selected':''}>低</option></select></td>
+    <td><select data-ri="${i}" data-f="reliance"><option value="否" ${r.reliance==='否'?'selected':''}>否</option><option value="是" ${r.reliance==='是'?'selected':''}>是</option></select></td>
+    <td><input type="number" value="${r.rf}" data-ri="${i}" data-f="rf" step="0.1" style="width:80px"></td>
+    <td><button class="btn btn-xs" onclick="delRiskRow(${i})" style="color:var(--accent-3)">✕</button></td>
+  </tr>`).join('');
+  document.querySelectorAll('#riskBody input,#riskBody select').forEach(el=>{
+    el.addEventListener('change',function(){
+      const t=getRiskTable(); const i=+this.dataset.ri; const f=this.dataset.f;
+      if(t[i]){ t[i][f]=f==='rf'?parseFloat(this.value):this.value; saveRiskTable(t); }
+    });
+  });
+}
+function addRiskRow(){ const t=getRiskTable(); t.push({risk:'中',reliance:'否',rf:2.0}); saveRiskTable(t); renderRiskTable(); }
+function delRiskRow(i){ const t=getRiskTable(); t.splice(i,1); saveRiskTable(t); renderRiskTable(); }
+
+// ==================== SINGLE MODE ====================
+let singleWb=null, singleData=[], singleIdCol=-1, singleAmtCol=-1;
+
+function loadSingleFile(input){
+  const f=input.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=function(e){
+    singleWb=XLSX.read(e.target.result,{type:'array'});
+    document.getElementById('singleFileInfo').textContent=f.name+' ('+singleWb.SheetNames.length+' Sheets)';
+    const sel=document.getElementById('singleSheetSel');
+    sel.classList.remove('hidden');
+    sel.innerHTML=singleWb.SheetNames.map((n,i)=>`<option value="${i}">${n}</option>`).join('');
+    previewSingleData();
+  };
+  r.readAsArrayBuffer(f);
+}
+
+function previewSingleData(){
+  if(!singleWb) return;
+  const sIdx=+document.getElementById('singleSheet').value||0;
+  const sheet=singleWb.Sheets[singleWb.SheetNames[sIdx]];
+  const rows=XLSX.utils.sheet_to_json(sheet,{header:1});
+  if(rows.length===0){ document.getElementById('singlePreview').innerHTML='<p class="text-sm text-secondary p-4">空Sheet</p>'; return; }
+  const maxCol=Math.max(...rows.map(r=>Array.isArray(r)?r.length:0));
+  const opts=Array.from({length:maxCol},(_,i)=>{
+    const h=(Array.isArray(rows[0])&&rows[0][i])?String(rows[0][i]).slice(0,15):'列'+(i+1);
+    return `<option value="${i}">${htmlEscape(h)}</option>`;
+  }).join('');
+  document.getElementById('singleIdCol').innerHTML=opts;
+  document.getElementById('singleAmtCol').innerHTML=opts;
+  if(maxCol>1){ document.getElementById('singleIdCol').value='0'; document.getElementById('singleAmtCol').value='1'; }
+  singleData=rows.slice(1).filter(r=>Array.isArray(r)&&r.some(c=>c!==undefined&&c!==null&&c!==''));
+  renderSinglePreview(rows[0],maxCol);
+}
+
+function renderSinglePreview(header,maxCol){
+  const previewRows=singleData.slice(0,20);
+  document.getElementById('singlePreview').innerHTML=`<table><thead><tr>${Array.from({length:maxCol},(_,i)=>`<th>${htmlEscape(String(Array.isArray(header)?header[i]||'列'+(i+1):'列'+(i+1)))}</th>`).join('')}</tr></thead><tbody>`+
+    previewRows.map(r=>`<tr>${Array.from({length:maxCol},(_,i)=>`<td>${htmlEscape(String(r[i]??''))}</td>`).join('')}</tr>`).join('')+
+    (singleData.length>20?`<tr><td colspan="${maxCol}" class="text-secondary">... 共 ${singleData.length} 行</td></tr>`:'')+'</tbody></table>';
+}
+
+function onMethodChange(){
+  const m=document.getElementById('singleMethod').value;
+  document.getElementById('musParams').classList.toggle('hidden',m!=='MUS');
+  document.getElementById('fixedParams').classList.toggle('hidden',m!=='fixed');
+  document.getElementById('calcParams').classList.toggle('hidden',m!=='calc');
+}
+
+// ==================== SINGLE SAMPLING LOGIC ====================
+function runSingleSampling(){
+  if(singleData.length===0){ toast('请先上传抽样框'); return; }
+  singleIdCol=+document.getElementById('singleIdCol').value;
+  singleAmtCol=+document.getElementById('singleAmtCol').value;
+  const method=document.getElementById('singleMethod').value;
+  const globalSeed=getGlobalSeed();
+  const seed=hashSeed(globalSeed);
+  const log={companyName:'单家公司',method,execTime:new Date().toLocaleString(),seed:globalSeed};
+  let samples=[], logs=[];
+  let highValueCount=0, musCount=0, randomCount=0;
+
+  if(method==='MUS'){
+    const PM=parseFloat(document.getElementById('musPM').value)||500000;
+    const risk=document.getElementById('musRisk').value;
+    const reliance=document.getElementById('musReliance').value;
+    const overPM=document.getElementById('musOverPM').value==='是';
+    const threshold=overPM?parseFloat(document.getElementById('musThreshold').value)||PM:PM;
+    const sign=document.getElementById('musSign').value;
+    const RF=getRF(risk,reliance);
+
+    // Filter amounts
+    let items=singleData.map((r,i)=>({idx:i,id:String(r[singleIdCol]||'').trim(),desc:String(r[singleIdCol]||'').trim(),amt:parseAmt(r[singleAmtCol],sign),row:r}));
+    const totalAmt=items.reduce((s,x)=>s+x.amt,0);
+    const totalItems=items.length;
+
+    // High value items
+    if(overPM){
+      items.forEach(x=>{ if(Math.abs(x.amt)>=threshold){ x.selected=true; x.method='高价值项目'; highValueCount++; } });
+    }
+
+    // MUS sampling
+    const SI=totalAmt/(PM/RF);
+    const rng=mulberry32(seed);
+    const RS=rng()*SI;
+
+    // Build cumulative amounts
+    let cumsum=0; const cumsums=[];
+    items.forEach(x=>{ cumsum+=x.amt; cumsums.push(cumsum); });
+
+    // Select samples
+    const selectedSet=new Set();
+    const repeatCount={};
+    for(let point=RS; point<cumsum; point+=SI){
+      const idx=binarySearch(cumsums,point);
+      if(idx>=0&&idx<items.length){
+        const item=items[idx];
+        if(item.selected){ repeatCount[idx]=(repeatCount[idx]||0)+1; continue; }
+        if(selectedSet.has(idx)){ repeatCount[idx]=(repeatCount[idx]||0)+1; continue; }
+        selectedSet.add(idx);
+        item.selected=true;
+        item.method=item.method||'金额单位选样';
+        if(item.method==='金额单位选样') musCount++;
+      }
+    }
+
+    // Collect samples
+    samples=items.filter(x=>x.selected).map(x=>({
+      id:x.id, desc:x.desc, amt:x.amt, method:x.method,
+      note: repeatCount[x.idx] ? `重复命中 ${repeatCount[x.idx]} 次` + (x.method==='高价值项目'?'；同时被 MUS 命中':'') : (x.method==='高价值项目'&&selectedSet.has(x.idx)?'同时被 MUS 命中':'')
+    }));
+
+    logs=[
+      ['公司名称','单家公司'],['抽样方法','MUS'],['总体描述','全表数据'],
+      ['总体项目数量',totalItems],['总体金额',fmtNum(totalAmt)],
+      ['重要性水平(PM)',fmtNum(PM)],['风险水平',risk],['信赖控制',reliance],
+      ['风险系数(RF)',RF],['抽样间距(SI)',fmtNum(SI)],
+      ['高价值项目阈值',fmtNum(threshold)],['高价值项目强制选取数量',highValueCount],
+      ['金额单位选样数量',musCount],['随机抽样数量',0],['样本量合计',samples.length],
+      ['随机起点/种子',RS.toFixed(4)+' / '+globalSeed],['执行时间',log.execTime]
+    ];
+
+  } else if(method==='fixed'){
+    const N=parseInt(document.getElementById('fixedN').value)||30;
+    const items=singleData.map((r,i)=>({idx:i,id:String(r[singleIdCol]||'').trim(),amt:parseAmt(r[singleAmtCol],'abs'),row:r}));
+    const shuffled=fisherYatesShuffle([...items],seed);
+    samples=shuffled.slice(0,Math.min(N,shuffled.length)).map(x=>({id:x.id,desc:x.id,amt:x.amt,method:'随机抽样',note:''}));
+    randomCount=samples.length;
+    logs=[['公司名称','单家公司'],['抽样方法','设定规模随机抽样'],['总体项目数量',items.length],['样本量',samples.length],['种子',globalSeed],['执行时间',log.execTime]];
+  } else if(method==='calc'){
+    const PM=parseFloat(document.getElementById('calcPM').value)||500000;
+    const risk=document.getElementById('calcRisk').value;
+    const reliance=document.getElementById('calcReliance').value;
+    const ratio=parseFloat(document.getElementById('calcRatio').value)/100||0.1;
+    const RF=getRF(risk,reliance);
+    const N=Math.ceil(singleData.length*ratio/RF);
+    const items=singleData.map((r,i)=>({idx:i,id:String(r[singleIdCol]||'').trim(),amt:parseAmt(r[singleAmtCol],'abs'),row:r}));
+    const shuffled=fisherYatesShuffle([...items],seed);
+    samples=shuffled.slice(0,Math.min(N,shuffled.length)).map(x=>({id:x.id,desc:x.id,amt:x.amt,method:'随机抽样',note:''}));
+    randomCount=samples.length;
+    logs=[['公司名称','单家公司'],['抽样方法','未设定规模随机抽样'],['总体项目数量',singleData.length],['重要性水平(PM)',fmtNum(PM)],['风险水平',risk],['信赖控制',reliance],['风险系数(RF)',RF],['基础比例',(ratio*100)+'%'],['计算样本量',N],['实际样本量',samples.length],['种子',globalSeed],['执行时间',log.execTime]];
+  }
+
+  renderSingleResult(logs,samples,method);
+  window._singleLogs=logs; window._singleSamples=samples; window._singleMethod=method;
+  toast(`✓ 抽样完成：${samples.length} 个样本`);
+}
+
+function parseAmt(v,sign){
+  const n=typeof v==='number'?v:parseFloat(String(v).replace(/[,\s]/g,''))||0;
+  if(sign==='pos') return Math.max(0,n);
+  if(sign==='neg') return Math.min(0,n);
+  return n;
+}
+
+function binarySearch(arr,target){
+  let lo=0,hi=arr.length-1;
+  while(lo<hi){ const mid=(lo+hi)>>1; if(arr[mid]<=target) lo=mid+1; else hi=mid; }
+  return lo;
+}
+
+function fisherYatesShuffle(arr,seed){
+  const rng=mulberry32(seed);
+  for(let i=arr.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+  return arr;
+}
+
+function renderSingleResult(logs,samples,method){
+  const el=document.getElementById('singleResult');
+  el.classList.remove('hidden');
+  el.innerHTML=`
+    <div class="card"><div class="card-title">📋 抽样日志</div>
+      <table style="font-size:12px">${logs.map(l=>`<tr><td class="text-secondary" style="padding:2px 12px 2px 0">${l[0]}</td><td style="padding:2px 0">${l[1]}</td></tr>`).join('')}</table>
+    </div>
+    <div class="card"><div class="card-title">📊 样本清单 (${samples.length}条)</div>
+      <div class="table-wrap"><table><thead><tr><th>序号</th><th>样本编号</th><th>样本描述</th><th>金额</th><th>选样方式</th><th>备注</th></tr></thead><tbody>
+        ${samples.map((s,i)=>`<tr>
+          <td>${i+1}</td><td>${htmlEscape(s.id)}</td><td>${htmlEscape(s.desc)}</td><td class="font-mono">${fmtNum(s.amt)}</td>
+          <td>${s.method==='高价值项目'?'<span style="color:#fcc45c">高价值项目</span>':s.method==='金额单位选样'?'金额单位选样':'随机抽样'}</td>
+          <td class="text-xs">${htmlEscape(s.note)}</td>
+        </tr>`).join('')}
+      </tbody></table></div>
+    </div>
+    <div class="gap2 mt2">
+      <button class="btn btn-primary" onclick="exportSingleResult()">📥 导出 Excel</button>
+    </div>`;
+}
+
+function exportSingleResult(){
+  const logs=window._singleLogs||[];
+  const samples=window._singleSamples||[];
+  const wb=XLSX.utils.book_new();
+
+  // Sheet 1: Logs + Samples
+  const logRows=logs.map(l=>[l[0],l[1]]);
+  logRows.push(['','']);
+  logRows.push(['序号','样本编号','样本描述','金额','选样方式','备注']);
+  samples.forEach((s,i)=>logRows.push([i+1,s.id,s.desc,fmtNum(s.amt),s.method,s.note]));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(logRows),'抽样日志与清单');
+
+  // Sheet 2: Parameters
+  const params=[['全局种子',getGlobalSeed()],['执行时间',new Date().toLocaleString()],['抽样方法',window._singleMethod||'']];
+  logs.forEach(l=>params.push([l[0],l[1]]));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(params),'抽样参数');
+
+  XLSX.writeFile(wb,`抽凭结果_${new Date().toISOString().slice(0,10)}.xlsx`);
+  toast('✓ 已导出');
+}
+
+// ==================== BATCH MODE ====================
+let batchWb=null, batchSheets=[], batchConfig=[];
+
+function loadBatchFile(input){
+  const f=input.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=function(e){
+    batchWb=XLSX.read(e.target.result,{type:'array'});
+    document.getElementById('batchFileInfo').textContent=f.name+' ('+batchWb.SheetNames.length+' Sheets)';
+    document.getElementById('batchDemoBtn').classList.add('hidden');
+    showBatchSheets();
+  };
+  r.readAsArrayBuffer(f);
+}
+
+function loadBatchDemo(){
+  // Create a demo wb with 2 sheets
+  const wb=XLSX.utils.book_new();
+  const makeSheet=(name,rows)=>{
+    const data=[['凭证号','金额','摘要']];
+    rows.forEach(r=>data.push([r[0],r[1],r[2]]));
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(data),name);
+  };
+  makeSheet('甲公司',[['PZ001',150000,'销售收入'],['PZ002',85000,'采购付款'],['PZ003',230000,'工程款'],['PZ004',45000,'办公费'],['PZ005',120000,'咨询费'],['PZ006',98000,'设备采购'],['PZ007',67000,'差旅报销'],['PZ008',310000,'货款收入'],['PZ009',54000,'维修费'],['PZ010',175000,'投资收益']]);
+  makeSheet('乙公司',[['PZ101',280000,'货款收入'],['PZ102',65000,'材料采购'],['PZ103',190000,'设备款'],['PZ104',42000,'办公费'],['PZ105',155000,'咨询服务'],['PZ106',88000,'运输费'],['PZ107',340000,'销售收入'],['PZ108',72000,'修理费']]);
+  batchWb=wb;
+  document.getElementById('batchFileInfo').textContent='演示数据 (2家公司)';
+  document.getElementById('batchDemoBtn').classList.add('hidden');
+  showBatchSheets();
+  toast('已加载演示数据：甲公司10行、乙公司8行');
+}
+
+function showBatchSheets(){
+  if(!batchWb) return;
+  const el=document.getElementById('batchSheetList');
+  el.classList.remove('hidden');
+  batchSheets=batchWb.SheetNames.map((n,i)=>({name:n,idx:i,checked:true,companyName:n}));
+  el.innerHTML='<p class="text-sm mb2">选择要抽样的 Sheet（公司）：</p><div class="gap2">'+
+    batchSheets.map((s,i)=>`<label class="flex-center text-sm"><input type="checkbox" checked data-bsi="${i}" onchange="batchSheets[${i}].checked=this.checked"> ${htmlEscape(s.name)} → 公司名: <input value="${htmlEscape(s.companyName)}" data-bsi="${i}" data-f="companyName" style="width:120px" onchange="batchSheets[${i}].companyName=this.value"></label>`).join('')+
+    '</div>';
+  document.getElementById('batchConfigCard').classList.remove('hidden');
+  generateBatchConfig();
+}
+
+function generateBatchConfig(){
+  const active=batchSheets.filter(s=>s.checked);
+  if(active.length===0){ toast('请至少选择一个Sheet'); return; }
+  batchConfig=active.map((s,i)=>({
+    companyName:s.companyName, sheetIdx:s.idx, sheetName:s.name,
+    method:'MUS', PM:500000, amtCol:1, sign:'abs',
+    risk:'中', reliance:'否', overPM:'否', threshold:'',
+    fixedN:30
+  }));
+  renderBatchConfig();
+}
+
+function renderBatchConfig(){
+  const el=document.getElementById('batchConfigTable');
+  const headers=['公司名称','Tab','抽样方法','PM','金额列','金额取值','风险水平','信赖控制','超PM强制','超PM阈值','样本量'];
+  const methods=['MUS','fixed','calc'];
+  const signs=['abs→绝对值','pos→正值','neg→负值'];
+  const risks=['高','中','低'];
+  const yn=['否','是'];
+  // Get sheet headers for amount column dropdown
+  const amtColOpts=batchSheets.length>0?getSheetColOpts(batchSheets[0].idx):[];
+
+  el.innerHTML=`<table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>`+
+    batchConfig.map((c,i)=>`<tr>
+      <td><input value="${htmlEscape(c.companyName)}" data-bci="${i}" data-f="companyName" style="width:100px"></td>
+      <td class="text-secondary">${htmlEscape(c.sheetName)}</td>
+      <td><select data-bci="${i}" data-f="method" onchange="batchMethodChange(${i},this.value)">${methods.map(m=>`<option value="${m}" ${c.method===m?'selected':''}>${m==='MUS'?'MUS':m==='fixed'?'设定规模随机':'未设定规模随机'}</option>`).join('')}</select></td>
+      <td><input type="number" value="${c.PM}" data-bci="${i}" data-f="PM" style="width:90px" step="any"></td>
+      <td><select data-bci="${i}" data-f="amtCol">${amtColOpts.map(o=>`<option value="${o.v}" ${c.amtCol===o.v?'selected':''}>${htmlEscape(o.l)}</option>`).join('')}</select></td>
+      <td><select data-bci="${i}" data-f="sign">${signs.map(s=>`<option value="${s.slice(0,3)}" ${c.sign===s.slice(0,3)?'selected':''}>${s}</option>`).join('')}</select></td>
+      <td><select data-bci="${i}" data-f="risk">${risks.map(r=>`<option value="${r}" ${c.risk===r?'selected':''}>${r}</option>`).join('')}</select></td>
+      <td><select data-bci="${i}" data-f="reliance">${yn.map(y=>`<option value="${y}" ${c.reliance===y?'selected':''}>${y}</option>`).join('')}</select></td>
+      <td><select data-bci="${i}" data-f="overPM">${yn.map(y=>`<option value="${y}" ${c.overPM===y?'selected':''}>${y}</option>`).join('')}</select></td>
+      <td><input value="${c.threshold}" data-bci="${i}" data-f="threshold" style="width:80px" placeholder="=PM"></td>
+      <td><input type="number" value="${c.fixedN}" data-bci="${i}" data-f="fixedN" style="width:70px" ${c.method==='fixed'?'':'disabled'}></td>
+    </tr>`).join('')+'</tbody></table>';
+
+  // Bind changes
+  el.querySelectorAll('input,select').forEach(inp=>{
+    inp.addEventListener('change',function(){
+      const i=+this.dataset.bci,f=this.dataset.f;
+      if(batchConfig[i]){
+        batchConfig[i][f]=f==='PM'||f==='fixedN'?parseFloat(this.value):this.value;
+      }
+    });
+  });
+}
+
+function getSheetColOpts(sIdx){
+  if(!batchWb) return [];
+  const sheet=batchWb.Sheets[batchWb.SheetNames[sIdx]];
+  const ref=XLSX.utils.decode_range(sheet['!ref']||'A1');
+  const opts=[];
+  for(let c=0;c<=ref.e.c;c++){
+    const cell=sheet[XLSX.utils.encode_cell({r:ref.s.r,c})];
+    const h=cell?String(cell.w||cell.v||'列'+(c+1)).slice(0,12):'列'+(c+1);
+    opts.push({v:c,l:h});
+  }
+  return opts;
+}
+
+function batchMethodChange(i,m){
+  batchConfig[i].method=m;
+  renderBatchConfig();
+}
+
+function fillDown(){
+  if(batchConfig.length<2) return;
+  const first=batchConfig[0];
+  for(let i=1;i<batchConfig.length;i++){
+    batchConfig[i].method=first.method;
+    batchConfig[i].PM=first.PM;
+    batchConfig[i].sign=first.sign;
+    batchConfig[i].risk=first.risk;
+    batchConfig[i].reliance=first.reliance;
+    batchConfig[i].overPM=first.overPM;
+    batchConfig[i].fixedN=first.fixedN;
+  }
+  renderBatchConfig();
+  toast('已向下填充');
+}
+
+async function runBatchSampling(){
+  if(!batchWb||batchConfig.length===0){ toast('请先上传文件并生成配置'); return; }
+  const globalSeed=getGlobalSeed();
+  const bar=document.getElementById('batchProgressBar');
+  const fill=document.getElementById('batchProgressFill');
+  const txt=document.getElementById('batchProgressText');
+  bar.classList.remove('hidden');
+
+  const allResults=[];
+  for(let i=0;i<batchConfig.length;i++){
+    const cfg=batchConfig[i];
+    const sIdx=cfg.sheetIdx;
+    const sheet=batchWb.Sheets[batchWb.SheetNames[sIdx]];
+    const rows=XLSX.utils.sheet_to_json(sheet,{header:1});
+    const data=rows.slice(1).filter(r=>Array.isArray(r)&&r.some(c=>c!==undefined&&c!==null&&c!==''));
+    const idCol=0, amtCol=cfg.amtCol||1;
+    const subSeed=globalSeed+'_'+i;
+    const seed=hashSeed(subSeed);
+    const log={companyName:cfg.companyName,method:cfg.method,execTime:new Date().toLocaleString(),seed:subSeed};
+    let samples=[],logs=[];
+
+    if(cfg.method==='MUS'){
+      const PM=cfg.PM||500000; const RF=getRF(cfg.risk,cfg.reliance);
+      const items=data.map((r,idx)=>({idx,id:String(r[idCol]||'').trim(),amt:parseAmt(r[amtCol],cfg.sign),row:r}));
+      const totalAmt=items.reduce((s,x)=>s+x.amt,0);
+      let highCount=0, musCnt=0;
+      if(cfg.overPM==='是'){
+        const th=parseFloat(cfg.threshold)||PM;
+        items.forEach(x=>{ if(Math.abs(x.amt)>=th){ x.selected=true; x.method='高价值项目'; highCount++; } });
+      }
+      const SI=totalAmt/(PM/RF);
+      const rng=mulberry32(seed); const RS=rng()*SI;
+      let cumsum=0; const cumsums=items.map(x=>{ cumsum+=x.amt; return cumsum; });
+      const selSet=new Set(), repCnt={};
+      for(let pt=RS; pt<cumsum; pt+=SI){
+        const idx=binarySearch(cumsums,pt);
+        if(idx>=0&&idx<items.length){
+          const item=items[idx];
+          if(item.selected){ repCnt[idx]=(repCnt[idx]||0)+1; continue; }
+          if(selSet.has(idx)){ repCnt[idx]=(repCnt[idx]||0)+1; continue; }
+          selSet.add(idx); item.selected=true; item.method='金额单位选样'; musCnt++;
+        }
+      }
+      samples=items.filter(x=>x.selected).map(x=>({
+        id:x.id,desc:x.id,amt:x.amt,method:x.method,
+        note:repCnt[x.idx]?`重复命中${repCnt[x.idx]}次`:x.method==='高价值项目'&&selSet.has(x.idx)?'同时被MUS命中':''
+      }));
+      logs=[['公司名称',cfg.companyName],['抽样方法','MUS'],['总体项目数量',items.length],['总体金额',fmtNum(totalAmt)],['重要性水平(PM)',fmtNum(PM)],['风险水平',cfg.risk],['信赖控制',cfg.reliance],['风险系数(RF)',RF],['抽样间距(SI)',fmtNum(SI)],['高价值项目',''+highCount],['金额单位选样',''+musCnt],['样本量合计',''+samples.length],['种子',subSeed],['执行时间',log.execTime]];
+    } else {
+      const methodLabel=cfg.method==='fixed'?'设定规模随机抽样':'未设定规模随机抽样';
+      let N=cfg.fixedN||30;
+      if(cfg.method==='calc'){ const RF=getRF(cfg.risk,cfg.reliance); N=Math.ceil(data.length*0.1/RF); }
+      const items=data.map((r,idx)=>({idx,id:String(r[idCol]||'').trim(),amt:parseAmt(r[amtCol],'abs'),row:r}));
+      const shuffled=fisherYatesShuffle([...items],seed);
+      samples=shuffled.slice(0,Math.min(N,shuffled.length)).map(x=>({id:x.id,desc:x.id,amt:x.amt,method:'随机抽样',note:''}));
+      logs=[['公司名称',cfg.companyName],['抽样方法',methodLabel],['总体项目数量',items.length],['样本量',samples.length],['种子',subSeed],['执行时间',log.execTime]];
+    }
+
+    allResults.push({cfg,logs,samples});
+    fill.style.width=Math.round((i+1)/batchConfig.length*100)+'%';
+    txt.textContent=`处理中... ${i+1}/${batchConfig.length}`;
+    await new Promise(r=>setTimeout(r,50)); // allow UI update
+  }
+
+  bar.classList.add('hidden'); txt.textContent='';
+  window._batchResults=allResults;
+  renderBatchResult(allResults);
+  toast(`✓ 批量抽样完成：${batchConfig.length}家公司`);
+}
+
+function renderBatchResult(results){
+  const el=document.getElementById('batchResult');
+  el.classList.remove('hidden');
+  el.innerHTML=`
+    <div class="card"><div class="card-title">📊 抽样汇总</div>
+      <div class="table-wrap"><table><thead><tr><th>公司名称</th><th>抽样方法</th><th>PM/参数</th><th>样本量</th><th>展开</th></tr></thead><tbody>
+        ${results.map((r,i)=>`<tr>
+          <td>${htmlEscape(r.cfg.companyName)}</td><td>${r.cfg.method==='MUS'?'MUS':r.cfg.method==='fixed'?'设定规模随机':'未设定规模随机'}</td>
+          <td>${r.cfg.method==='MUS'?fmtNum(r.cfg.PM):r.cfg.method==='fixed'?'N='+r.cfg.fixedN:'比例10%'}</td>
+          <td>${r.samples.length}</td>
+          <td><button class="btn btn-xs" onclick="toggleBatchDetail(${i})">展开</button></td>
+        </tr>
+        <tr id="batchDetail${i}" class="hidden"><td colspan="5">
+          <table style="font-size:12px;margin:8px">${r.logs.map(l=>`<tr><td class="text-secondary" style="padding:1px 8px 1px 0">${l[0]}</td><td>${l[1]}</td></tr>`).join('')}</table>
+          <div class="table-wrap" style="max-height:200px"><table><thead><tr><th>序号</th><th>样本编号</th><th>金额</th><th>选样方式</th><th>备注</th></tr></thead><tbody>
+            ${r.samples.map((s,j)=>`<tr><td>${j+1}</td><td>${htmlEscape(s.id)}</td><td class="font-mono">${fmtNum(s.amt)}</td><td>${s.method}</td><td class="text-xs">${htmlEscape(s.note)}</td></tr>`).join('')}
+          </tbody></table></div>
+        </td></tr>`).join('')}
+      </tbody></table></div>
+    </div>
+    <div class="gap2 mt2">
+      <button class="btn btn-primary" onclick="exportBatchResult()">📥 导出批量抽样 Excel</button>
+    </div>`;
+}
+
+function toggleBatchDetail(i){
+  document.getElementById('batchDetail'+i).classList.toggle('hidden');
+}
+
+function exportBatchResult(){
+  const results=window._batchResults||[];
+  if(results.length===0) return;
+  const wb=XLSX.utils.book_new();
+
+  // Summary sheet
+  const summary=[['公司名称','Tab名','抽样方法','PM','风险','信赖控制','样本量']];
+  results.forEach(r=>summary.push([r.cfg.companyName,r.cfg.sheetName,r.cfg.method,fmtNum(r.cfg.PM||0),r.cfg.risk,r.cfg.reliance,r.samples.length]));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(summary),'抽样汇总');
+
+  // Per-company sheets
+  results.forEach(r=>{
+    const rows=[];
+    r.logs.forEach(l=>rows.push([l[0],l[1]]));
+    rows.push(['','']);
+    rows.push(['序号','样本编号','样本描述','金额','选样方式','备注']);
+    r.samples.forEach((s,j)=>rows.push([j+1,s.id,s.desc,fmtNum(s.amt),s.method,s.note]));
+    const name=r.cfg.companyName.replace(/[\\\/\*\?\[\]:]/g,'_').slice(0,31);
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),name);
+  });
+
+  // Global params
+  const gp=[['全局种子',getGlobalSeed()],['执行时间',new Date().toLocaleString()],['公司数',results.length],['总样本量',results.reduce((s,r)=>s+r.samples.length,0)]];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(gp),'全局参数');
+
+  XLSX.writeFile(wb,`批量抽凭结果_${new Date().toISOString().slice(0,10)}.xlsx`);
+  toast('✓ 已导出：抽样汇总+每公司独立Sheet+全局参数');
+}
+
+// ==================== HELPERS ====================
+function fmtNum(n){ return isNaN(n)?'-':Number(n).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function htmlEscape(s){ const d=document.createElement('div'); d.textContent=String(s??''); return d.innerHTML; }
+
+// ==================== INIT ====================
+generateSeed();
+renderRiskTable();
+onMethodChange();
+
+// Add global demo button for single mode
+document.getElementById('batchDemoBtn').classList.remove('hidden');
+</script>
+</body>
+</html>

@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智能待办 · Smart Todo</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        surface: '#161b22',
+        deep: '#0d1117',
+        accent: '#7c5cfc',
+        accent2: '#5ccafc',
+        danger: '#f85149',
+        success: '#3fb950',
+        warn: '#d2991d'
+      }
+    }
+  }
+}
+</script>
+<script type="module">
+import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1';
+window.transformersReady = false;
+window.aiPipeline = null;
+
+async function initAI() {
+  try {
+    window.aiPipeline = await pipeline('text2text-generation', 'Xenova/LaMini-Flan-T5-783M');
+    window.transformersReady = true;
+    window.dispatchEvent(new CustomEvent('ai-ready'));
+  } catch(e) {
+    console.warn('AI model load failed, using regex fallback:', e.message);
+  }
+}
+initAI();
+</script>
+<style>
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --border: #30363d;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --accent: #7c5cfc;
+  --danger: #f85149;
+  --success: #3fb950;
+  --warn: #d2991d;
+  --radius: 10px;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; font-family: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  background: linear-gradient(160deg, #0a0a14 0%, #12122a 40%, #16163a 80%, #0d0d24 100%);
+  color: var(--text); min-height: 100vh;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 20% 30%, rgba(124,92,252,0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 70%, rgba(92,202,252,0.04) 0%, transparent 50%);
+  pointer-events: none; z-index: 0;
+}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(124,92,252,0.25); border-radius: 3px; }
+
+.app-wrap { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; padding: 20px; }
+
+/* Header */
+.app-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.app-header h1 { font-size: 24px; font-weight: 800; background: linear-gradient(135deg,#7c5cfc,#5ccafc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.app-header .btn-icon {
+  width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text2); font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+}
+.app-header .btn-icon:hover { border-color: var(--accent); color: var(--text); }
+
+/* Card */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px; margin-bottom: 14px;
+  backdrop-filter: blur(8px);
+}
+
+/* AI Input */
+.ai-section textarea {
+  width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--bg); color: var(--text); font-size: 13px; resize: vertical;
+  outline: none; font-family: inherit; line-height: 1.5;
+}
+.ai-section textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,92,252,0.1); }
+.ai-section .ai-actions { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+.ai-status { font-size: 11px; color: var(--text2); }
+.ai-status.ready { color: var(--success); }
+
+/* Buttons */
+.btn {
+  padding: 8px 16px; border: 1px solid var(--border); border-radius: 8px;
+  font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+  background: var(--surface); color: var(--text); display: inline-flex; align-items: center; gap: 6px;
+}
+.btn:hover { border-color: rgba(124,92,252,0.4); }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn-primary:hover { background: #9578ff; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-sm { padding: 4px 10px; font-size: 11px; border-radius: 6px; }
+.btn-xs { padding: 2px 8px; font-size: 10px; border-radius: 5px; }
+.btn-danger { border-color: rgba(248,81,73,0.3); color: var(--danger); }
+.btn-danger:hover { background: rgba(248,81,73,0.1); border-color: var(--danger); }
+
+/* Quick Add */
+.quick-add { display: flex; gap: 8px; }
+.quick-add input { flex: 1; }
+.quick-add input, .quick-add input[type="date"] {
+  padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg); color: var(--text); font-size: 13px; outline: none;
+  font-family: inherit;
+}
+.quick-add input:focus { border-color: var(--accent); }
+.quick-add input[type="date"] { width: 140px; color-scheme: dark; }
+
+/* Tabs */
+.tabs { display: flex; gap: 0; margin-bottom: 14px; border-bottom: 1px solid var(--border); }
+.tab-btn {
+  padding: 10px 20px; border: none; background: none; color: var(--text2);
+  font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-count { font-size: 11px; margin-left: 4px; opacity: 0.7; }
+
+/* Todo Items */
+.todo-item {
+  display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: rgba(22,22,44,0.4); margin-bottom: 8px;
+  transition: all 0.2s; position: relative;
+}
+.todo-item:hover { border-color: rgba(124,92,252,0.2); }
+.todo-item.done { opacity: 0.5; }
+.todo-item.done .todo-text { text-decoration: line-through; color: var(--text2); }
+.todo-item.urgent { border-left: 3px solid var(--danger); }
+.todo-check {
+  width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border);
+  flex-shrink: 0; cursor: pointer; transition: all 0.2s; margin-top: 1px;
+  display: flex; align-items: center; justify-content: center; font-size: 11px;
+}
+.todo-check:hover { border-color: var(--success); }
+.todo-check.done { background: var(--success); border-color: var(--success); color: #fff; }
+.todo-body { flex: 1; min-width: 0; }
+.todo-text { font-size: 14px; line-height: 1.4; word-break: break-word; }
+.todo-text .urgent-icon { color: var(--danger); margin-right: 3px; }
+.todo-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 5px; align-items: center; }
+.todo-date { font-size: 11px; color: var(--accent2); display: flex; align-items: center; gap: 3px; }
+.todo-date.overdue { color: var(--danger); font-weight: 700; }
+.todo-tag {
+  display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 10px;
+  font-weight: 600;
+}
+.tag-high { background: rgba(248,81,73,0.12); color: var(--danger); }
+.tag-medium { background: rgba(210,153,29,0.12); color: var(--warn); }
+.tag-low { background: rgba(139,148,158,0.12); color: var(--text2); }
+.tag-cat { background: rgba(124,92,252,0.12); color: #b4a0ff; }
+.todo-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.todo-edit-input {
+  width: 100%; padding: 4px 8px; border: 1px solid var(--accent); border-radius: 6px;
+  background: var(--bg); color: var(--text); font-size: 13px; outline: none;
+  font-family: inherit;
+}
+
+/* Settings panel */
+.settings-overlay {
+  position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center;
+  opacity: 0; visibility: hidden; transition: all 0.3s;
+}
+.settings-overlay.open { opacity: 1; visibility: visible; }
+.settings-panel {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 24px; width: 420px; max-width: 90vw; max-height: 80vh; overflow-y: auto;
+}
+.settings-panel h3 { font-size: 18px; margin: 0 0 16px; }
+.settings-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 12px; }
+.settings-row label { font-size: 13px; font-weight: 500; }
+.settings-row input, .settings-row select {
+  width: 80px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px;
+  background: var(--bg); color: var(--text); font-size: 13px; outline: none; text-align: center;
+}
+.settings-row input:focus { border-color: var(--accent); }
+.toggle-switch {
+  position: relative; width: 46px; height: 26px; flex-shrink: 0;
+}
+.toggle-switch input { display: none; }
+.toggle-slider {
+  position: absolute; inset: 0; border-radius: 26px; background: var(--border);
+  cursor: pointer; transition: all 0.3s;
+}
+.toggle-slider::after {
+  content: ''; position: absolute; width: 20px; height: 20px; border-radius: 50%;
+  background: #fff; top: 3px; left: 3px; transition: all 0.3s;
+}
+input:checked + .toggle-slider { background: var(--accent); }
+input:checked + .toggle-slider::after { left: 23px; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+  padding: 10px 24px; border-radius: 20px; background: var(--surface);
+  border: 1px solid var(--border); color: var(--text); font-size: 13px;
+  z-index: 200; opacity: 0; transition: opacity 0.3s; pointer-events: none;
+}
+.toast.show { opacity: 1; }
+
+/* Empty state */
+.empty { text-align: center; padding: 40px 20px; color: var(--text2); }
+.empty .empty-icon { font-size: 40px; margin-bottom: 8px; }
+
+/* Import area */
+.import-area {
+  border: 2px dashed var(--border); border-radius: var(--radius); padding: 20px;
+  text-align: center; transition: all 0.2s; cursor: pointer;
+}
+.import-area:hover { border-color: var(--accent); background: rgba(124,92,252,0.04); }
+
+@media (max-width: 640px) {
+  .app-wrap { padding: 12px; }
+  .quick-add { flex-wrap: wrap; }
+  .quick-add input[type="date"] { width: 100%; }
+  .todo-actions { flex-direction: column; }
+}
+</style>
+<script>
+(function() {
+  if (sessionStorage.getItem('myapp_unlocked')) return;
+  var overlay = document.createElement('div');
+  overlay.id = 'pwd-overlay';
+  overlay.innerHTML = '<div style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0a0a1a;z-index:999999;display:flex;align-items:center;justify-content:center;"><div style="background:#16213e;padding:40px;border-radius:16px;border:1px solid #D2691E;max-width:360px;width:90%%;text-align:center;"><div style="font-size:40px;margin-bottom:10px;">🔒</div><h2 style="color:#D2691E;margin-bottom:12px;font-size:18px;">请输入密码</h2><input type="password" id="pwd-input" style="width:100%%;padding:12px;border-radius:8px;border:1px solid #3a3a5a;background:#0f3460;color:#e0e0e0;font-size:16px;text-align:center;box-sizing:border-box;" placeholder="输入密码" autofocus><button id="pwd-btn" style="margin-top:12px;width:100%%;padding:10px;border:none;border-radius:8px;background:#D2691E;color:#fff;font-size:15px;cursor:pointer;">解锁</button><p id="pwd-error" style="color:#c62828;font-size:13px;margin-top:8px;display:none;">密码错误，请重试</p></div></div>';
+  document.documentElement.appendChild(overlay);
+  
+  async function checkPwd() {
+    var pwd = document.getElementById('pwd-input').value;
+    var buf = new TextEncoder().encode(pwd);
+    var hash = await crypto.subtle.digest('SHA-256', buf);
+    var hex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+    if (hex === '5f6f2138aac618ff50a0751b76144e91468d5139ee38db42b0947ba123e37aaf') {
+      sessionStorage.setItem('myapp_unlocked', '1');
+      overlay.style.display = 'none';
+    } else {
+      document.getElementById('pwd-error').style.display = 'block';
+    }
+  }
+  
+  document.getElementById('pwd-btn').onclick = checkPwd;
+  document.getElementById('pwd-input').onkeydown = function(e) {
+    if (e.key === 'Enter') checkPwd();
+  };
+})();
+</script>
+</head>
+<body>
+
+<div class="app-wrap">
+  <!-- Header -->
+  <div class="app-header">
+    <h1>📋 智能待办</h1>
+    <div style="display:flex;gap:8px">
+      <a href="https://bgu253518.github.io/my-app-hub/" style="color:var(--text2);text-decoration:none;font-size:0.78rem;padding:6px 12px;border:1px solid var(--border);border-radius:20px;transition:all 0.2s">← 返回主页</a>
+      <button class="btn-icon" onclick="toggleSettings()" title="设置">⚙️</button>
+      <button class="btn-icon" onclick="exportData()" title="导出">📤</button>
+    </div>
+  </div>
+
+  <!-- AI Parse Section -->
+  <div class="card ai-section">
+    <textarea id="ai-input" rows="3" placeholder="粘贴自然语言，AI 自动提取待办事项...&#10;例如：明天下午3点找张三确认需求，高优先级 #审计 &#10;周五前提交项目报告给李四 #财务"></textarea>
+    <div class="ai-actions">
+      <button class="btn btn-primary" id="btn-ai-parse" onclick="aiParse()">🤖 AI 解析</button>
+      <span class="ai-status" id="ai-status">⏳ AI 模型加载中...</span>
+      <button class="btn btn-sm" onclick="document.getElementById('ai-input').value=''">清空</button>
+    </div>
+  </div>
+
+  <!-- Quick Add -->
+  <div class="card">
+    <div class="quick-add">
+      <input type="text" id="quick-text" placeholder="快速添加待办..." onkeydown="if(event.key==='Enter')quickAdd()">
+      <input type="date" id="quick-date">
+      <button class="btn btn-primary" onclick="quickAdd()" style="padding:9px 18px">➕ 添加</button>
+    </div>
+  </div>
+
+  <!-- Import -->
+  <div class="card" style="padding:12px 18px">
+    <details>
+      <summary style="cursor:pointer;font-size:13px;color:var(--text2);font-weight:600">📥 导入 / 粘贴批量添加</summary>
+      <div style="margin-top:10px">
+        <textarea id="import-text" rows="4" placeholder="每行一个待办，或粘贴 CSV：&#10;找张三确认需求,2026-05-20,high,审计&#10;提交项目报告,2026-05-18,medium,财务&#10;&#10;或粘贴 JSON..." style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;resize:vertical;outline:none"></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn btn-sm" onclick="importText()">📋 解析文本/CSV</button>
+          <button class="btn btn-sm" onclick="document.getElementById('import-json-file').click()">📂 导入 JSON 文件</button>
+          <input type="file" id="import-json-file" accept=".json" onchange="importJsonFile(this)" style="display:none">
+          <button class="btn btn-sm" onclick="loadSampleTodos()">🎲 加载示例</button>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="active" onclick="switchTab('active',this)">待完成 <span class="tab-count" id="count-active">0</span></button>
+    <button class="tab-btn" data-tab="done" onclick="switchTab('done',this)">已完成 <span class="tab-count" id="count-done">0</span></button>
+  </div>
+
+  <!-- Todo List -->
+  <div id="todo-list"></div>
+
+  <!-- Export area -->
+  <div style="display:flex;gap:8px;justify-content:center;margin-top:20px;flex-wrap:wrap">
+    <button class="btn btn-sm" onclick="exportCSV()">📥 导出 CSV</button>
+    <button class="btn btn-sm" onclick="exportJSON()">📥 导出 JSON</button>
+    <button class="btn btn-sm btn-danger" onclick="clearAllDone()">🗑️ 清空已完成</button>
+  </div>
+
+  <div style="text-align:center;margin-top:24px;font-size:11px;color:var(--text2)">
+    🔒 数据仅存储在浏览器本地 · 提醒需授予通知权限
+  </div>
+</div>
+
+<!-- Settings Panel -->
+<div class="settings-overlay" id="settings-overlay" onclick="if(event.target===this)closeSettings()">
+  <div class="settings-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 style="margin:0">⚙️ 设置</h3>
+      <button class="btn-icon" onclick="closeSettings()" style="font-size:14px">✕</button>
+    </div>
+    <div class="settings-row">
+      <label>🔔 桌面提醒</label>
+      <label class="toggle-switch"><input type="checkbox" id="set-notify" onchange="saveSettings()"><span class="toggle-slider"></span></label>
+    </div>
+    <div class="settings-row">
+      <label>⏰ 每日首次提醒 (时)</label>
+      <input type="number" id="set-first-hour" min="0" max="23" value="9" onchange="saveSettings()">
+    </div>
+    <div class="settings-row">
+      <label>⏱ 提醒间隔 (小时)</label>
+      <input type="number" id="set-interval" min="1" max="24" value="4" onchange="saveSettings()">
+    </div>
+    <div class="settings-row">
+      <label>⚠ 提前提醒 (截止前小时数)</label>
+      <input type="number" id="set-advance" min="0" max="72" value="24" onchange="saveSettings()">
+    </div>
+    <div style="margin-top:16px;font-size:12px;color:var(--text2)">
+      通知权限状态：<span id="notif-perm-status" style="color:var(--warn)">检查中...</span>
+      <button class="btn btn-sm" onclick="requestNotifPerm()" style="margin-left:8px">请求权限</button>
+      <button class="btn btn-sm" onclick="testNotification()" style="margin-left:4px">🧪 测试提醒</button>
+    </div>
+    <div style="margin-top:16px">
+      <button class="btn btn-sm btn-danger" onclick="if(confirm('确定要删除所有待办数据？此操作不可恢复。')){todos=[];doneTodos=[];save();render();closeSettings();}">🗑️ 清除所有数据</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== DATA ====================
+const STORAGE_KEY = 'smart_todos';
+const SETTINGS_KEY = 'smart_settings';
+
+let todos = [];
+let doneTodos = [];
+let currentTab = 'active';
+let editingId = null;
+let reminderTimer = null;
+let lastReminderCheck = 0;
+
+// ==================== SETTINGS ====================
+let settings = {
+  notifyEnabled: true,
+  firstReminderHour: 9,
+  reminderIntervalHours: 4,
+  advanceWarningHours: 24
+};
+
+function loadSettings() {
+  try {
+    var raw = localStorage.getItem(SETTINGS_KEY);
+    if (raw) { var s = JSON.parse(raw); Object.assign(settings, s); }
+  } catch(e) {}
+  document.getElementById('set-notify').checked = settings.notifyEnabled;
+  document.getElementById('set-first-hour').value = settings.firstReminderHour;
+  document.getElementById('set-interval').value = settings.reminderIntervalHours;
+  document.getElementById('set-advance').value = settings.advanceWarningHours;
+}
+
+function saveSettings() {
+  settings.notifyEnabled = document.getElementById('set-notify').checked;
+  settings.firstReminderHour = Math.max(0, Math.min(23, parseInt(document.getElementById('set-first-hour').value) || 9));
+  settings.reminderIntervalHours = Math.max(1, Math.min(24, parseInt(document.getElementById('set-interval').value) || 4));
+  settings.advanceWarningHours = Math.max(0, Math.min(72, parseInt(document.getElementById('set-advance').value) || 24));
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  updateNotifPermStatus();
+}
+
+// ==================== LOAD / SAVE ====================
+function load() {
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) { var data = JSON.parse(raw); todos = data.todos || []; doneTodos = data.doneTodos || []; }
+  } catch(e) { todos = []; doneTodos = []; }
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ todos: todos, doneTodos: doneTodos }));
+  updateCounts();
+}
+
+// ==================== HELPERS ====================
+function uid() { return 't' + Date.now() + '_' + Math.random().toString(36).slice(2,7); }
+
+function fmtDate(iso) {
+  if (!iso) return '';
+  var d = new Date(iso);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function isOverdue(iso) {
+  if (!iso) return false;
+  var now = new Date();
+  var due = new Date(iso);
+  due.setHours(23,59,59,999);
+  return now > due;
+}
+
+function isUrgent(iso) {
+  if (!iso) return false;
+  var now = new Date();
+  var due = new Date(iso);
+  due.setHours(23,59,59,999);
+  var diff = due - now;
+  return diff > 0 && diff <= settings.advanceWarningHours * 3600 * 1000;
+}
+
+function escapeHtml(s) {
+  var div = document.createElement('div');
+  div.textContent = s || '';
+  return div.innerHTML;
+}
+
+// ==================== QUICK ADD ====================
+function quickAdd() {
+  var textEl = document.getElementById('quick-text');
+  var dateEl = document.getElementById('quick-date');
+  var text = textEl.value.trim();
+  if (!text) return;
+  addTodo({ text: text, dueDate: dateEl.value || null, priority: 'medium', tags: [], note: '' });
+  textEl.value = '';
+  dateEl.value = '';
+  textEl.focus();
+  showToast('✅ 已添加');
+}
+
+function addTodo(item) {
+  todos.push({
+    id: uid(),
+    text: item.text,
+    dueDate: item.dueDate || null,
+    priority: item.priority || 'medium',
+    tags: item.tags || [],
+    note: item.note || '',
+    createdAt: new Date().toISOString(),
+    remindedAt: null
+  });
+  save();
+  render();
+}
+
+// ==================== COMPLETE / EDIT / DELETE ====================
+function completeTodo(id) {
+  var idx = todos.findIndex(function(t) { return t.id === id; });
+  if (idx === -1) return;
+  var item = todos.splice(idx, 1)[0];
+  item.completedAt = new Date().toISOString();
+  doneTodos.unshift(item);
+  save();
+  render();
+  showToast('✅ 已完成');
+}
+
+function uncompleteTodo(id) {
+  var idx = doneTodos.findIndex(function(t) { return t.id === id; });
+  if (idx === -1) return;
+  var item = doneTodos.splice(idx, 1)[0];
+  item.completedAt = null;
+  todos.push(item);
+  save();
+  render();
+  showToast('↩ 已恢复');
+}
+
+function deleteTodo(id) {
+  if (!confirm('确定删除此待办？')) return;
+  var idx = todos.findIndex(function(t) { return t.id === id; });
+  if (idx !== -1) { todos.splice(idx, 1); save(); render(); return; }
+  idx = doneTodos.findIndex(function(t) { return t.id === id; });
+  if (idx !== -1) { doneTodos.splice(idx, 1); save(); render(); }
+}
+
+function startEdit(id) {
+  editingId = id;
+  render();
+}
+
+function saveEdit(id) {
+  var input = document.getElementById('edit-input-' + id);
+  var dateInput = document.getElementById('edit-date-' + id);
+  if (!input) return;
+  var item = todos.find(function(t) { return t.id === id; });
+  if (!item) return;
+  item.text = input.value.trim() || item.text;
+  if (dateInput) item.dueDate = dateInput.value || null;
+  editingId = null;
+  save();
+  render();
+}
+
+function cancelEdit() { editingId = null; render(); }
+
+function clearAllDone() {
+  if (!confirm('确定清空所有已完成待办？')) return;
+  doneTodos = [];
+  save();
+  render();
+  showToast('🗑️ 已清空已完成');
+}
+
+// ==================== RENDER ====================
+function render() {
+  renderActive();
+  renderDone();
+  updateCounts();
+}
+
+function renderActive() {
+  var container = document.getElementById('todo-list');
+  if (currentTab !== 'active') return;
+
+  if (todos.length === 0) {
+    container.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><p>暂无待办事项</p><p style="font-size:12px">使用上方输入框或 AI 解析添加</p></div>';
+    return;
+  }
+
+  // Sort: overdue first, then urgent, then by due date, then by priority
+  var sorted = todos.slice().sort(function(a, b) {
+    var aOver = isOverdue(a.dueDate) ? 0 : 1;
+    var bOver = isOverdue(b.dueDate) ? 0 : 1;
+    if (aOver !== bOver) return aOver - bOver;
+    var aUrg = isUrgent(a.dueDate) ? 0 : 1;
+    var bUrg = isUrgent(b.dueDate) ? 0 : 1;
+    if (aUrg !== bUrg) return aUrg - bUrg;
+    if (a.dueDate && b.dueDate) return new Date(a.dueDate) - new Date(b.dueDate);
+    if (a.dueDate) return -1;
+    if (b.dueDate) return 1;
+    var p = { high: 0, medium: 1, low: 2 };
+    return (p[a.priority]||1) - (p[b.priority]||1);
+  });
+
+  container.innerHTML = sorted.map(function(item) {
+    var isItemUrgent = isUrgent(item.dueDate);
+    var isItemOverdue = isOverdue(item.dueDate);
+    var urgentClass = (isItemUrgent || isItemOverdue) ? ' urgent' : '';
+    var urgentIcon = (isItemUrgent || isItemOverdue) ? '<span class="urgent-icon">🔴</span>' : '';
+    var isEditing = editingId === item.id;
+
+    var tagsHtml = '';
+    if (item.priority === 'high') tagsHtml += '<span class="todo-tag tag-high">高优先</span>';
+    else if (item.priority === 'medium') tagsHtml += '<span class="todo-tag tag-medium">中优先</span>';
+    else tagsHtml += '<span class="todo-tag tag-low">低优先</span>';
+    if (item.tags && item.tags.length > 0) {
+      item.tags.forEach(function(t) { tagsHtml += '<span class="todo-tag tag-cat">#' + escapeHtml(t) + '</span>'; });
+    }
+
+    var dateHtml = '';
+    if (item.dueDate) {
+      var cls = isItemOverdue ? ' todo-date overdue' : ' todo-date';
+      dateHtml = '<span class="' + cls + '">📅 ' + fmtDate(item.dueDate) + (isItemOverdue ? ' (已逾期)' : (isItemUrgent ? ' (临近)' : '')) + '</span>';
+    }
+
+    var textHtml;
+    if (isEditing) {
+      textHtml = '<input class="todo-edit-input" id="edit-input-' + item.id + '" value="' + escapeHtml(item.text) + '" onkeydown="if(event.key===\'Enter\')saveEdit(\'' + item.id + '\'); if(event.key===\'Escape\')cancelEdit()">';
+      textHtml += '<div style="display:flex;gap:8px;margin-top:4px;align-items:center">';
+      textHtml += '<input type="date" id="edit-date-' + item.id + '" value="' + (item.dueDate || '') + '" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:12px;color-scheme:dark;outline:none">';
+      textHtml += '<button class="btn btn-primary btn-xs" onclick="saveEdit(\'' + item.id + '\')">保存</button>';
+      textHtml += '<button class="btn btn-xs" onclick="cancelEdit()">取消</button>';
+      textHtml += '</div>';
+    } else {
+      textHtml = '<div class="todo-text">' + urgentIcon + escapeHtml(item.text) + '</div>';
+      if (item.note) textHtml += '<div style="font-size:11px;color:var(--text2);margin-top:2px">' + escapeHtml(item.note) + '</div>';
+    }
+
+    return '<div class="todo-item' + urgentClass + '">' +
+      '<div class="todo-check" onclick="completeTodo(\'' + item.id + '\')" title="标记完成">✓</div>' +
+      '<div class="todo-body">' + textHtml +
+      '<div class="todo-meta">' + tagsHtml + dateHtml + '</div>' +
+      '</div>' +
+      '<div class="todo-actions">' +
+      (isEditing ? '' : '<button class="btn btn-sm" onclick="startEdit(\'' + item.id + '\')" title="编辑">✏️</button>') +
+      '<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteTodo(\'' + item.id + '\')" title="删除">🗑</button>' +
+      '</div>' +
+      '</div>';
+  }).join('');
+}
+
+function renderDone() {
+  var container = document.getElementById('todo-list');
+  if (currentTab !== 'done') return;
+
+  if (doneTodos.length === 0) {
+    container.innerHTML = '<div class="empty"><div class="empty-icon">🎉</div><p>还没有已完成的待办</p></div>';
+    return;
+  }
+
+  container.innerHTML = doneTodos.map(function(item) {
+    var tagsHtml = '';
+    if (item.tags && item.tags.length > 0) {
+      item.tags.forEach(function(t) { tagsHtml += '<span class="todo-tag tag-cat">#' + escapeHtml(t) + '</span>'; });
+    }
+    return '<div class="todo-item done">' +
+      '<div class="todo-check done" onclick="uncompleteTodo(\'' + item.id + '\')" title="恢复">✓</div>' +
+      '<div class="todo-body">' +
+      '<div class="todo-text">' + escapeHtml(item.text) + '</div>' +
+      '<div class="todo-meta">' + tagsHtml +
+      '<span style="font-size:11px;color:var(--text2)">✅ ' + new Date(item.completedAt).toLocaleString('zh-CN') + '</span>' +
+      '</div></div>' +
+      '<button class="btn btn-sm btn-danger" onclick="deleteTodo(\'' + item.id + '\')" title="删除">🗑</button>' +
+      '</div>';
+  }).join('');
+}
+
+function updateCounts() {
+  document.getElementById('count-active').textContent = todos.length;
+  document.getElementById('count-done').textContent = doneTodos.length;
+}
+
+function switchTab(tab, btn) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  render();
+}
+
+// ==================== AI PARSE ====================
+// 检测邮件格式，提取纯净正文（跳过邮件头/签名/免责声明）
+function extractEmailBody(text) {
+  // 常见邮件头标识
+  var emailHeaders = /^(From|To|CC|BCC|Subject|Date|Sent|发件人|收件人|抄送|密送|主题|日期|发送时间|回复|Reply|Forward|转发)[：:]\s*/im;
+  var lines = text.split(/\n/);
+  var bodyLines = [];
+  var headerEnded = false;
+  var signatureStarted = false;
+  var emptyLineCount = 0;
+
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    var trimmed = line.trim();
+
+    // 检测邮件头
+    if (!headerEnded) {
+      if (emailHeaders.test(trimmed) || /^(Message-ID|In-Reply-To|References|Content-Type|MIME|Received|X-|DKIM|SPF|Return-Path|List-|Precedence|Thread-|Authentication-Results)[:\s]/i.test(trimmed)) {
+        continue; // 跳过邮件头
+      }
+      if (trimmed === '' || /^[>|]/.test(trimmed)) {
+        headerEnded = true; // 空行或引用行 = 正文开始
+        if (trimmed === '') continue;
+      } else {
+        headerEnded = true; // 非头行，正文开始
+      }
+    }
+
+    // 检测签名分隔符
+    if (/^--\s*$/.test(trimmed) || /^__+\s*$/.test(trimmed) || /^={5,}\s*$/.test(trimmed)) {
+      signatureStarted = true;
+      continue;
+    }
+
+    // 检测常见签名块
+    if (signatureStarted) continue;
+    if (/^(Best|Regards|Cheers|Thanks|Sincerely|Yours|祝好|此致|敬礼|谢谢|顺颂)/i.test(trimmed) && trimmed.length < 30) {
+      signatureStarted = true;
+      continue;
+    }
+
+    // 跳过常见免责声明
+    if (/^(DISCLAIMER|CONFIDENTIALITY|免责声明|本邮件|This (email|message)| Privileged| confidential)/im.test(trimmed)) {
+      signatureStarted = true;
+      continue;
+    }
+
+    // 跳过纯引用行
+    if (/^>\s/.test(trimmed) || / wrote:$/.test(trimmed) || /^On .* wrote:$/.test(trimmed)) {
+      continue;
+    }
+
+    // 跳过纯分隔线
+    if (/^[-=_*]{3,}\s*$/.test(trimmed)) continue;
+
+    // 收集正文行
+    if (trimmed !== '') {
+      emptyLineCount = 0;
+      bodyLines.push(trimmed);
+    } else if (!signatureStarted && bodyLines.length > 0) {
+      emptyLineCount++;
+      if (emptyLineCount <= 2) bodyLines.push(''); // 保留少量空行用于分段
+    }
+  }
+
+  return bodyLines.length > 0 ? bodyLines.join('\n') : text;
+}
+
+function parseLocally(text) {
+  // 先尝试识别邮件格式，提取正文
+  var body = extractEmailBody(text);
+
+  // Regex-based fallback parser
+  var results = [];
+  var lines = body.split(/[\n;；]/);
+  var priorityMap = { '高': 'high', 'high': 'high', '!': 'high', '!!': 'high', '紧急': 'high', '中': 'medium', 'medium': 'medium', '低': 'low', 'low': 'low' };
+
+  lines.forEach(function(line) {
+    line = line.trim();
+    if (!line || line.length < 3) return;
+
+    var priority = 'medium';
+    for (var k in priorityMap) {
+      if (line.toLowerCase().indexOf(k.toLowerCase()) !== -1) { priority = priorityMap[k]; break; }
+    }
+
+    var tags = [];
+    var tagMatch = line.match(/#(\S+)/g);
+    if (tagMatch) { tagMatch.forEach(function(t) { tags.push(t.replace('#','')); }); }
+
+    // Extract date patterns
+    var dueDate = null;
+    var datePatterns = [
+      /(\d{4}[-/]\d{1,2}[-/]\d{1,2})/,
+      /(\d{1,2}月\d{1,2}[日号])/,
+      /明天/.test(line) ? new Date(Date.now() + 86400000).toISOString().slice(0,10) : null,
+      /后天/.test(line) ? new Date(Date.now() + 172800000).toISOString().slice(0,10) : null,
+      /今天/.test(line) ? new Date().toISOString().slice(0,10) : null,
+      /下周[一二三四五六日]/.test(line) ? (function() { var d = new Date(); d.setDate(d.getDate() + 7); return d.toISOString().slice(0,10); })() : null,
+      /下周/.test(line) ? (function() { var d = new Date(); d.setDate(d.getDate() + 7); return d.toISOString().slice(0,10); })() : null,
+      /周末/.test(line) ? (function() { var d = new Date(); var day = d.getDay(); d.setDate(d.getDate() + (6 - day)); return d.toISOString().slice(0,10); })() : null,
+    ];
+
+    for (var i = 0; i < datePatterns.length; i++) {
+      var m = null;
+      if (typeof datePatterns[i] === 'string') {
+        dueDate = datePatterns[i];
+        if (dueDate) break;
+      } else {
+        m = line.match(datePatterns[i]);
+        if (m) {
+          if (m[0] && m[0].indexOf('月') !== -1) {
+            var now = new Date();
+            var monthMatch = m[0].match(/(\d{1,2})月(\d{1,2})/);
+            if (monthMatch) dueDate = now.getFullYear() + '-' + String(parseInt(monthMatch[1])).padStart(2,'0') + '-' + String(parseInt(monthMatch[2])).padStart(2,'0');
+          } else {
+            dueDate = m[1] ? m[1].replace(/\//g, '-') : m[0];
+          }
+          break;
+        }
+      }
+    }
+
+    // Clean text: remove date, tags, priority keywords
+    var text = line.replace(/#\S+/g, '').replace(/高优先[级]?|低优先[级]?|中优先[级]?|紧急/g, '').replace(/\d{4}[-/]\d{1,2}[-/]\d{1,2}/g, '').replace(/\d{1,2}月\d{1,2}[日号]/g, '').replace(/[；;]/g, '').trim();
+    if (text) {
+      results.push({ text: text, dueDate: dueDate, priority: priority, tags: tags, note: '' });
+    }
+  });
+
+  return results;
+}
+
+async function aiParse() {
+  var input = document.getElementById('ai-input').value.trim();
+  if (!input) { showToast('请先输入文本'); return; }
+
+  var btn = document.getElementById('btn-ai-parse');
+
+  // Try Transformers.js first
+  if (window.transformersReady && window.aiPipeline) {
+    btn.disabled = true;
+    btn.textContent = '⏳ AI 解析中...';
+    try {
+      var prompt = 'Extract todo items from the following text. For each item, output a JSON object with fields: text (the task description), dueDate (YYYY-MM-DD format or null), priority (high/medium/low), tags (array of category strings like 审计,财务), note (any additional context). Output as a valid JSON array. Text:\n\n' + input;
+
+      var result = await window.aiPipeline(prompt);
+      var generated = result[0].generated_text;
+      // Try to extract JSON array from the response
+      var jsonMatch = generated.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        try {
+          var items = JSON.parse(jsonMatch[0]);
+          if (Array.isArray(items) && items.length > 0) {
+            items.forEach(function(item) {
+              addTodo({
+                text: item.text || item.task || '',
+                dueDate: item.dueDate || item.due_date || null,
+                priority: ['high','medium','low'].indexOf(item.priority) !== -1 ? item.priority : 'medium',
+                tags: item.tags || [],
+                note: item.note || ''
+              });
+            });
+            document.getElementById('ai-input').value = '';
+            showToast('🤖 AI 解析完成！已添加 ' + items.length + ' 项');
+            btn.disabled = false;
+            btn.textContent = '🤖 AI 解析';
+            return;
+          }
+        } catch(jsonErr) { console.warn('JSON parse failed, using regex fallback:', jsonErr); }
+      }
+    } catch(aiErr) {
+      console.warn('AI inference failed, using regex fallback:', aiErr);
+    }
+    btn.disabled = false;
+    btn.textContent = '🤖 AI 解析';
+  }
+
+  // Regex fallback
+  var parsed = parseLocally(input);
+  if (parsed.length === 0) { showToast('未能解析出待办项，请检查输入格式'); return; }
+  parsed.forEach(function(item) { addTodo(item); });
+  document.getElementById('ai-input').value = '';
+  showToast('📋 已添加 ' + parsed.length + ' 项（本地解析）');
+}
+
+// Listen for AI model ready
+window.addEventListener('ai-ready', function() {
+  document.getElementById('ai-status').textContent = '🟢 AI 模型就绪';
+  document.getElementById('ai-status').classList.add('ready');
+});
+
+// ==================== IMPORT / EXPORT ====================
+function importText() {
+  var text = document.getElementById('import-text').value.trim();
+  if (!text) return;
+  // Try JSON
+  try {
+    var json = JSON.parse(text);
+    if (Array.isArray(json)) {
+      var added = 0;
+      json.forEach(function(item) {
+        if (item.text) {
+          var exists = todos.some(function(t) { return t.text === item.text; });
+          if (!exists) { addTodo(item); added++; }
+        }
+      });
+      document.getElementById('import-text').value = '';
+      showToast('📥 导入 JSON：' + added + ' 项（已去重）');
+      return;
+    }
+  } catch(e) {}
+
+  // Parse as CSV or line-by-line
+  var parsed = parseLocally(text);
+  if (parsed.length === 0) {
+    // Simple: each line is a todo
+    text.split('\n').forEach(function(line) {
+      line = line.trim();
+      if (!line) return;
+      // CSV: text,date,priority,tags
+      if (line.indexOf(',') !== -1) {
+        var parts = line.split(',');
+        addTodo({
+          text: parts[0].trim(),
+          dueDate: parts[1] ? parts[1].trim() : null,
+          priority: parts[2] ? parts[2].trim() : 'medium',
+          tags: parts[3] ? parts[3].trim().split(';') : [],
+          note: ''
+        });
+      } else {
+        addTodo({ text: line, dueDate: null, priority: 'medium', tags: [], note: '' });
+      }
+    });
+  } else {
+    parsed.forEach(function(item) { addTodo(item); });
+  }
+  document.getElementById('import-text').value = '';
+  showToast('📥 导入完成');
+}
+
+function importJsonFile(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var data = JSON.parse(e.target.result);
+      var items = data.todos || data;
+      if (!Array.isArray(items)) throw new Error('Not an array');
+      var added = 0;
+      items.forEach(function(item) {
+        if (item.text) {
+          var exists = todos.some(function(t) { return t.text === item.text && t.id !== item.id; });
+          if (!exists) { addTodo(item); added++; }
+        }
+      });
+      showToast('📂 导入完成：' + added + ' 项（已去重）');
+    } catch(err) {
+      showToast('文件格式错误');
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+function exportJSON() {
+  var data = { todos: todos.concat(doneTodos), exportDate: new Date().toISOString() };
+  downloadFile('smart-todo-backup-' + new Date().toISOString().slice(0,10) + '.json', JSON.stringify(data, null, 2));
+}
+
+function exportCSV() {
+  var all = todos.concat(doneTodos);
+  var csv = 'text,dueDate,priority,tags,status\n';
+  all.forEach(function(t) {
+    csv += '"' + (t.text||'').replace(/"/g,'""') + '",' + (t.dueDate||'') + ',' + t.priority + ',' + (t.tags||[]).join(';') + ',' + (t.completedAt ? 'done' : 'active') + '\n';
+  });
+  downloadFile('smart-todo-export-' + new Date().toISOString().slice(0,10) + '.csv', '﻿' + csv);
+}
+
+function exportData() {
+  var choice = confirm('导出 JSON 备份？\n确定 = JSON\n取消 = CSV');
+  if (choice) exportJSON(); else exportCSV();
+}
+
+function downloadFile(filename, content) {
+  var blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast('📤 已导出');
+}
+
+function loadSampleTodos() {
+  if (todos.length > 0 || doneTodos.length > 0) {
+    if (!confirm('加载示例将清除现有数据，确定继续？')) return;
+    todos = []; doneTodos = [];
+  }
+  var tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0,10);
+  var dayAfter = new Date(Date.now() + 172800000).toISOString().slice(0,10);
+  var today = new Date().toISOString().slice(0,10);
+  var samples = [
+    { text: '完成 Q2 审计报告初稿', dueDate: tomorrow, priority: 'high', tags: ['审计'], note: '需经理复核' },
+    { text: '核对应收账款明细表', dueDate: today, priority: 'high', tags: ['财务'], note: '' },
+    { text: '更新租赁测算参数表', dueDate: dayAfter, priority: 'medium', tags: ['ROU'], note: '' },
+    { text: '整理银行余额调节表', dueDate: tomorrow, priority: 'medium', tags: ['财务'], note: '3家银行' },
+    { text: '学习新租赁准则变更点', dueDate: null, priority: 'low', tags: ['学习'], note: '' },
+  ];
+  samples.forEach(function(s) { addTodo(s); });
+  showToast('🎲 示例已加载 (' + samples.length + ' 项)');
+}
+
+// ==================== NOTIFICATIONS ====================
+let notifPermission = 'default';
+
+function updateNotifPermStatus() {
+  notifPermission = Notification ? Notification.permission : 'denied';
+  var el = document.getElementById('notif-perm-status');
+  if (!el) return;
+  if (notifPermission === 'granted') el.textContent = '✅ 已授权';
+  else if (notifPermission === 'denied') el.textContent = '❌ 已拒绝';
+  else el.textContent = '⚠ 未请求';
+}
+
+function requestNotifPerm() {
+  if (!Notification) { showToast('浏览器不支持桌面通知'); return; }
+  Notification.requestPermission().then(function(p) {
+    notifPermission = p;
+    updateNotifPermStatus();
+    if (p === 'granted') showToast('✅ 通知已开启');
+    else showToast('❌ 通知被拒绝');
+  });
+}
+
+function testNotification() {
+  if (!Notification) { showToast('❌ 此浏览器不支持桌面通知'); return; }
+  if (Notification.permission !== 'granted') {
+    showToast('⚠ 请先点击「请求权限」授权通知');
+    Notification.requestPermission().then(function(p) {
+      notifPermission = p;
+      updateNotifPermStatus();
+      if (p === 'granted') testNotification();
+    });
+    return;
+  }
+  try {
+    var sampleTodos = todos.length > 0 ? todos.slice(0, 3).map(function(t) { return t.text; }) : ['示例任务：完成项目报告', '示例任务：回复客户邮件', '示例任务：审核底稿'];
+    var notification = new Notification('🧪 测试提醒 — 智能待办', {
+      body: '当前待办：\n' + sampleTodos.join('\n') + (todos.length > 3 ? '\n  ...还有 ' + (todos.length - 3) + ' 项' : ''),
+      icon: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#3fb950"/><text x="32" y="44" font-size="36" text-anchor="middle" fill="white">✅</text></svg>'),
+      tag: 'smart-todo-test',
+      requireInteraction: true
+    });
+    notification.onclick = function() { window.focus(); notification.close(); };
+    showToast('✅ 测试通知已发送！请查看屏幕右下角');
+  } catch(e) {
+    showToast('❌ 发送通知失败：' + e.message);
+  }
+}
+
+function checkReminders() {
+  if (!settings.notifyEnabled) return;
+  if (notifPermission !== 'granted') return;
+
+  var now = new Date();
+  var todayFirstReminder = new Date(now);
+  todayFirstReminder.setHours(settings.firstReminderHour, 0, 0, 0);
+
+  // Haven't passed first reminder time today
+  if (now < todayFirstReminder) return;
+
+  // Check interval
+  var intervalMs = settings.reminderIntervalHours * 3600 * 1000;
+  if (now - lastReminderCheck < intervalMs) return;
+  if (lastReminderCheck === 0) {
+    // First check since page load - check if we missed a reminder
+    var lastReminded = 0;
+    todos.forEach(function(t) {
+      if (t.remindedAt) { var r = new Date(t.remindedAt).getTime(); if (r > lastReminded) lastReminded = r; }
+    });
+    if (now - lastReminded < intervalMs) return;
+  }
+
+  // Check incomplete todos
+  if (todos.length === 0) return;
+
+  lastReminderCheck = now.getTime();
+
+  try {
+    // 构建有意义的提醒内容：列出临近/逾期任务
+    var urgentList = [];
+    var normalList = [];
+    todos.forEach(function(t) {
+      if (isOverdue(t.dueDate)) urgentList.push('🔴 ' + t.text);
+      else if (isUrgent(t.dueDate)) urgentList.push('🟡 ' + t.text);
+      else normalList.push(t.text);
+    });
+    var bodyText = '';
+    if (urgentList.length > 0) {
+      bodyText = '⚠ 紧急：\n' + urgentList.slice(0, 3).join('\n');
+      if (urgentList.length > 3) bodyText += '\n  ...还有 ' + (urgentList.length - 3) + ' 项';
+    } else {
+      bodyText = '📋 ' + todos.length + ' 项待办：\n' + normalList.slice(0, 3).join('\n');
+      if (normalList.length > 3) bodyText += '\n  ...还有 ' + (normalList.length - 3) + ' 项';
+    }
+
+    var notification = new Notification('📋 待办提醒', {
+      body: bodyText,
+      icon: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#7c5cfc"/><text x="32" y="44" font-size="36" text-anchor="middle" fill="white">📋</text></svg>'),
+      tag: 'smart-todo-reminder',
+      requireInteraction: false
+    });
+    notification.onclick = function() { window.focus(); };
+  } catch(e) {}
+
+  // Update remindedAt for all todos
+  var nowISO = now.toISOString();
+  todos.forEach(function(t) { t.remindedAt = nowISO; });
+  save();
+}
+
+// ==================== SETTINGS UI ====================
+function toggleSettings() {
+  var overlay = document.getElementById('settings-overlay');
+  if (overlay.classList.contains('open')) { closeSettings(); }
+  else { overlay.classList.add('open'); loadSettings(); updateNotifPermStatus(); }
+}
+
+function closeSettings() {
+  document.getElementById('settings-overlay').classList.remove('open');
+}
+
+// ==================== TOAST ====================
+var toastTimer = null;
+function showToast(msg) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function() { el.classList.remove('show'); }, 2000);
+}
+
+// ==================== INIT ====================
+function init() {
+  load();
+  loadSettings();
+  updateNotifPermStatus();
+  render();
+
+  // Request notification permission on load
+  if (Notification && Notification.permission === 'default') {
+    Notification.requestPermission().then(function(p) {
+      notifPermission = p;
+      updateNotifPermStatus();
+    });
+  } else {
+    notifPermission = Notification ? Notification.permission : 'denied';
+    updateNotifPermStatus();
+  }
+
+  // Reminder check every second
+  reminderTimer = setInterval(checkReminders, 1000);
+
+  // Listen for AI ready
+  window.addEventListener('ai-ready', function() {
+    document.getElementById('ai-status').textContent = '🟢 AI 模型就绪';
+    document.getElementById('ai-status').classList.add('ready');
+  });
+  // Show loading state
+  setTimeout(function() {
+    if (!window.transformersReady) {
+      document.getElementById('ai-status').textContent = '⏳ AI 模型加载中...（可先用本地解析）';
+    }
+  }, 3000);
+}
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', function() {
+  if (reminderTimer) clearInterval(reminderTimer);
+});
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📊 信用评级查询工具</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, 'Microsoft YaHei', sans-serif;
+  background: #1a1a2e; color: #e0e0e0; min-height: 100vh;
+}
+.header {
+  background: linear-gradient(135deg, #1a3a2a, #1a1a2e);
+  padding: 24px 20px 16px; text-align: center;
+  border-bottom: 1px solid #2a4a3a;
+}
+.header h1 { font-size: 24px; color: #4CAF50; }
+.header p { font-size: 13px; color: #8B7355; margin-top: 4px; }
+.container { max-width: 900px; margin: 0 auto; padding: 12px; }
+
+.card {
+  background: #16213e; border-radius: 12px; padding: 20px;
+  margin-bottom: 16px; border: 1px solid #2a2a4a;
+}
+.card h2 { font-size: 16px; color: #4CAF50; margin-bottom: 12px; }
+
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 13px; color: #a0a0c0; margin-bottom: 4px; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; padding: 10px 12px; border-radius: 8px;
+  border: 1px solid #3a3a5a; background: #0f3460; color: #e0e0e0;
+  font-size: 14px; font-family: inherit;
+}
+.form-group input:focus, .form-group textarea:focus {
+  outline: none; border-color: #4CAF50;
+}
+.form-group textarea { min-height: 120px; resize: vertical; }
+
+.btn {
+  display: inline-block; padding: 10px 24px; border: none; border-radius: 8px;
+  font-size: 15px; cursor: pointer; transition: all 0.2s;
+}
+.btn-primary { background: #4CAF50; color: #fff; width: 100%; font-size: 16px; padding: 12px; }
+.btn-primary:hover { background: #388E3C; }
+.btn-primary:disabled { background: #3a5a3a; cursor: not-allowed; }
+.btn-small { padding: 6px 14px; font-size: 13px; background: #2a2a4a; color: #ccc; }
+.btn-small:hover { background: #3a3a5a; }
+
+/* 进度 */
+.progress-area { margin: 12px 0; }
+.progress-bar {
+  height: 8px; background: #2a2a4a; border-radius: 4px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; background: linear-gradient(90deg, #4CAF50, #8BC34A);
+  border-radius: 4px; transition: width 0.3s; width: 0%;
+}
+.progress-text { font-size: 13px; color: #888; margin-top: 6px; text-align: center; }
+
+/* 结果表格 */
+.result-table {
+  width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px;
+}
+.result-table th {
+  background: #0f3460; color: #4CAF50; padding: 8px 10px;
+  text-align: left; border-bottom: 2px solid #4CAF50;
+}
+.result-table td {
+  padding: 8px 10px; border-bottom: 1px solid #2a2a4a;
+}
+.result-table tr:hover td { background: #1a2a4a; }
+.status-pending { color: #888; }
+.status-running { color: #F9A825; }
+.status-done { color: #4CAF50; }
+.status-error { color: #c62828; }
+
+/* 统计 */
+.stats {
+  display: flex; gap: 12px; margin: 12px 0; flex-wrap: wrap;
+}
+.stat-item {
+  flex: 1; min-width: 100px; background: #0f3460; border-radius: 8px;
+  padding: 12px; text-align: center;
+}
+.stat-item .num { font-size: 24px; font-weight: bold; color: #4CAF50; }
+.stat-item .label { font-size: 12px; color: #888; margin-top: 4px; }
+
+.toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: #333; color: #fff; padding: 12px 24px; border-radius: 8px;
+  font-size: 14px; display: none; z-index: 999;
+}
+
+@media (max-width: 600px) {
+  .container { padding: 8px; }
+  .header h1 { font-size: 20px; }
+  .stats { flex-direction: column; }
+}
+</style>
+<script>
+(function() {
+  if (sessionStorage.getItem('myapp_unlocked')) return;
+  var overlay = document.createElement('div');
+  overlay.id = 'pwd-overlay';
+  overlay.innerHTML = '<div style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0a0a1a;z-index:999999;display:flex;align-items:center;justify-content:center;"><div style="background:#16213e;padding:40px;border-radius:16px;border:1px solid #D2691E;max-width:360px;width:90%%;text-align:center;"><div style="font-size:40px;margin-bottom:10px;">🔒</div><h2 style="color:#D2691E;margin-bottom:12px;font-size:18px;">请输入密码</h2><input type="password" id="pwd-input" style="width:100%%;padding:12px;border-radius:8px;border:1px solid #3a3a5a;background:#0f3460;color:#e0e0e0;font-size:16px;text-align:center;box-sizing:border-box;" placeholder="输入密码" autofocus><button id="pwd-btn" style="margin-top:12px;width:100%%;padding:10px;border:none;border-radius:8px;background:#D2691E;color:#fff;font-size:15px;cursor:pointer;">解锁</button><p id="pwd-error" style="color:#c62828;font-size:13px;margin-top:8px;display:none;">密码错误，请重试</p></div></div>';
+  document.documentElement.appendChild(overlay);
+  
+  async function checkPwd() {
+    var pwd = document.getElementById('pwd-input').value;
+    var buf = new TextEncoder().encode(pwd);
+    var hash = await crypto.subtle.digest('SHA-256', buf);
+    var hex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+    if (hex === '5f6f2138aac618ff50a0751b76144e91468d5139ee38db42b0947ba123e37aaf') {
+      sessionStorage.setItem('myapp_unlocked', '1');
+      overlay.style.display = 'none';
+    } else {
+      document.getElementById('pwd-error').style.display = 'block';
+    }
+  }
+  
+  document.getElementById('pwd-btn').onclick = checkPwd;
+  document.getElementById('pwd-input').onkeydown = function(e) {
+    if (e.key === 'Enter') checkPwd();
+  };
+})();
+</script>
+</head>
+<body>
+
+<div class="header">
+  <h1>📊 信用评级查询工具</h1>
+  <p>批量查询企业/银行信用评级 · 接入千问大模型</p>
+</div>
+
+<div class="container">
+  <div id="toast" class="toast"></div>
+
+  <!-- API 设置 -->
+  <div class="card">
+    <h2>🔑 API 设置</h2>
+    <div class="form-group">
+      <label>API 接口地址</label>
+      <input type="text" id="apiUrl" value="https://nova.deloitte.com.cn/del/v1/chat/completions" placeholder="千问 API 地址">
+    </div>
+    <div class="form-group">
+      <label>API 密钥</label>
+      <input type="password" id="apiKey" placeholder="输入你的 API Key">
+    </div>
+    <div class="form-group">
+      <label>模型名称</label>
+      <input type="text" id="modelName" value="Qwen3-235B-A22B" placeholder="如 qwen-vl-plus / qwen-turbo">
+    </div>
+  </div>
+
+  <!-- 企业名单 -->
+  <div class="card">
+    <h2>🏢 企业名单</h2>
+    <div class="form-group">
+      <label>输入企业/银行名称（每行一个，或粘贴 Excel 表格中的一列）</label>
+      <textarea id="companyList" placeholder="例如：
+中国工商银行
+中国建设银行
+招商银行
+平安银行
+中信银行
+兴业银行"></textarea>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:8px;">
+      <button class="btn btn-small" onclick="loadSample()">📋 加载示例</button>
+      <button class="btn btn-small" onclick="clearList()">🗑️ 清空</button>
+    </div>
+  </div>
+
+  <!-- 查询 -->
+  <div class="card">
+    <button class="btn btn-primary" id="startBtn" onclick="startQuery()">🚀 开始查询评级</button>
+    
+    <div class="progress-area" id="progressArea" style="display:none;">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-text" id="progressText">准备中...</div>
+    </div>
+
+    <div class="stats" id="statsArea" style="display:none;">
+      <div class="stat-item"><div class="num" id="statTotal">0</div><div class="label">总计</div></div>
+      <div class="stat-item"><div class="num" id="statDone" style="color:#4CAF50;">0</div><div class="label">已完成</div></div>
+      <div class="stat-item"><div class="num" id="statError" style="color:#c62828;">0</div><div class="label">失败</div></div>
+    </div>
+  </div>
+
+  <!-- 结果 -->
+  <div class="card" id="resultCard" style="display:none;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <h2 style="margin:0;">📋 查询结果</h2>
+      <button class="btn btn-small" onclick="downloadResults()">📥 下载 CSV</button>
+    </div>
+    <div style="max-height:500px;overflow-y:auto;">
+      <table class="result-table" id="resultTable">
+        <thead>
+          <tr><th>#</th><th>企业名称</th><th>状态</th><th>信用评级</th><th>说明</th></tr>
+        </thead>
+        <tbody id="resultBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+let results = [];
+let isRunning = false;
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3000);
+}
+
+function loadSample() {
+  document.getElementById('companyList').value = 
+    '中国工商银行\n中国建设银行\n招商银行\n平安银行\n中信银行\n兴业银行\n交通银行\n浦发银行\n民生银行\n光大银行';
+  toast('已加载示例企业名单');
+}
+
+function clearList() {
+  document.getElementById('companyList').value = '';
+  toast('已清空');
+}
+
+function updateStats() {
+  const total = results.length;
+  const done = results.filter(r => r.status === 'done').length;
+  const err = results.filter(r => r.status === 'error').length;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statDone').textContent = done;
+  document.getElementById('statError').textContent = err;
+  document.getElementById('statsArea').style.display = 'flex';
+}
+
+function renderResults() {
+  const tbody = document.getElementById('resultBody');
+  tbody.innerHTML = results.map((r, i) => {
+    let statusText = '', statusClass = '';
+    if (r.status === 'pending') { statusText = '⏳ 等待'; statusClass = 'status-pending'; }
+    else if (r.status === 'running') { statusText = '⏳ 查询中'; statusClass = 'status-running'; }
+    else if (r.status === 'done') { statusText = '✅ 完成'; statusClass = 'status-done'; }
+    else { statusText = '❌ ' + (r.error || '失败'); statusClass = 'status-error'; }
+    
+    return `<tr>
+      <td>${i+1}</td>
+      <td>${r.name}</td>
+      <td class="${statusClass}">${statusText}</td>
+      <td>${r.rating || '-'}</td>
+      <td>${r.detail || '-'}</td>
+    </tr>`;
+  }).join('');
+  
+  document.getElementById('resultCard').style.display = 'block';
+}
+
+async function queryRating(name, apiUrl, apiKey, model, controller) {
+  const prompt = `你是一位专业的信用评级分析师。请对以下企业/银行进行信用评级分析，输出格式如下：
+
+企业名称：${name}
+信用评级：（AAA、AA+、AA、AA-、A+、A、BBB+、BBB等）
+评级依据：（简要说明该评级的依据，包括企业规模、行业地位、财务状况等）
+风险提示：（如果有需要注意的风险因素）
+
+请基于公开信息给出客观分析，不要编造数据。如不确定，请标注"基于公开信息的推测"。`;
+
+  try {
+    const resp = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      signal: controller ? controller.signal : null,
+      body: JSON.stringify({
+        api_url: apiUrl,
+        api_key: apiKey,
+        model: model,
+        messages: [
+          {role: 'system', content: '你是一位专业的信用评级分析师，擅长对企业进行信用评级分析。'},
+          {role: 'user', content: prompt}
+        ],
+        max_tokens: 1000
+      })
+    });
+    
+    if (!resp.ok) {
+      const err = await resp.text();
+      throw new Error(`HTTP ${resp.status}: ${err.slice(0, 100)}`);
+    }
+    
+    const data = await resp.json();
+    
+    // 检查代理返回的错误
+    if (data.error) {
+      throw new Error(typeof data.error === 'string' ? data.error : JSON.stringify(data.error));
+    }
+    
+    // 检查API返回是否正常
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error('API返回格式异常: ' + JSON.stringify(data).slice(0, 100));
+    }
+    
+    const content = data.choices[0].message.content;
+    if (!content) throw new Error('API返回内容为空');
+    
+    // 提取评级
+    let rating = '';
+    const ratingMatch = content.match(/信用评级[：:]\s*(AAA|AA\+|AA|AA-|A\+|A|A-|BBB\+|BBB|BBB-|BB\+|BB|BB-|B\+|B|B-|CCC|CC|C|D)/i);
+    if (ratingMatch) rating = ratingMatch[1].toUpperCase();
+    else rating = '未识别';
+    
+    return {rating, detail: content.slice(0, 300)};
+  } catch (e) {
+    throw new Error(e.message);
+  }
+}
+
+async function startQuery() {
+  if (isRunning) return;
+  
+  const apiUrl = document.getElementById('apiUrl').value.trim();
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const model = document.getElementById('modelName').value.trim();
+  const text = document.getElementById('companyList').value.trim();
+  
+  if (!apiKey) { toast('⚠️ 请输入 API 密钥'); return; }
+  if (!text) { toast('⚠️ 请输入企业名单'); return; }
+  
+  // 解析企业名单
+  const companies = text.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+  if (companies.length === 0) { toast('⚠️ 企业名单为空'); return; }
+  
+  // 初始化结果
+  results = companies.map(name => ({
+    name, status: 'pending', rating: '', detail: '', error: ''
+  }));
+  renderResults();
+  updateStats();
+  
+  // 显示进度
+  const progressArea = document.getElementById('progressArea');
+  progressArea.style.display = 'block';
+  document.getElementById('startBtn').disabled = true;
+  isRunning = true;
+  
+  // 串行查询（带超时控制）
+  for (let i = 0; i < results.length; i++) {
+    results[i].status = 'running';
+    renderResults();
+    
+    const pct = Math.round((i + 1) / results.length * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressText').textContent = `正在查询（${i+1}/${results.length}）：${results[i].name}`;
+    
+    try {
+      // 45秒超时
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 45000);
+      
+      const result = await queryRating(results[i].name, apiUrl, apiKey, model, controller);
+      clearTimeout(timeoutId);
+      
+      results[i].status = 'done';
+      results[i].rating = result.rating;
+      results[i].detail = result.detail;
+    } catch (e) {
+      results[i].status = 'error';
+      results[i].error = (e.name === 'AbortError' ? '请求超时（45秒）' : e.message).slice(0, 80);
+    }
+    
+    renderResults();
+    updateStats();
+  }
+  
+  // 完成
+  document.getElementById('progressFill').style.width = '100%';
+  document.getElementById('progressText').textContent = `✅ 查询完成！共 ${results.length} 条，成功 ${results.filter(r => r.status === 'done').length} 条`;
+  document.getElementById('startBtn').disabled = false;
+  isRunning = false;
+  toast('🎉 全部查询完成！');
+}
+
+function downloadResults() {
+  if (results.length === 0) { toast('没有可下载的数据'); return; }
+  
+  // 生成 CSV
+  let csv = '序号,企业名称,状态,信用评级,说明\n';
+  results.forEach((r, i) => {
+    const status = r.status === 'done' ? '完成' : r.status === 'error' ? '失败' : '等待';
+    const rating = r.rating || '';
+    const detail = (r.detail || r.error || '').replace(/"/g, '""');
+    csv += `${i+1},"${r.name}","${status}","${rating}","${detail}"\n`;
+  });
+  
+  const blob = new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `信用评级结果_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('📥 已下载 CSV 文件');
+}
+</script>
+</body>
+</html>

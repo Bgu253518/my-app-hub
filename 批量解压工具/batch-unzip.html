@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>批量解压工具</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg-deep: #0a0a14; --bg-card: rgba(22,22,44,0.6);
+  --glass-border: rgba(255,255,255,0.08);
+  --text-primary: #e8e8f0; --text-secondary: #9999b0;
+  --accent-1: #7c5cfc; --accent-2: #5cfca0; --accent-3: #fc5c9c;
+  --radius: 14px; --radius-sm: 8px; --transition: 0.2s ease;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: linear-gradient(160deg, #0a0a14 0%, #12122a 30%, #16163a 60%, #0d0d24 100%);
+  color: var(--text-primary); min-height: 100vh; line-height: 1.6;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 20% 20%, rgba(124,92,252,0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 60%, rgba(252,92,156,0.04) 0%, transparent 50%);
+  pointer-events: none; z-index: 0;
+}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(124,92,252,0.25); border-radius: 3px; }
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,10,20,0.8); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 0 24px; height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header .brand { font-size: 17px; font-weight: 700; }
+.header a { color: var(--text-secondary); text-decoration: none; font-size: 13px; padding: 6px 14px; border: 1px solid var(--glass-border); border-radius: 8px; transition: var(--transition); }
+.header a:hover { color: var(--text-primary); border-color: rgba(124,92,252,0.3); }
+.main { position: relative; z-index: 1; max-width: 1000px; margin: 0 auto; padding: 24px; }
+.section {
+  background: var(--bg-card); border: 1px solid var(--glass-border);
+  border-radius: var(--radius); padding: 24px; margin-bottom: 20px;
+  backdrop-filter: blur(10px);
+}
+.section-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.section-hint { font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; }
+
+.drop-zone {
+  border: 2px dashed rgba(124,92,252,0.3); border-radius: var(--radius);
+  padding: 48px 24px; text-align: center; cursor: pointer; transition: var(--transition);
+}
+.drop-zone:hover, .drop-zone.dragover { border-color: var(--accent-1); background: rgba(124,92,252,0.06); }
+.drop-zone .dz-icon { font-size: 48px; margin-bottom: 10px; }
+.drop-zone .dz-text { font-size: 15px; font-weight: 600; }
+.drop-zone .dz-hint { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+.zip-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.zip-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+}
+.zip-card .zc-icon { font-size: 24px; }
+.zip-card .zc-name { flex: 1; font-size: 14px; font-weight: 600; }
+.zip-card .zc-info { font-size: 11px; color: var(--text-secondary); }
+.zip-card .zc-status { font-size: 11px; padding: 3px 8px; border-radius: 4px; }
+.zip-card .zc-status.done { background: rgba(92,252,160,0.15); color: #5cfca0; }
+.zip-card .zc-status.waiting { background: rgba(252,200,92,0.15); color: #fcc85c; }
+
+.tree-wrap { max-height: 400px; overflow-y: auto; margin: 12px 0; }
+.tree-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 8px; border-radius: 4px; font-size: 13px;
+}
+.tree-item:hover { background: rgba(255,255,255,0.03); }
+.tree-item .ti-icon { flex-shrink: 0; width: 20px; text-align: center; }
+.tree-item .ti-name { flex: 1; word-break: break-all; }
+.tree-item .ti-size { color: var(--text-secondary); font-size: 11px; white-space: nowrap; }
+.tree-folder { font-weight: 600; color: var(--accent-2); }
+.tree-nested { padding-left: 24px; }
+
+.btn {
+  padding: 10px 20px; border: none; border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: var(--transition); display: inline-flex; align-items: center; gap: 6px;
+}
+.btn-primary { background: var(--accent-1); color: #fff; }
+.btn-primary:hover { background: #9578ff; transform: translateY(-1px); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.btn-secondary { background: rgba(255,255,255,0.06); color: var(--text-primary); border: 1px solid var(--glass-border); }
+.btn-secondary:hover { background: rgba(255,255,255,0.12); }
+.tool-actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
+
+.result-box {
+  padding: 16px; border-radius: var(--radius-sm);
+  border: 1px solid rgba(92,252,160,0.2); background: rgba(92,252,160,0.06);
+  display: none; margin-top: 16px;
+}
+.result-box.show { display: block; }
+.result-box .result-title { color: #5cfca0; font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+.result-box .result-detail { color: var(--text-secondary); font-size: 12px; }
+
+.processing { display: none; align-items: center; gap: 10px; padding: 16px 0; color: var(--text-secondary); font-size: 13px; }
+.processing.show { display: flex; }
+.spinner { width: 24px; height: 24px; border: 3px solid rgba(124,92,252,0.2); border-top-color: var(--accent-1); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.empty-state { padding: 40px; text-align: center; color: var(--text-secondary); font-size: 14px; }
+
+.file-entry { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 12px; }
+.file-entry .fe-icon { flex-shrink: 0; }
+.file-entry .fe-name { flex: 1; word-break: break-all; }
+.file-entry .fe-dl {
+  padding: 2px 8px; border: 1px solid var(--glass-border); border-radius: 4px;
+  background: transparent; color: var(--accent-2); font-size: 11px; cursor: pointer;
+  transition: var(--transition);
+}
+.file-entry .fe-dl:hover { background: rgba(92,252,160,0.1); }
+
+@media (max-width: 640px) {
+  .main { padding: 14px; } .section { padding: 16px; }
+  .drop-zone { padding: 32px 14px; }
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="brand">🗜️ 批量解压工具</div>
+  <a href="index.html">← 返回首页</a>
+</div>
+<div class="main">
+
+  <div class="section">
+    <div class="section-title">📂 上传压缩包</div>
+    <div class="section-hint">支持 ZIP 格式，可同时上传多个文件</div>
+    <div class="drop-zone" id="dropZone">
+      <div class="dz-icon">🗜️</div>
+      <div class="dz-text">拖拽 ZIP 文件到此处，或点击选择文件</div>
+      <div class="dz-hint">支持同时选择多个 ZIP 文件</div>
+    </div>
+    <input type="file" id="fileInput" multiple accept=".zip" style="display:none">
+  </div>
+
+  <div class="section" id="resultSection" style="display:none">
+    <div class="section-title">📋 已上传压缩包</div>
+    <div class="zip-list" id="zipList"></div>
+
+    <div class="section-title">📂 文件目录</div>
+    <div class="section-hint">解压后自动显示文件目录结构，可逐文件下载</div>
+    <div id="treeContainer"><div class="empty-state">请先解压查看文件目录</div></div>
+
+    <div class="processing" id="processing">
+      <div class="spinner"></div>
+      <span id="processingText">正在解压...</span>
+    </div>
+
+    <div class="tool-actions">
+      <button class="btn btn-primary" id="extractAllBtn">📦 解压全部</button>
+      <button class="btn btn-secondary" id="downloadAllBtn" style="display:none">⬇ 打包下载全部</button>
+      <button class="btn btn-secondary" id="clearAllBtn">🗑️ 清空全部</button>
+    </div>
+
+    <div class="result-box" id="resultBox">
+      <div class="result-title">✅ 解压完成</div>
+      <div class="result-detail" id="resultDetail"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let archives = []; // { file, zip: JSZip object, entries: [], extracted: bool }
+let allExtracted = false;
+
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const resultSection = document.getElementById('resultSection');
+const zipList = document.getElementById('zipList');
+const treeContainer = document.getElementById('treeContainer');
+const processing = document.getElementById('processing');
+const processingText = document.getElementById('processingText');
+const extractAllBtn = document.getElementById('extractAllBtn');
+const downloadAllBtn = document.getElementById('downloadAllBtn');
+const clearAllBtn = document.getElementById('clearAllBtn');
+const resultBox = document.getElementById('resultBox');
+const resultDetail = document.getElementById('resultDetail');
+
+dropZone.onclick = () => fileInput.click();
+dropZone.ondragover = e => { e.preventDefault(); dropZone.classList.add('dragover'); };
+dropZone.ondragleave = () => dropZone.classList.remove('dragover');
+dropZone.ondrop = e => {
+  e.preventDefault(); dropZone.classList.remove('dragover');
+  handleFiles(Array.from(e.dataTransfer.files).filter(f => f.name.match(/\.zip$/i)));
+};
+fileInput.onchange = () => {
+  handleFiles(Array.from(fileInput.files));
+  fileInput.value = '';
+};
+
+async function handleFiles(files) {
+  if (files.length === 0) return;
+  processing.classList.add('show');
+  processingText.textContent = '正在读取压缩包...';
+  await new Promise(r => setTimeout(r, 50));
+
+  for (const file of files) {
+    if (archives.some(a => a.file.name === file.name && a.file.size === file.size)) continue;
+    try {
+      const bytes = await file.arrayBuffer();
+      const zip = await JSZip.loadAsync(bytes);
+      const entries = Object.keys(zip.files);
+      archives.push({ file, zip, entries, extracted: false });
+    } catch (err) {
+      alert('无法读取压缩包: ' + file.name + '\n' + err.message);
+    }
+  }
+
+  processing.classList.remove('show');
+  resultSection.style.display = 'block';
+  renderZipList();
+  renderTree();
+}
+
+function renderZipList() {
+  if (archives.length === 0) {
+    zipList.innerHTML = '<div class="empty-state">暂无压缩包</div>';
+    return;
+  }
+  zipList.innerHTML = archives.map((a, i) => {
+    const folderCount = a.zip.files ? Object.keys(a.zip.files).filter(k => a.zip.files[k].dir).length : 0;
+    const fileCount = a.entries.length - folderCount;
+    const size = a.file.size < 1024*1024 ? (a.file.size/1024).toFixed(1)+' KB' : (a.file.size/(1024*1024)).toFixed(1)+' MB';
+    const status = a.extracted ? '<span class="zc-status done">✅ 已解压</span>' : '<span class="zc-status waiting">⏳ 待解压</span>';
+    return `<div class="zip-card">
+      <span class="zc-icon">🗜️</span>
+      <span class="zc-name">${escapeHtml(a.file.name)}</span>
+      <span class="zc-info">${fileCount} 个文件 · ${size}</span>
+      ${status}
+    </div>`;
+  }).join('');
+}
+
+function renderTree() {
+  const allEntries = archives.flatMap((a, ai) =>
+    a.extracted ? Object.keys(a.zip.files).map(name => ({ name, dir: a.zip.files[name].dir, ai })) : []
+  );
+
+  if (allEntries.length === 0) {
+    treeContainer.innerHTML = '<div class="empty-state">请点击"解压全部"查看文件目录</div>';
+    downloadAllBtn.style.display = 'none';
+    return;
+  }
+
+  downloadAllBtn.style.display = 'inline-flex';
+
+  let html = '';
+  // Build tree structure
+  allEntries.forEach(entry => {
+    if (entry.dir) return; // Skip directory entries, show as tree
+    const icon = getFileIcon(entry.name);
+    const parts = entry.name.split('/');
+    const displayName = parts[parts.length - 1];
+    const indent = parts.length - 1;
+    const indentStr = '&nbsp;&nbsp;'.repeat(indent) + (indent > 0 ? '└ ' : '');
+    const size = archives[entry.ai].zip.files[entry.name]._data?.uncompressedSize;
+    const sizeStr = size ? (size < 1024 ? size+' B' : size < 1024*1024 ? (size/1024).toFixed(1)+' KB' : (size/(1024*1024)).toFixed(1)+' MB') : '';
+
+    html += `<div class="file-entry" style="padding-left:${indent * 20}px">
+      <span class="fe-icon">${icon}</span>
+      <span class="fe-name">${escapeHtml(displayName)}</span>
+      <span style="color:var(--text-secondary);font-size:11px">${sizeStr}</span>
+      <button class="fe-dl" data-ai="${entry.ai}" data-path="${escapeHtml(entry.name)}" onclick="downloadSingleFile(this)">⬇ 下载</button>
+    </div>`;
+  });
+
+  treeContainer.innerHTML = html || '<div class="empty-state">压缩包中没有找到文件</div>';
+}
+
+function getFileIcon(name) {
+  const ext = name.split('.').pop().toLowerCase();
+  const icons = {
+    pdf:'📄', doc:'📝', docx:'📝', xls:'📊', xlsx:'📊', ppt:'📑', pptx:'📑',
+    jpg:'🖼️', jpeg:'🖼️', png:'🖼️', gif:'🖼️', webp:'🖼️', svg:'🖼️',
+    mp3:'🎵', mp4:'🎬', avi:'🎬', mkv:'🎬',
+    zip:'🗜️', rar:'🗜️', 7z:'🗜️', gz:'🗜️',
+    py:'🐍', js:'📜', ts:'📜', html:'🌐', css:'🎨', json:'📋',
+    txt:'📄', csv:'📊', md:'📝',
+  };
+  return icons[ext] || '📄';
+}
+
+extractAllBtn.onclick = async () => {
+  if (archives.length === 0) return;
+  const pending = archives.filter(a => !a.extracted);
+  if (pending.length === 0) {
+    alert('所有压缩包已解压');
+    return;
+  }
+
+  extractAllBtn.disabled = true;
+  processing.classList.add('show');
+  processingText.textContent = `正在解压 ${pending.length} 个压缩包...`;
+  await new Promise(r => setTimeout(r, 50));
+
+  try {
+    for (const a of pending) {
+      a.extracted = true;
+    }
+    allExtracted = true;
+    renderZipList();
+    renderTree();
+
+    const totalFiles = archives.reduce((sum, a) => sum + Object.keys(a.zip.files).filter(k => !a.zip.files[k].dir).length, 0);
+    resultDetail.textContent = `成功解压 ${archives.length} 个压缩包，共 ${totalFiles} 个文件`;
+    resultBox.classList.add('show');
+  } catch (err) {
+    alert('解压失败: ' + err.message);
+  } finally {
+    extractAllBtn.disabled = false;
+    processing.classList.remove('show');
+  }
+};
+
+async function downloadSingleFile(btn) {
+  const ai = parseInt(btn.dataset.ai);
+  const path = btn.dataset.path;
+  try {
+    const a = archives[ai];
+    const fileData = await a.zip.files[path].async('blob');
+    const url = URL.createObjectURL(fileData);
+    const link = document.createElement('a');
+    link.href = url;
+    const parts = path.split('/');
+    link.download = parts[parts.length - 1];
+    link.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    alert('下载失败: ' + err.message);
+  }
+}
+
+downloadAllBtn.onclick = async () => {
+  const allFiles = archives.flatMap((a, ai) =>
+    Object.keys(a.zip.files).filter(name => !a.zip.files[name].dir).map(name => ({ name, ai }))
+  );
+  if (allFiles.length === 0) return;
+
+  processing.classList.add('show');
+  processingText.textContent = '正在打包...';
+  downloadAllBtn.disabled = true;
+
+  try {
+    const zip = new JSZip();
+    for (const entry of allFiles) {
+      const a = archives[entry.ai];
+      const data = await a.zip.files[entry.name].async('blob');
+      const parts = entry.name.split('/');
+      const fileName = parts[parts.length - 1];
+      // Handle duplicates
+      let finalName = fileName;
+      let i = 2;
+      while (zip.files[finalName]) {
+        const dot = fileName.lastIndexOf('.');
+        if (dot > 0) finalName = fileName.slice(0, dot) + '_' + i + fileName.slice(dot);
+        else finalName = fileName + '_' + i;
+        i++;
+      }
+      zip.file(finalName, data);
+    }
+    const content = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(content);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = '解压文件_' + new Date().toISOString().slice(0,10) + '.zip';
+    link.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    alert('打包失败: ' + err.message);
+  } finally {
+    processing.classList.remove('show');
+    downloadAllBtn.disabled = false;
+  }
+};
+
+clearAllBtn.onclick = () => {
+  archives = [];
+  allExtracted = false;
+  zipList.innerHTML = '';
+  treeContainer.innerHTML = '<div class="empty-state">请先上传压缩包</div>';
+  resultSection.style.display = 'none';
+  resultBox.classList.remove('show');
+  downloadAllBtn.style.display = 'none';
+};
+
+function escapeHtml(str) {
+  if (!str) return '';
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+</script>
+</body>
+</html>

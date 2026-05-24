@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BKD 底稿滚存与上数助手 — 顾力菡·应用工坊</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+<style>
+:root {
+  --bg-deep: #0a0a14; --bg-card: rgba(22,22,44,0.6); --glass-border: rgba(255,255,255,0.08);
+  --text-primary: #e8e8f0; --text-secondary: #9999b0;
+  --accent-1: #7c5cfc; --accent-2: #5cfca0; --accent-3: #fc5c9c;
+  --radius: 14px; --radius-sm: 8px;
+}
+body {
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background: linear-gradient(160deg,#0a0a14 0%,#12122a 30%,#16163a 60%,#0d0d24 100%);
+  color: var(--text-primary); min-height:100vh; line-height:1.6;
+}
+body::before {
+  content:''; position:fixed; inset:0;
+  background: radial-gradient(ellipse at 20% 20%, rgba(124,92,252,0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 60%, rgba(252,92,156,0.04) 0%, transparent 50%);
+  pointer-events:none; z-index:0;
+}
+::-webkit-scrollbar { width:5px; } ::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(124,92,252,0.25); border-radius:3px; }
+
+.header {
+  position:sticky; top:0; z-index:50; background:rgba(10,10,20,0.85); backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--glass-border); padding:0 20px; height:56px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.header .brand { font-size:16px; font-weight:700; }
+.header a { color:var(--text-secondary); text-decoration:none; font-size:13px; }
+.header a:hover { color:var(--text-primary); }
+.main { position:relative; z-index:1; max-width:1500px; margin:0 auto; padding:20px; }
+
+.card {
+  background:var(--bg-card); border:1px solid var(--glass-border);
+  border-radius:var(--radius); padding:20px; margin-bottom:16px; backdrop-filter:blur(10px);
+}
+.card-title { font-size:15px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.card-hint { font-size:12px; color:var(--text-secondary); margin-bottom:12px; }
+
+.btn {
+  display:inline-flex; align-items:center; gap:4px; padding:7px 14px; border-radius:6px;
+  font-size:12px; font-weight:600; cursor:pointer; border:1px solid var(--glass-border);
+  background:rgba(255,255,255,0.05); color:var(--text-primary); transition:all 0.2s; white-space:nowrap;
+}
+.btn:hover { background:rgba(255,255,255,0.1); }
+.btn-primary { background:linear-gradient(135deg,#7c5cfc,#5ccafc); border:none; color:#fff; }
+.btn-primary:hover { opacity:0.9; transform:translateY(-1px); box-shadow:0 4px 16px rgba(124,92,252,0.3); }
+.btn-danger { border-color:rgba(252,92,156,0.3); color:var(--accent-3); }
+.btn-success { border-color:rgba(92,252,160,0.3); color:var(--accent-2); }
+.btn-xs { padding:3px 8px; font-size:10px; }
+.btn-sm { padding:5px 10px; font-size:11px; }
+
+input,select,textarea {
+  background:rgba(255,255,255,0.05); border:1px solid var(--glass-border);
+  border-radius:6px; padding:7px 10px; color:var(--text-primary); font-size:12px; outline:none;
+}
+input:focus,select:focus,textarea:focus { border-color:var(--accent-1); }
+select option { background:#1a1a2e; color:#e8e8f0; }
+
+.tabs { display:flex; gap:0; margin-bottom:20px; }
+.tab {
+  flex:1; text-align:center; padding:12px; cursor:pointer; font-size:13px;
+  background:rgba(255,255,255,0.03); border:1px solid var(--glass-border);
+  color:var(--text-secondary); transition:all 0.2s;
+}
+.tab:first-child { border-radius:var(--radius) 0 0 var(--radius); }
+.tab:last-child { border-radius:0 var(--radius) var(--radius) 0; }
+.tab.active { background:rgba(124,92,252,0.15); border-color:var(--accent-1); color:#fff; font-weight:600; }
+
+.table-wrap { max-height:400px; overflow:auto; border:1px solid var(--glass-border); border-radius:var(--radius-sm); }
+.table-wrap table { border-collapse:collapse; font-size:12px; width:100%; }
+.table-wrap th, .table-wrap td { border:1px solid rgba(255,255,255,0.1); padding:6px 10px; white-space:nowrap; }
+.table-wrap th { background:rgba(124,92,252,0.15); font-weight:600; position:sticky; top:0; z-index:1; text-align:center; }
+.table-wrap td { background:rgba(0,0,0,0.2); text-align:left; }
+tr.row-red td { background:rgba(252,92,156,0.1) !important; }
+tr.row-green td { background:rgba(92,252,160,0.08) !important; }
+
+.toast {
+  position:fixed; bottom:20px; right:20px; z-index:100;
+  background:rgba(22,22,44,0.95); border:1px solid var(--glass-border);
+  padding:10px 18px; border-radius:var(--radius-sm); font-size:12px;
+  backdrop-filter:blur(12px); transform:translateY(100px); opacity:0; transition:all 0.3s;
+}
+.toast.show { transform:translateY(0); opacity:1; }
+
+.hidden { display:none !important; }
+.flex-center { display:flex; align-items:center; gap:8px; }
+.gap2 { display:flex; gap:8px; flex-wrap:wrap; }
+.mt2 { margin-top:8px; } .mt3 { margin-top:12px; } .mb2 { margin-bottom:8px; }
+.text-sm { font-size:12px; } .text-xs { font-size:10px; }
+.text-secondary { color:var(--text-secondary); }
+.font-mono { font-family:monospace; }
+
+@media (max-width:768px) { .main { padding:12px; } .tabs { flex-wrap:wrap; } .tab { flex:auto; } }
+
+/* Password Gate */
+.pwd-gate {
+  position: fixed; inset: 0; z-index: 99999;
+  background: linear-gradient(160deg, #0a0a14 0%, #12122a 50%, #0d0d24 100%);
+  display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 24px;
+}
+.pwd-gate::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center, rgba(124,92,252,0.1) 0%, transparent 60%);
+  pointer-events: none;
+}
+.gate-icon { font-size: 64px; animation: pulse 2s ease-in-out infinite; position: relative; }
+@keyframes pulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } }
+.gate-box {
+  position: relative; background: rgba(22,22,44,0.6); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px; padding: 40px 36px; width: 380px; max-width: 90vw;
+  backdrop-filter: blur(20px); display: flex; flex-direction: column; gap: 16px;
+}
+.gate-box h2 { text-align: center; font-size: 20px; font-weight: 700; }
+.gate-box .hint { text-align: center; font-size: 13px; color: #9999b0; }
+.gate-box input {
+  width: 100%; padding: 12px 16px; border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px; background: rgba(0,0,0,0.3); color: #e8e8f0;
+  font-size: 15px; outline: none; box-sizing: border-box;
+}
+.gate-box input:focus { border-color: #7c5cfc; box-shadow: 0 0 0 3px rgba(124,92,252,0.15); }
+.gate-box .btn {
+  padding: 12px; border: none; border-radius: 8px;
+  background: #7c5cfc; color: #fff; font-size: 15px; font-weight: 600;
+  cursor: pointer; transition: 0.2s;
+}
+.gate-box .btn:hover { background: #9578ff; }
+.gate-box .error { color: #fc5c9c; font-size: 13px; text-align: center; display: none; }
+</style>
+
+</head>
+<body>
+<div class="pwd-gate" id="pwdGate">
+  <div class="gate-icon">🔐</div>
+  <div class="gate-box">
+    <h2>BKD 底稿滚存与上数助手</h2>
+    <p class="hint">请输入访问密码以使用本工具</p>
+    <input type="password" id="pwdInput" placeholder="请输入密码..." autofocus>
+    <button class="btn" id="pwdBtn">验 证</button>
+    <p class="error" id="pwdError">密码错误，请重试</p>
+  </div>
+</div>
+
+
+<div class="header">
+  <span class="brand">📋 BKD 底稿滚存与上数助手</span>
+  <a href="index.html">← 返回应用工坊</a>
+</div>
+
+<div class="main">
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" data-tab="1" onclick="switchTab(1)">📁 ① 模板管理</div>
+    <div class="tab" data-tab="2" onclick="switchTab(2)">🔄 ② 滚存操作</div>
+    <div class="tab" data-tab="3" onclick="switchTab(3)">📊 ③ 上数与校验</div>
+    <div class="tab" data-tab="4" onclick="switchTab(4)">📤 ④ 导出</div>
+  </div>
+
+  <!-- ====== Tab 1: Template Management ====== -->
+  <div id="tab1">
+    <div class="card">
+      <div class="card-title">📁 客户科目映射模板</div>
+      <div class="card-hint">维护客户科目与标准科目的对应关系，用于自动上数匹配。存储于浏览器 localStorage。</div>
+      <div class="gap2 mb2">
+        <button class="btn btn-sm btn-primary" onclick="addTemplateRow()">➕ 新增行</button>
+        <label class="btn btn-sm" style="cursor:pointer">📥 导入映射 Excel<input type="file" accept=".xlsx,.xls" onchange="importTemplates(this)" class="hidden"></label>
+        <button class="btn btn-sm" onclick="exportTemplates()">📤 导出映射 Excel</button>
+        <button class="btn btn-sm" onclick="loadDemoTemplates()">🔬 加载演示模板</button>
+      </div>
+      <div class="table-wrap" id="tplTableWrap">
+        <table id="tplTable">
+          <thead><tr><th>客户科目代码</th><th>客户科目名称</th><th>标准科目代码</th><th>标准科目名称</th><th>借贷方向</th><th>操作</th></tr></thead>
+          <tbody id="tplBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== Tab 2: Roll-Forward ====== -->
+  <div id="tab2" class="hidden">
+    <div class="card">
+      <div class="card-title">📂 上传 BKD 底稿</div>
+      <div class="gap2 mb2">
+        <label class="btn btn-sm" style="cursor:pointer">📤 上传底稿 Excel (.xlsx)<input type="file" accept=".xlsx,.xls" id="rfFileInput" onchange="loadWorkbook(this)" class="hidden"></label>
+        <span class="text-sm text-secondary" id="rfFileInfo">未上传文件</span>
+      </div>
+      <div id="rfSheetList" class="hidden mt2">
+        <p class="text-sm mb2">选择要处理的 Sheet（默认全选）：</p>
+        <div class="gap2 mb2" id="rfSheetChecks"></div>
+        <div class="flex-center gap2 mb2">
+          <span class="text-sm">表头行号:</span><input type="number" id="rfHeaderRow" value="1" min="1" max="5" style="width:60px" onchange="scanDateColumns()">
+          <button class="btn btn-xs btn-primary" onclick="scanDateColumns()">🔍 重新扫描日期列</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card hidden" id="rfDateCard">
+      <div class="card-title">📅 日期列识别结果</div>
+      <div class="table-wrap" id="rfDateTableWrap"></div>
+      <div class="mt2 text-xs text-secondary">可手动修正年份或勾选"忽略"跳过该列。正则匹配格式：24.12.31、2024-12-31、2024/12/31、20241231</div>
+    </div>
+
+    <div class="card hidden" id="rfRuleCard">
+      <div class="card-title">⚙️ 滚存规则</div>
+      <div class="flex-center gap2">
+        <span class="text-sm">源列（期末数）:</span><select id="rfSrcCol"></select>
+        <span class="text-sm">目标列（滚存到）:</span><select id="rfTgtCol"></select>
+        <span class="text-sm">新列标题:</span><input type="text" id="rfNewHeader" placeholder="如 25.12.31" style="width:120px">
+        <button class="btn btn-primary" onclick="executeRollForward()">🚀 执行滚存</button>
+      </div>
+      <div id="rfResult" class="mt3 hidden"></div>
+    </div>
+  </div>
+
+  <!-- ====== Tab 3: Data Filling & Verification ====== -->
+  <div id="tab3" class="hidden">
+    <div class="card">
+      <div class="card-title">📊 导入本期科目余额表</div>
+      <div class="gap2 mb2">
+        <label class="btn btn-sm" style="cursor:pointer">📤 上传 TB Excel<input type="file" accept=".xlsx,.xls" id="tbFileInput" onchange="loadTB(this)" class="hidden"></label>
+        <span class="text-sm text-secondary" id="tbFileInfo">未上传文件</span>
+      </div>
+      <div id="tbConfig" class="hidden mt2">
+        <div class="flex-center gap2 mb2" style="flex-wrap:wrap">
+          <span class="text-sm">科目代码列:</span><select id="tbCodeCol"></select>
+          <span class="text-sm">科目名称列:</span><select id="tbNameCol"></select>
+          <span class="text-sm">期末余额列:</span><select id="tbBalCol"></select>
+          <span class="text-sm">借贷方向列:</span><select id="tbDirCol"><option value="-1">无</option></select>
+          <button class="btn btn-xs btn-primary" onclick="parseTB()">解析</button>
+        </div>
+        <div class="table-wrap" style="max-height:200px" id="tbPreview"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🎯 上数配置</div>
+      <div class="flex-center gap2 mb2" style="flex-wrap:wrap">
+        <span class="text-sm">目标 Sheet:</span><select id="dfSheet"></select>
+        <span class="text-sm">填数列:</span><select id="dfCol"></select>
+        <span class="text-sm">使用模板:</span><button class="btn btn-xs" id="dfTplBtn" onclick="switchTab(1)">←先去模板管理选择</button>
+        <button class="btn btn-primary" onclick="executeFill()">📝 自动上数</button>
+      </div>
+      <div id="dfResult" class="hidden mt3"></div>
+      <div id="dfUnmatched" class="hidden mt2"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">✅ 自动校验</div>
+      <div class="gap2 mb2">
+        <button class="btn btn-sm btn-primary" onclick="runVerify()">🔍 执行校验</button>
+        <label class="flex-center text-sm"><input type="checkbox" id="vfYrCheck"> 年初年末一致性检查</label>
+        <label class="flex-center text-sm"><input type="checkbox" id="vfDrCrCheck" checked> 借贷平衡检查</label>
+      </div>
+      <div id="vfResult" class="hidden"></div>
+    </div>
+  </div>
+
+  <!-- ====== Tab 4: Export ====== -->
+  <div id="tab4" class="hidden">
+    <div class="card">
+      <div class="card-title">📤 导出</div>
+      <div class="gap2">
+        <button class="btn btn-primary" onclick="downloadWorkbook()">📥 下载最终底稿 (.xlsx)</button>
+        <button class="btn btn-primary" onclick="downloadVerifyReport()">📊 下载校验报告 (.xlsx)</button>
+        <button class="btn" onclick="downloadJSONBackup()">📦 下载 JSON 项目备份</button>
+      </div>
+      <div class="mt3 text-sm text-secondary">
+        下载内容包含：滚存后的底稿（公式保留、死数已填）、上数结果、校验差异清单。
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== TOAST ====================
+function toast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.className = 'toast show'; clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 2500); }
+
+// ==================== TAB SWITCH ====================
+function switchTab(n) {
+  ['tab1','tab2','tab3','tab4'].forEach((id,i) => document.getElementById(id).classList.toggle('hidden', i+1 !== n));
+  document.querySelectorAll('.tab').forEach((t,i) => { t.classList.toggle('active', i+1 === n); });
+  if (n === 2) refreshTargetSelects();
+  if (n === 3) refreshFillSelects();
+}
+
+// ==================== API ====================
+const api = {
+  getTemplates() { try { return JSON.parse(localStorage.getItem('bkdTemplates') || '[]'); } catch { return []; } },
+  saveTemplates(arr) { localStorage.setItem('bkdTemplates', JSON.stringify(arr)); },
+  addTemplate(row) { const a = this.getTemplates(); a.push(row); this.saveTemplates(a); return a; },
+  updateTemplate(idx, row) { const a = this.getTemplates(); a[idx] = row; this.saveTemplates(a); },
+  deleteTemplate(idx) { const a = this.getTemplates(); a.splice(idx, 1); this.saveTemplates(a); },
+};
+
+// ==================== GLOBAL STATE ====================
+let wb = null;                // Current workbook (XLSX.WorkBook)
+let dateColumns = [];         // [{sheet, col, colLetter, header, year, ignore}]
+let rollForwardDone = false;
+let tbData = [];              // [{code, name, balance, direction}]
+let fillResult = { filled: 0, skipped: 0, unmatched: [] };
+let verifyDiffs = [];
+
+// ==================== TAB 1: TEMPLATE MANAGEMENT ====================
+function renderTemplates() {
+  const templates = api.getTemplates();
+  const tbody = document.getElementById('tplBody');
+  if (templates.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-secondary);padding:20px">暂无模板数据，点击「新增行」或「加载演示模板」</td></tr>';
+    return;
+  }
+  tbody.innerHTML = templates.map((t, i) => `
+    <tr>
+      <td><input value="${htmlEscape(t.clientCode||'')}" data-idx="${i}" data-field="clientCode" style="width:120px"></td>
+      <td><input value="${htmlEscape(t.clientName||'')}" data-idx="${i}" data-field="clientName" style="width:180px"></td>
+      <td><input value="${htmlEscape(t.stdCode||'')}" data-idx="${i}" data-field="stdCode" style="width:120px"></td>
+      <td><input value="${htmlEscape(t.stdName||'')}" data-idx="${i}" data-field="stdName" style="width:180px"></td>
+      <td><select data-idx="${i}" data-field="direction" style="width:80px">
+        <option value="借" ${t.direction==='借'?'selected':''}>借</option>
+        <option value="贷" ${t.direction==='贷'?'selected':''}>贷</option>
+      </select></td>
+      <td><button class="btn btn-xs btn-danger" onclick="api.deleteTemplate(${i});renderTemplates();toast('已删除')">🗑</button></td>
+    </tr>
+  `).join('');
+  // Bind change events
+  tbody.querySelectorAll('input,select').forEach(el => {
+    el.addEventListener('change', function() {
+      const idx = +this.dataset.idx;
+      const field = this.dataset.field;
+      const templates = api.getTemplates();
+      if (templates[idx]) { templates[idx][field] = this.value; api.saveTemplates(templates); }
+    });
+  });
+}
+
+function addTemplateRow() {
+  api.addTemplate({ clientCode:'', clientName:'', stdCode:'', stdName:'', direction:'借' });
+  renderTemplates();
+  toast('已新增行');
+}
+
+function loadDemoTemplates() {
+  const demo = [
+    { clientCode:'1001', clientName:'库存现金', stdCode:'1001', stdName:'库存现金', direction:'借' },
+    { clientCode:'1002', clientName:'银行存款', stdCode:'1002', stdName:'银行存款', direction:'借' },
+    { clientCode:'1122', clientName:'应收账款', stdCode:'1122', stdName:'应收账款', direction:'借' },
+    { clientCode:'1123', clientName:'预付账款', stdCode:'1123', stdName:'预付账款', direction:'借' },
+    { clientCode:'1221', clientName:'其他应收款', stdCode:'1221', stdName:'其他应收款', direction:'借' },
+    { clientCode:'1403', clientName:'原材料', stdCode:'1403', stdName:'原材料', direction:'借' },
+    { clientCode:'1601', clientName:'固定资产', stdCode:'1601', stdName:'固定资产', direction:'借' },
+    { clientCode:'2001', clientName:'短期借款', stdCode:'2001', stdName:'短期借款', direction:'贷' },
+    { clientCode:'2201', clientName:'应付票据', stdCode:'2201', stdName:'应付票据', direction:'贷' },
+    { clientCode:'2202', clientName:'应付账款', stdCode:'2202', stdName:'应付账款', direction:'贷' },
+    { clientCode:'4001', clientName:'实收资本', stdCode:'4001', stdName:'实收资本', direction:'贷' },
+    { clientCode:'5001', clientName:'主营业务收入', stdCode:'5001', stdName:'主营业务收入', direction:'贷' },
+  ];
+  api.saveTemplates(demo);
+  renderTemplates();
+  toast('✓ 已加载12条演示模板');
+}
+
+function importTemplates(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const wb = XLSX.read(e.target.result, {type:'array'});
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1});
+    const headerMap = { '客户科目代码':'clientCode','客户科目名称':'clientName','标准科目代码':'stdCode','标准科目名称':'stdName','借贷方向':'direction' };
+    const hIdx = {};
+    const headerRow = rows[0];
+    if (!Array.isArray(headerRow)) { toast('无法识别表头'); return; }
+    headerRow.forEach((h, i) => { if (h && headerMap[h]) hIdx[headerMap[h]] = i; });
+    const templates = [];
+    for (let i = 1; i < rows.length; i++) {
+      const r = rows[i]; if (!Array.isArray(r) || !r.some(c => c !== undefined)) continue;
+      const t = {};
+      Object.entries(hIdx).forEach(([k, idx]) => { t[k] = String(r[idx] || '').trim(); });
+      if (!t.direction) t.direction = '借';
+      if (t.clientCode) templates.push(t);
+    }
+    if (templates.length > 0) { api.saveTemplates(templates); renderTemplates(); toast(`✓ 已导入 ${templates.length} 条模板`); }
+    else toast('未解析到有效数据');
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function exportTemplates() {
+  const templates = api.getTemplates();
+  if (templates.length === 0) { toast('无模板数据'); return; }
+  const rows = [['客户科目代码','客户科目名称','标准科目代码','标准科目名称','借贷方向']];
+  templates.forEach(t => rows.push([t.clientCode||'', t.clientName||'', t.stdCode||'', t.stdName||'', t.direction||'借']));
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wbOut = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wbOut, ws, '科目映射模板');
+  XLSX.writeFile(wbOut, `BKD科目映射模板_${new Date().toISOString().slice(0,10)}.xlsx`);
+  toast('✓ 模板已导出');
+}
+
+// ==================== TAB 2: ROLL-FORWARD ====================
+const DATE_RE = /(\d{2,4})[.\-/](\d{1,2})[.\-/](\d{1,2})|(\d{4})(\d{2})(\d{2})/;
+
+function loadWorkbook(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      wb = XLSX.read(e.target.result, {type:'array', cellFormula:true, cellStyles:true});
+      const sheetList = document.getElementById('rfSheetList');
+      sheetList.classList.remove('hidden');
+      document.getElementById('rfFileInfo').textContent = file.name + ' (' + wb.SheetNames.length + ' 个Sheet)';
+      document.getElementById('rfSheetChecks').innerHTML = wb.SheetNames.map((n, i) =>
+        `<label class="flex-center text-sm"><input type="checkbox" checked data-sheet="${i}"> ${n}</label>`
+      ).join('');
+      scanDateColumns();
+    } catch(err) { toast('加载失败: '+err.message); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function scanDateColumns() {
+  if (!wb) return;
+  dateColumns = [];
+  const headerRow = (+document.getElementById('rfHeaderRow').value || 1) - 1;
+
+  wb.SheetNames.forEach((sName, sIdx) => {
+    const sheet = wb.Sheets[sName];
+    const ref = XLSX.utils.decode_range(sheet['!ref'] || 'A1');
+    if (ref.e.r < headerRow) return;
+
+    for (let c = ref.s.c; c <= ref.e.c; c++) {
+      const addr = XLSX.utils.encode_cell({r:headerRow, c});
+      const cell = sheet[addr];
+      if (!cell) continue;
+      const text = String(cell.w || cell.v || '');
+      const match = text.match(DATE_RE);
+      if (match) {
+        let year;
+        if (match[1] && match[2] && match[3]) {
+          const y = parseInt(match[1]);
+          year = y < 100 ? 2000 + y : y;
+        } else if (match[4] && match[5] && match[6]) {
+          year = parseInt(match[4]);
+        }
+        if (year && year >= 2000 && year <= 2099) {
+          dateColumns.push({
+            sheet: sIdx, sheetName: sName,
+            col: c, colLetter: XLSX.utils.encode_col(c),
+            header: text, year, ignore: false
+          });
+        }
+      }
+    }
+  });
+
+  renderDateColumns();
+  document.getElementById('rfDateCard').classList.remove('hidden');
+  document.getElementById('rfRuleCard').classList.remove('hidden');
+  refreshTargetSelects();
+  toast(`扫描完成：识别到 ${dateColumns.length} 个日期列`);
+}
+
+function renderDateColumns() {
+  const el = document.getElementById('rfDateTableWrap');
+  if (dateColumns.length === 0) { el.innerHTML = '<p class="text-sm text-secondary p-4">未识别到日期列，请检查表头格式</p>'; return; }
+  el.innerHTML = `<table><thead><tr><th>Sheet</th><th>列标题</th><th>列字母</th><th>识别年份</th><th>忽略</th></tr></thead><tbody>` +
+    dateColumns.map((d, i) => `
+      <tr>
+        <td>${htmlEscape(d.sheetName)}</td>
+        <td>${htmlEscape(d.header)}</td>
+        <td class="font-mono">${d.colLetter}</td>
+        <td><input type="number" value="${d.year}" data-dcidx="${i}" data-field="year" style="width:70px"></td>
+        <td><input type="checkbox" ${d.ignore?'checked':''} data-dcidx="${i}" data-field="ignore"></td>
+      </tr>
+    `).join('') + '</tbody></table>';
+  // Bind changes
+  el.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('change', function() {
+      const idx = +this.dataset.dcidx;
+      if (this.type === 'checkbox') dateColumns[idx].ignore = this.checked;
+      else dateColumns[idx].year = +this.value;
+      refreshTargetSelects();
+    });
+  });
+}
+
+function refreshTargetSelects() {
+  const active = dateColumns.filter(d => !d.ignore).sort((a,b) => a.year - b.year);
+  const opts = active.map((d, i) => `<option value="${i}">${d.sheetName} / ${d.header} / ${d.colLetter} (${d.year})</option>`).join('');
+  document.getElementById('rfSrcCol').innerHTML = opts;
+  document.getElementById('rfTgtCol').innerHTML = opts;
+  // Suggest: src = newest year, tgt = oldest year
+  if (active.length >= 2) {
+    document.getElementById('rfSrcCol').selectedIndex = active.length - 1;
+    document.getElementById('rfTgtCol').selectedIndex = 0;
+    document.getElementById('rfNewHeader').value = (active[active.length-1].year + 1) + active[active.length-1].header.replace(/^\d+/, '');
+  }
+  // Refresh fill selects for tab3
+  refreshFillSelects();
+}
+
+function executeRollForward() {
+  if (!wb || dateColumns.filter(d => !d.ignore).length < 2) { toast('至少需要2个有效日期列'); return; }
+  const active = dateColumns.filter(d => !d.ignore).sort((a,b) => a.year - b.year);
+  const srcIdx = +document.getElementById('rfSrcCol').value;
+  const tgtIdx = +document.getElementById('rfTgtCol').value;
+  if (srcIdx === tgtIdx) { toast('源列和目标列不能相同'); return; }
+
+  const src = active[srcIdx];
+  const tgt = active[tgtIdx];
+  const newHeader = document.getElementById('rfNewHeader').value.trim() || (src.year + 1) + src.header.replace(/^\d{2,4}/, '');
+  const checkedSheets = [...document.querySelectorAll('#rfSheetChecks input:checked')].map(cb => +cb.dataset.sheet);
+
+  let totalCopied = 0, totalCleared = 0, totalHeaders = 0;
+
+  checkedSheets.forEach(sIdx => {
+    const sheet = wb.Sheets[wb.SheetNames[sIdx]];
+    const ref = XLSX.utils.decode_range(sheet['!ref'] || 'A1');
+    const headerRow = (+document.getElementById('rfHeaderRow').value || 1) - 1;
+    const dataStartRow = headerRow + 1;
+
+    // Find the actual source/target columns in this sheet
+    // Match by colLetter from the SCANNED columns
+    const srcColLetter = src.colLetter;
+    const tgtColLetter = tgt.colLetter;
+
+    // Update header
+    const srcHeaderAddr = XLSX.utils.encode_cell({r: headerRow, c: src.col});
+    if (sheet[srcHeaderAddr]) {
+      sheet[srcHeaderAddr].v = newHeader;
+      sheet[srcHeaderAddr].w = newHeader;
+    } else {
+      sheet[srcHeaderAddr] = { t: 's', v: newHeader, w: newHeader };
+    }
+    totalHeaders++;
+
+    // Copy source values to target, clear source
+    for (let r = dataStartRow; r <= ref.e.r; r++) {
+      const srcAddr = XLSX.utils.encode_cell({r, c: src.col});
+      const tgtAddr = XLSX.utils.encode_cell({r, c: tgt.col});
+      const srcCell = sheet[srcAddr];
+      if (!srcCell) continue;
+
+      // Get source calculated value
+      const srcVal = srcCell.v;
+
+      // Write dead number to target
+      if (srcVal !== undefined && srcVal !== null && srcVal !== '') {
+        const targetCell = sheet[tgtAddr] || {};
+        // Preserve format from target cell if exists
+        const tgtFmt = targetCell.z;
+        sheet[tgtAddr] = { t: typeof srcVal === 'number' ? 'n' : 's', v: srcVal, w: String(srcVal) };
+        if (tgtFmt) sheet[tgtAddr].z = tgtFmt;
+        totalCopied++;
+      }
+
+      // Clear source: if formula exists, keep formula but null value; else clear value
+      if (srcCell.f) {
+        sheet[srcAddr] = { t: srcCell.t || 'n', v: null, w: '', f: srcCell.f };
+        if (srcCell.z) sheet[srcAddr].z = srcCell.z;
+      } else {
+        sheet[srcAddr] = { t: 'n', v: '', w: '' };
+        if (srcCell.z) sheet[srcAddr].z = srcCell.z;
+      }
+      totalCleared++;
+    }
+  });
+
+  // Update date column headers in our tracking
+  src.header = newHeader;
+  src.year = src.year + 1;
+
+  wb._rollForwardDone = true;
+  rollForwardDone = true;
+
+  const result = document.getElementById('rfResult');
+  result.classList.remove('hidden');
+  result.innerHTML = `<div style="color:var(--accent-2);font-size:14px">
+    ✅ 滚存完成<br>
+    · ${totalHeaders} 个 Sheet 标题已更新为「${newHeader}」<br>
+    · ${totalCopied} 个单元格：${src.header.replace(/^\d+/,'')}期末数 → ${tgt.header.replace(/^\d+/,'')}期初数（死数）<br>
+    · ${totalCleared} 个源列单元格已清空（公式保留/死数清空）
+  </div>`;
+  toast(`✓ 滚存完成：${totalCopied}个复制, ${totalCleared}个清空`);
+  refreshTargetSelects();
+}
+
+// ==================== TAB 3: DATA FILLING ====================
+function loadTB(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const tbWb = XLSX.read(e.target.result, {type:'array'});
+    const sheet = tbWb.Sheets[tbWb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, {header:1});
+    if (rows.length < 2) { toast('数据为空'); return; }
+    document.getElementById('tbFileInfo').textContent = file.name + ' (' + rows.length + ' 行)';
+    // Build column selects
+    const headerRow = rows[0];
+    const maxCol = Math.max(...rows.map(r => Array.isArray(r) ? r.length : 0));
+    const opts = Array.from({length:maxCol}, (_,i) => {
+      const lbl = (Array.isArray(headerRow) && headerRow[i]) ? `${String(headerRow[i]).slice(0,12)}` : `列${i+1}`;
+      return `<option value="${i}">${htmlEscape(lbl)}</option>`;
+    }).join('');
+    document.getElementById('tbCodeCol').innerHTML = opts;
+    document.getElementById('tbNameCol').innerHTML = opts;
+    document.getElementById('tbBalCol').innerHTML = opts;
+    document.getElementById('tbDirCol').innerHTML = '<option value="-1">无</option>' + opts;
+    document.getElementById('tbConfig').classList.remove('hidden');
+    // Store all rows
+    window._tbRows = rows.slice(1).filter(r => Array.isArray(r) && r.some(c => c !== undefined && c !== null && c !== ''));
+    window._tbMaxCol = maxCol;
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseTB() {
+  if (!window._tbRows) { toast('请先上传TB文件'); return; }
+  const codeCol = +document.getElementById('tbCodeCol').value;
+  const nameCol = +document.getElementById('tbNameCol').value;
+  const balCol = +document.getElementById('tbBalCol').value;
+  const dirCol = +document.getElementById('tbDirCol').value;
+
+  tbData = window._tbRows.map(r => ({
+    code: String(r[codeCol] || '').trim(),
+    name: String(r[nameCol] || '').trim(),
+    balance: parseFloat(String(r[balCol] || '0').replace(/[,\s]/g,'')) || 0,
+    direction: dirCol >= 0 ? String(r[dirCol] || '').trim() : '',
+  })).filter(d => d.code || d.name);
+
+  // Preview
+  document.getElementById('tbPreview').innerHTML = `<table><thead><tr><th>科目代码</th><th>科目名称</th><th>期末余额</th><th>方向</th></tr></thead><tbody>` +
+    tbData.slice(0,20).map(d => `<tr><td>${htmlEscape(d.code)}</td><td>${htmlEscape(d.name)}</td><td class="font-mono">${d.balance.toLocaleString()}</td><td>${htmlEscape(d.direction)}</td></tr>`).join('') +
+    (tbData.length > 20 ? `<tr><td colspan="4" class="text-secondary">... 共 ${tbData.length} 条</td></tr>` : '') +
+    '</tbody></table>';
+
+  refreshFillSelects();
+  toast(`✓ 解析完成：${tbData.length} 条科目`);
+}
+
+function refreshFillSelects() {
+  if (!wb) return;
+  const sheetSel = document.getElementById('dfSheet');
+  sheetSel.innerHTML = wb.SheetNames.map((n, i) => `<option value="${i}">${n}</option>`).join('');
+
+  // For fill column, list date columns that are "new" (just rolled forward)
+  const active = dateColumns.filter(d => !d.ignore).sort((a,b) => a.year - b.year);
+  document.getElementById('dfCol').innerHTML = active.map((d, i) => `<option value="${i}">${d.sheetName} / ${d.header} / ${d.colLetter}</option>`).join('');
+  if (active.length > 0) document.getElementById('dfCol').selectedIndex = active.length - 1;
+
+  document.getElementById('dfTplBtn').textContent = api.getTemplates().length > 0 ? `✓ 已加载 ${api.getTemplates().length} 条模板` : '⚠ 未加载模板';
+}
+
+function executeFill() {
+  if (!wb || tbData.length === 0) { toast('请先加载底稿和TB数据'); return; }
+  const templates = api.getTemplates();
+  if (templates.length === 0) { toast('请先在模板管理中配置映射表'); return; }
+
+  const sIdx = +document.getElementById('dfSheet').value;
+  const active = dateColumns.filter(d => !d.ignore).sort((a,b) => a.year - b.year);
+  const colIdx = +document.getElementById('dfCol').value;
+  if (!active[colIdx]) { toast('请选择填数列'); return; }
+  const targetCol = active[colIdx].col;
+  const sheet = wb.Sheets[wb.SheetNames[sIdx]];
+  const ref = XLSX.utils.decode_range(sheet['!ref'] || 'A1');
+  const headerRow = (+document.getElementById('rfHeaderRow').value || 1) - 1;
+
+  // Build a lookup from the sheet: for each row, find the subject code in column 0 or first column
+  // (simplified: scan first column for subject codes)
+  // Actually we need to know which column has the subject code in the working paper.
+  // For now, scan the first column (col 0) for matching codes
+  const subjectCol = 0; // Default: first column has subject code
+
+  // Build index: {code: row}
+  const sheetIndex = {};
+  for (let r = headerRow + 1; r <= ref.e.r; r++) {
+    const addr = XLSX.utils.encode_cell({r, c: subjectCol});
+    const cell = sheet[addr];
+    if (cell) {
+      const val = String(cell.w || cell.v || '').trim();
+      if (val) sheetIndex[val] = r;
+    }
+  }
+
+  // Build template lookup: {stdCode: template}
+  const tplByStdCode = {};
+  templates.forEach(t => { if (t.stdCode) tplByStdCode[t.stdCode] = t; });
+
+  let filled = 0, skipped = 0;
+  const unmatched = [];
+
+  tbData.forEach(tbRow => {
+    const tpl = tplByStdCode[tbRow.code];
+    if (!tpl) { unmatched.push({...tbRow, reason:'模板未找到对应标准科目代码'}); return; }
+
+    // Find row in sheet
+    let targetRow = sheetIndex[tpl.clientCode];
+    if (targetRow === undefined) {
+      // Try by name in other columns
+      for (let r = headerRow + 1; r <= ref.e.r; r++) {
+        for (let c2 = 0; c2 <= ref.e.c; c2++) {
+          const addr2 = XLSX.utils.encode_cell({r, c: c2});
+          const cell2 = sheet[addr2];
+          if (cell2 && String(cell2.w || cell2.v || '').trim() === tpl.clientName) {
+            targetRow = r;
+            break;
+          }
+        }
+        if (targetRow !== undefined) break;
+      }
+    }
+
+    if (targetRow === undefined) { unmatched.push({...tbRow, reason:`底稿未找到行: 代码=${tpl.clientCode}, 名称=${tpl.clientName}`}); return; }
+
+    const targetAddr = XLSX.utils.encode_cell({r: targetRow, c: targetCol});
+    const targetCell = sheet[targetAddr];
+
+    // Skip if has formula
+    if (targetCell && targetCell.f) { skipped++; return; }
+
+    // Determine value sign based on direction
+    let fillVal = tbRow.balance;
+    // Standard: debit subjects (assets/costs) are positive, credit subjects (liabilities/equity/revenue) are positive on credit side
+    // BKD convention: assets normally debit balance (positive), liabilities normally credit balance
+    // If TB direction opposite to template direction, negate
+    if (tpl.direction && tbRow.direction && tpl.direction !== tbRow.direction) {
+      // Different direction: could be a negative balance
+      // Keep as-is; user can adjust
+    }
+
+    // Write
+    sheet[targetAddr] = {
+      t: 'n',
+      v: fillVal,
+      w: fillVal.toLocaleString('zh-CN', {minimumFractionDigits:2, maximumFractionDigits:2})
+    };
+    if (targetCell && targetCell.z) sheet[targetAddr].z = targetCell.z;
+    filled++;
+    fillResult.filledRows = fillResult.filledRows || [];
+    fillResult.filledRows.push({row: targetRow, col: targetCol, code: tbRow.code, name: tbRow.name, value: fillVal});
+  });
+
+  fillResult = { filled, skipped, unmatched };
+  document.getElementById('dfResult').classList.remove('hidden');
+  document.getElementById('dfResult').innerHTML = `<div style="color:var(--accent-2)">✅ 上数完成：填入 ${filled} 个单元格，跳过 ${skipped} 个（有公式），未匹配 ${unmatched.length} 个</div>`;
+
+  if (unmatched.length > 0) {
+    document.getElementById('dfUnmatched').classList.remove('hidden');
+    document.getElementById('dfUnmatched').innerHTML = `<h4 class="text-sm mb2" style="color:var(--accent-3)">⚠ 未匹配科目 (${unmatched.length})</h4>` +
+      unmatched.map(u => `<div class="text-sm" style="color:var(--accent-3);padding:4px 0">· ${htmlEscape(u.code)} ${htmlEscape(u.name)} — ${u.reason}</div>`).join('');
+  }
+
+  toast(`✓ 上数完成：${filled}填, ${skipped}跳, ${unmatched.length}未匹`);
+}
+
+// ==================== VERIFICATION ====================
+function runVerify() {
+  verifyDiffs = [];
+  if (!wb) { toast('请先加载底稿'); return; }
+
+  const doDrCr = document.getElementById('vfDrCrCheck').checked;
+  const doYr = document.getElementById('vfYrCheck').checked;
+
+  let drTotal = 0, crTotal = 0;
+
+  if (doDrCr && fillResult.filledRows) {
+    // Sum all filled values grouped by direction
+    fillResult.filledRows.forEach(fr => {
+      const tbRow = tbData.find(t => t.code === fr.code);
+      if (tbRow) {
+        if (tbRow.direction === '借') drTotal += fr.value;
+        else crTotal += fr.value;
+      }
+    });
+    if (Math.abs(drTotal - crTotal) > 0.01) {
+      verifyDiffs.push({type:'借贷不平衡', detail:`借方合计 ${drTotal.toLocaleString()} ≠ 贷方合计 ${crTotal.toLocaleString()}，差异 ${Math.abs(drTotal-crTotal).toLocaleString()}`});
+    }
+  }
+
+  if (doYr && dateColumns.filter(d => !d.ignore).length >= 2) {
+    const active = dateColumns.filter(d => !d.ignore).sort((a,b) => a.year - b.year);
+    const sIdx = +document.getElementById('dfSheet').value || 0;
+    const sheet = wb.Sheets[wb.SheetNames[sIdx]];
+    const ref = XLSX.utils.decode_range(sheet['!ref'] || 'A1');
+    const hr = (+document.getElementById('rfHeaderRow').value || 1) - 1;
+    // Compare: 期初 (oldest col) + 本期发生 = 期末 (newest col)
+    // Simplified: just compare the two columns for each row and flag large differences
+    let yrDiffs = 0;
+    for (let r = hr + 1; r <= ref.e.r; r++) {
+      const oldAddr = XLSX.utils.encode_cell({r, c: active[0].col});
+      const newAddr = XLSX.utils.encode_cell({r, c: active[active.length-1].col});
+      const oldVal = parseFloat(sheet[oldAddr]?.v) || 0;
+      const newVal = parseFloat(sheet[newAddr]?.v) || 0;
+      if (Math.abs(oldVal) > 0 && Math.abs(oldVal - newVal) > Math.abs(oldVal) * 0.5) {
+        yrDiffs++;
+      }
+    }
+    if (yrDiffs > 0) verifyDiffs.push({type:'年初年末变动较大', detail:`${yrDiffs} 行存在超过50%的异常变动，建议逐项检查`});
+  }
+
+  document.getElementById('vfResult').classList.remove('hidden');
+  if (verifyDiffs.length === 0) {
+    document.getElementById('vfResult').innerHTML = '<div style="color:var(--accent-2)">✅ 校验通过，未发现异常</div>';
+  } else {
+    document.getElementById('vfResult').innerHTML = verifyDiffs.map(d =>
+      `<div class="text-sm mb2" style="color:var(--accent-3)">❌ ${d.type}：${d.detail}</div>`
+    ).join('');
+  }
+  toast('校验完成');
+}
+
+// ==================== TAB 4: EXPORT ====================
+function downloadWorkbook() {
+  if (!wb) { toast('请先加载并处理底稿'); return; }
+  XLSX.writeFile(wb, `BKD底稿_滚存后_${new Date().toISOString().slice(0,10)}.xlsx`, {cellFormula:true, cellStyles:true});
+  toast('✓ 底稿已下载');
+}
+
+function downloadVerifyReport() {
+  const rows = [['校验类型','详情']];
+  verifyDiffs.forEach(d => rows.push([d.type, d.detail]));
+  // Add unmatched section
+  if (fillResult.unmatched && fillResult.unmatched.length > 0) {
+    rows.push(['---','---']);
+    rows.push(['未匹配科目','原因']);
+    fillResult.unmatched.forEach(u => rows.push([u.code+' '+u.name, u.reason]));
+  }
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wbOut = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wbOut, ws, '校验报告');
+  XLSX.writeFile(wbOut, `BKD校验报告_${new Date().toISOString().slice(0,10)}.xlsx`);
+  toast('✓ 校验报告已下载');
+}
+
+function downloadJSONBackup() {
+  const data = {
+    templates: api.getTemplates(),
+    tbData: tbData,
+    fillResult: fillResult,
+    verifyDiffs: verifyDiffs,
+    exportedAt: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `BKD项目备份_${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+  toast('✓ JSON备份已下载');
+}
+
+// ==================== HELPERS ====================
+function htmlEscape(s) { const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+
+// ==================== INIT ====================
+renderTemplates();
+</script>
+
+<script>
+(function() {
+  if (sessionStorage.getItem('bkd-rollforward.html_unlocked')) return;
+  var gate = document.getElementById('pwdGate');
+  var input = document.getElementById('pwdInput');
+  var btn = document.getElementById('pwdBtn');
+  var err = document.getElementById('pwdError');
+  gate.style.display = 'flex';
+
+  async function check() {
+    var pwd = input.value;
+    var buf = new TextEncoder().encode(pwd);
+    var hash = await crypto.subtle.digest('SHA-256', buf);
+    var hex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+    if (hex === '5f6f2138aac618ff50a0751b76144e91468d5139ee38db42b0947ba123e37aaf') {
+      sessionStorage.setItem('bkd-rollforward.html_unlocked', '1');
+      gate.style.display = 'none';
+    } else {
+      err.style.display = 'block';
+      input.value = '';
+      input.focus();
+    }
+  }
+
+  btn.onclick = check;
+  input.onkeydown = function(e) { if (e.key === 'Enter') check(); };
+})();
+</script>
+</body>
+</html>

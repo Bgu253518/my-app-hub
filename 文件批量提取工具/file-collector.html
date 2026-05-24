@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文件批量提取工具</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg-deep: #0a0a14; --bg-card: rgba(22,22,44,0.6);
+  --glass-border: rgba(255,255,255,0.08);
+  --text-primary: #e8e8f0; --text-secondary: #9999b0;
+  --accent-1: #7c5cfc; --accent-2: #5cfca0; --accent-3: #fc5c9c;
+  --radius: 14px; --radius-sm: 8px; --transition: 0.2s ease;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: linear-gradient(160deg, #0a0a14 0%, #12122a 30%, #16163a 60%, #0d0d24 100%);
+  color: var(--text-primary); min-height: 100vh; line-height: 1.6;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 20% 20%, rgba(124,92,252,0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 60%, rgba(252,92,156,0.04) 0%, transparent 50%);
+  pointer-events: none; z-index: 0;
+}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(124,92,252,0.25); border-radius: 3px; }
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,10,20,0.8); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 0 24px; height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header .brand { font-size: 17px; font-weight: 700; }
+.header a { color: var(--text-secondary); text-decoration: none; font-size: 13px; padding: 6px 14px; border: 1px solid var(--glass-border); border-radius: 8px; transition: var(--transition); }
+.header a:hover { color: var(--text-primary); border-color: rgba(124,92,252,0.3); }
+.main { position: relative; z-index: 1; max-width: 1000px; margin: 0 auto; padding: 24px; }
+.section {
+  background: var(--bg-card); border: 1px solid var(--glass-border);
+  border-radius: var(--radius); padding: 24px; margin-bottom: 20px;
+  backdrop-filter: blur(10px);
+}
+.section-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.section-hint { font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; }
+.section-warn { font-size: 12px; color: var(--accent-3); margin-bottom: 16px; }
+
+.folder-zone {
+  border: 2px dashed rgba(124,92,252,0.3); border-radius: var(--radius);
+  padding: 40px 24px; text-align: center; cursor: pointer; transition: var(--transition);
+}
+.folder-zone:hover, .folder-zone.dragover { border-color: var(--accent-1); background: rgba(124,92,252,0.05); }
+.folder-zone .fz-icon { font-size: 36px; margin-bottom: 8px; }
+.folder-zone .fz-text { font-size: 15px; font-weight: 600; }
+.folder-zone .fz-hint { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+.folder-info {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; background: rgba(124,92,252,0.08);
+  border: 1px solid rgba(124,92,252,0.2); border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+}
+.folder-info .fi-icon { font-size: 24px; }
+.folder-info .fi-text { flex: 1; font-size: 13px; }
+.folder-info .fi-count { font-size: 12px; color: var(--accent-2); }
+
+.filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.filter-tag {
+  padding: 6px 14px; border: 1px solid var(--glass-border); border-radius: 20px;
+  background: rgba(22,22,44,0.5); color: var(--text-secondary);
+  font-size: 12px; cursor: pointer; transition: var(--transition); user-select: none;
+}
+.filter-tag:hover { border-color: rgba(124,92,252,0.3); color: var(--text-primary); }
+.filter-tag.active { border-color: var(--accent-1); color: #fff; background: rgba(124,92,252,0.2); }
+
+.file-list { display: flex; flex-direction: column; gap: 4px; max-height: 350px; overflow-y: auto; margin-bottom: 12px; }
+.file-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 10px; border-radius: 4px; font-size: 12px;
+  background: rgba(255,255,255,0.02);
+}
+.file-item:hover { background: rgba(255,255,255,0.04); }
+.file-item .fi-icon { flex-shrink: 0; }
+.file-item .fi-name { flex: 1; word-break: break-all; }
+.file-item .fi-size { color: var(--text-secondary); white-space: nowrap; }
+
+.btn {
+  padding: 10px 20px; border: none; border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: var(--transition); display: inline-flex; align-items: center; gap: 6px;
+}
+.btn-primary { background: var(--accent-1); color: #fff; }
+.btn-primary:hover { background: #9578ff; transform: translateY(-1px); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.btn-secondary { background: rgba(255,255,255,0.06); color: var(--text-primary); border: 1px solid var(--glass-border); }
+.btn-secondary:hover { background: rgba(255,255,255,0.12); }
+.tool-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+
+.result-box {
+  padding: 16px; border-radius: var(--radius-sm);
+  border: 1px solid rgba(92,252,160,0.2); background: rgba(92,252,160,0.06);
+  display: none; margin-top: 16px;
+}
+.result-box.show { display: block; }
+.result-box .result-title { color: #5cfca0; font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+.result-box .result-detail { color: var(--text-secondary); font-size: 12px; }
+
+.processing { display: none; align-items: center; gap: 10px; padding: 16px 0; color: var(--text-secondary); font-size: 13px; }
+.processing.show { display: flex; }
+.spinner { width: 24px; height: 24px; border: 3px solid rgba(124,92,252,0.2); border-top-color: var(--accent-1); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty-state { padding: 40px; text-align: center; color: var(--text-secondary); font-size: 14px; }
+@media (max-width: 640px) {
+  .main { padding: 14px; } .section { padding: 16px; }
+  .folder-zone { padding: 28px 14px; }
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="brand">📂 文件批量提取工具</div>
+  <a href="index.html">← 返回首页</a>
+</div>
+<div class="main">
+
+  <div class="section">
+    <div class="section-title">📂 选择文件夹</div>
+    <div class="section-hint">选择一个文件夹，工具将扫描其中所有文件</div>
+    <div class="folder-zone" id="folderZone">
+      <div class="fz-icon">📁</div>
+      <div class="fz-text">点击选择文件夹</div>
+      <div class="fz-hint">将扫描所选文件夹及其子文件夹中的所有文件</div>
+    </div>
+    <input type="file" id="folderInput" webkitdirectory style="display:none">
+  </div>
+
+  <div class="section" id="resultSection" style="display:none">
+    <div class="folder-info" id="folderInfo">
+      <span class="fi-icon">📁</span>
+      <span class="fi-text" id="folderPath">未选择文件夹</span>
+      <span class="fi-count" id="totalCount">0 个文件</span>
+    </div>
+
+    <div class="section-title">🔍 按类型筛选</div>
+    <div class="filter-bar" id="filterBar"></div>
+
+    <div class="section-title">📋 文件列表 <span style="font-size:12px;color:var(--text-secondary);font-weight:400" id="matchedCount"></span></div>
+    <div class="file-list" id="fileList"></div>
+
+    <div class="tool-actions">
+      <button class="btn btn-primary" id="extractBtn">📦 提取并下载</button>
+      <button class="btn btn-secondary" id="changeFolderBtn">🔄 更换文件夹</button>
+    </div>
+
+    <div class="processing" id="processing">
+      <div class="spinner"></div>
+      <span>正在打包文件...</span>
+    </div>
+
+    <div class="result-box" id="resultBox">
+      <div class="result-title">✅ 提取完成</div>
+      <div class="result-detail" id="resultDetail"></div>
+      <div class="tool-actions">
+        <button class="btn btn-primary" id="downloadBtn">⬇ 下载 ZIP</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const EXT_CATEGORIES = {
+  all: { label: '全部', exts: [] },
+  documents: { label: '📄 文档', exts: ['doc','docx','xls','xlsx','ppt','pptx','pdf','txt','csv','md','wps','rtf'] },
+  images: { label: '🖼️ 图片', exts: ['jpg','jpeg','png','gif','bmp','webp','svg','tiff','tif','ico','heic','heif'] },
+  audio_video: { label: '🎵 音视频', exts: ['mp3','wav','flac','aac','ogg','wma','mp4','avi','mkv','mov','wmv','flv'] },
+  code: { label: '💻 代码', exts: ['py','js','ts','html','css','java','cpp','c','h','cs','php','rb','go','rs','swift','sql','sh','bat','ps1'] },
+  archives: { label: '🗜️ 压缩包', exts: ['zip','rar','7z','tar','gz','bz2','xz'] },
+  other: { label: '📦 其他', exts: [] }
+};
+
+let allFiles = [];
+let matchedFiles = [];
+let currentFilter = 'all';
+let zipBlob = null;
+
+const folderZone = document.getElementById('folderZone');
+const folderInput = document.getElementById('folderInput');
+const resultSection = document.getElementById('resultSection');
+const folderPath = document.getElementById('folderPath');
+const totalCount = document.getElementById('totalCount');
+const filterBar = document.getElementById('filterBar');
+const fileList = document.getElementById('fileList');
+const matchedCount = document.getElementById('matchedCount');
+const extractBtn = document.getElementById('extractBtn');
+const changeFolderBtn = document.getElementById('changeFolderBtn');
+const processing = document.getElementById('processing');
+const resultBox = document.getElementById('resultBox');
+const resultDetail = document.getElementById('resultDetail');
+const downloadBtn = document.getElementById('downloadBtn');
+
+folderZone.onclick = () => folderInput.click();
+
+folderInput.onchange = () => {
+  const files = Array.from(folderInput.files);
+  if (files.length === 0) return;
+  allFiles = files;
+  const path = files[0].webkitRelativePath.split('/')[0];
+  folderPath.textContent = '📁 ' + path;
+  totalCount.textContent = files.length + ' 个文件';
+  resultSection.style.display = 'block';
+  resultBox.classList.remove('show');
+  initFilters();
+  applyFilter('all');
+};
+
+changeFolderBtn.onclick = () => {
+  folderInput.click();
+};
+
+// Init filter tags
+function initFilters() {
+  filterBar.innerHTML = '';
+  Object.entries(EXT_CATEGORIES).forEach(([key, cat]) => {
+    const tag = document.createElement('span');
+    tag.className = 'filter-tag' + (key === 'all' ? ' active' : '');
+    tag.textContent = cat.label;
+    tag.dataset.filter = key;
+    tag.onclick = () => applyFilter(key);
+    filterBar.appendChild(tag);
+  });
+}
+
+function applyFilter(key) {
+  currentFilter = key;
+  document.querySelectorAll('.filter-tag').forEach(t => t.classList.toggle('active', t.dataset.filter === key));
+
+  if (key === 'all') {
+    matchedFiles = allFiles.slice();
+  } else if (key === 'other') {
+    const allExts = new Set();
+    Object.entries(EXT_CATEGORIES).forEach(([k, cat]) => {
+      if (k !== 'all' && k !== 'other') cat.exts.forEach(e => allExts.add(e.toLowerCase()));
+    });
+    matchedFiles = allFiles.filter(f => {
+      const ext = f.name.split('.').pop().toLowerCase();
+      return !allExts.has(ext);
+    });
+  } else {
+    const exts = EXT_CATEGORIES[key].exts;
+    matchedFiles = allFiles.filter(f => {
+      const ext = f.name.split('.').pop().toLowerCase();
+      return exts.includes(ext);
+    });
+  }
+
+  renderFileList();
+  zipBlob = null;
+  resultBox.classList.remove('show');
+}
+
+function renderFileList() {
+  if (matchedFiles.length === 0) {
+    fileList.innerHTML = '<div class="empty-state">没有匹配的文件</div>';
+    matchedCount.textContent = '(0 个文件)';
+    return;
+  }
+  matchedCount.textContent = `(${matchedFiles.length} 个文件)`;
+  // Show first 200 files
+  const showFiles = matchedFiles.slice(0, 200);
+  fileList.innerHTML = showFiles.map(f => {
+    const ext = f.name.split('.').pop().toLowerCase();
+    const icons = {
+      pdf:'📄', doc:'📝', docx:'📝', xls:'📊', xlsx:'📊', ppt:'📑', pptx:'📑',
+      jpg:'🖼️', jpeg:'🖼️', png:'🖼️', gif:'🖼️', mp3:'🎵', mp4:'🎬', zip:'🗜️', rar:'🗜️',
+      py:'🐍', js:'📜', html:'🌐', css:'🎨', txt:'📄'
+    };
+    const icon = icons[ext] || '📄';
+    const size = f.size < 1024 ? f.size + ' B' : f.size < 1024*1024 ? (f.size/1024).toFixed(1)+' KB' : (f.size/(1024*1024)).toFixed(1)+' MB';
+    return `<div class="file-item"><span class="fi-icon">${icon}</span><span class="fi-name">${escapeHtml(f.webkitRelativePath || f.name)}</span><span class="fi-size">${size}</span></div>`;
+  }).join('');
+
+  if (matchedFiles.length > 200) {
+    fileList.innerHTML += `<div style="padding:8px;text-align:center;color:var(--text-secondary);font-size:12px">... 还有 ${matchedFiles.length - 200} 个文件</div>`;
+  }
+}
+
+extractBtn.onclick = async () => {
+  if (matchedFiles.length === 0) {
+    alert('没有匹配的文件可提取');
+    return;
+  }
+
+  extractBtn.disabled = true;
+  extractBtn.textContent = '⏳ 打包中...';
+  processing.classList.add('show');
+
+  try {
+    const zip = new JSZip();
+    // Group by parent folder
+    const parentFolders = new Set();
+    matchedFiles.forEach(f => {
+      const parts = f.webkitRelativePath.split('/');
+      if (parts.length > 1) parentFolders.add(parts[0]);
+    });
+
+    for (const file of matchedFiles) {
+      const parts = file.webkitRelativePath.split('/');
+      const parentFolder = parts.length > 1 ? parts[0] : '';
+      const fileName = parts[parts.length - 1];
+      // Rename as "parent-原文件名"
+      const newName = parentFolder ? parentFolder + '-' + fileName : fileName;
+
+      // Handle duplicates in zip
+      let finalName = newName;
+      let i = 2;
+      while (zip.files[finalName]) {
+        const dot = newName.lastIndexOf('.');
+        if (dot > 0) finalName = newName.slice(0, dot) + '_' + i + newName.slice(dot);
+        else finalName = newName + '_' + i;
+        i++;
+      }
+
+      const bytes = await file.arrayBuffer();
+      zip.file(finalName, bytes);
+    }
+
+    const content = await zip.generateAsync({ type: 'blob' });
+    zipBlob = content;
+
+    resultDetail.textContent = `成功提取 ${matchedFiles.length} 个文件，打包为 ZIP`;
+    resultBox.classList.add('show');
+  } catch (err) {
+    alert('提取失败: ' + err.message);
+    console.error(err);
+  } finally {
+    extractBtn.disabled = false;
+    extractBtn.textContent = '📦 提取并下载';
+    processing.classList.remove('show');
+  }
+};
+
+downloadBtn.onclick = () => {
+  if (!zipBlob) return;
+  const url = URL.createObjectURL(zipBlob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '文件提取_' + new Date().toISOString().slice(0,10) + '.zip';
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+function escapeHtml(str) {
+  if (!str) return '';
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+</script>
+</body>
+</html>

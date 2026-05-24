@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude API Key Vault — Private & Encrypted</title>
+<style>
+:root {
+  --bg: #0a0a14; --card: rgba(22,22,44,0.7); --border: rgba(255,255,255,0.08);
+  --text: #e8e8f0; --sub: #9999b0; --accent: #7c5cfc; --green: #5cfca0; --red: #fc5c9c;
+  --radius: 14px; --r-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background: linear-gradient(160deg,#0a0a14 0%,#12122a 30%,#16163a 60%,#0d0d24 100%);
+  color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 20% 20%, rgba(124,92,252,0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 60%, rgba(252,92,156,0.04) 0%, transparent 50%);
+  pointer-events: none; z-index: 0;
+}
+
+.container { position: relative; z-index: 1; width: 100%; max-width: 520px; padding: 20px; }
+
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 28px 24px; margin-bottom: 16px;
+  backdrop-filter: blur(12px);
+}
+
+/* Lock Screen */
+.lock-icon { font-size: 48px; text-align: center; margin-bottom: 12px; }
+.lock-title { font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 4px; }
+.lock-sub { font-size: 13px; color: var(--sub); text-align: center; margin-bottom: 24px; }
+.lock-input {
+  width: 100%; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04); color: var(--text); font-size: 15px; outline: none;
+  margin-bottom: 12px; transition: border-color 0.2s;
+}
+.lock-input:focus { border-color: var(--accent); }
+
+.btn {
+  display: block; width: 100%; padding: 12px; border-radius: 8px; font-size: 14px;
+  font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; text-align: center;
+}
+.btn-primary { background: linear-gradient(135deg, #7c5cfc, #5ccafc); color: #fff; }
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(124,92,252,0.3); }
+.btn-outline {
+  background: transparent; border: 1px solid var(--border); color: var(--sub);
+  margin-top: 8px;
+}
+.btn-outline:hover { border-color: var(--accent); color: var(--text); }
+.btn-danger { background: transparent; border: 1px solid rgba(252,92,156,0.3); color: var(--red); margin-top: 8px; }
+.btn-danger:hover { background: rgba(252,92,156,0.08); }
+.btn-sm { display: inline; width: auto; padding: 6px 14px; font-size: 11px; border-radius: 4px; }
+
+.msg { font-size: 12px; min-height: 18px; margin-top: 8px; text-align: center; }
+.msg.error { color: var(--red); }
+.msg.success { color: var(--green); }
+
+/* Main Vault */
+.vault-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.vault-title { font-size: 16px; font-weight: 700; }
+.badge {
+  font-size: 10px; padding: 3px 10px; border-radius: 12px;
+  background: rgba(92,252,160,0.1); color: var(--green); border: 1px solid rgba(92,252,160,0.2);
+}
+
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 12px; color: var(--sub); margin-bottom: 4px; }
+.field .input-row { display: flex; gap: 8px; }
+.field input {
+  flex: 1; padding: 10px 14px; border-radius: 6px; border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04); color: var(--text); font-size: 13px; outline: none;
+  font-family: monospace;
+}
+.field input:focus { border-color: var(--accent); }
+.field .toggle-btn {
+  padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04); color: var(--sub); font-size: 11px; cursor: pointer;
+  white-space: nowrap;
+}
+.field .toggle-btn:hover { border-color: var(--accent); color: var(--text); }
+
+.status-row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; }
+.status-dot.set { background: var(--green); }
+.status-dot.unset { background: var(--red); }
+
+.security-notice {
+  background: rgba(92,252,160,0.05); border: 1px solid rgba(92,252,160,0.15);
+  border-radius: var(--r-sm); padding: 12px 14px; margin-top: 16px;
+  font-size: 11px; color: var(--sub); line-height: 1.6;
+}
+.security-notice strong { color: var(--green); }
+
+.actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.actions .btn { flex: 1; min-width: 120px; }
+
+.hidden { display: none !important; }
+
+.toast {
+  position: fixed; bottom: 20px; right: 20px; z-index: 100;
+  background: rgba(22,22,44,0.95); border: 1px solid var(--border);
+  padding: 10px 18px; border-radius: var(--r-sm); font-size: 12px;
+  backdrop-filter: blur(12px); transform: translateY(100px); opacity: 0; transition: all 0.3s;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+</style>
+<script>
+(function() {
+  if (sessionStorage.getItem('myapp_unlocked')) return;
+  var overlay = document.createElement('div');
+  overlay.id = 'pwd-overlay';
+  overlay.innerHTML = '<div style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0a0a1a;z-index:999999;display:flex;align-items:center;justify-content:center;"><div style="background:#16213e;padding:40px;border-radius:16px;border:1px solid #D2691E;max-width:360px;width:90%%;text-align:center;"><div style="font-size:40px;margin-bottom:10px;">🔒</div><h2 style="color:#D2691E;margin-bottom:12px;font-size:18px;">请输入密码</h2><input type="password" id="pwd-input" style="width:100%%;padding:12px;border-radius:8px;border:1px solid #3a3a5a;background:#0f3460;color:#e0e0e0;font-size:16px;text-align:center;box-sizing:border-box;" placeholder="输入密码" autofocus><button id="pwd-btn" style="margin-top:12px;width:100%%;padding:10px;border:none;border-radius:8px;background:#D2691E;color:#fff;font-size:15px;cursor:pointer;">解锁</button><p id="pwd-error" style="color:#c62828;font-size:13px;margin-top:8px;display:none;">密码错误，请重试</p></div></div>';
+  document.documentElement.appendChild(overlay);
+  
+  async function checkPwd() {
+    var pwd = document.getElementById('pwd-input').value;
+    var buf = new TextEncoder().encode(pwd);
+    var hash = await crypto.subtle.digest('SHA-256', buf);
+    var hex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+    if (hex === '5f6f2138aac618ff50a0751b76144e91468d5139ee38db42b0947ba123e37aaf') {
+      sessionStorage.setItem('myapp_unlocked', '1');
+      overlay.style.display = 'none';
+    } else {
+      document.getElementById('pwd-error').style.display = 'block';
+    }
+  }
+  
+  document.getElementById('pwd-btn').onclick = checkPwd;
+  document.getElementById('pwd-input').onkeydown = function(e) {
+    if (e.key === 'Enter') checkPwd();
+  };
+})();
+</script>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ====== LOCK SCREEN ====== -->
+  <div id="lockScreen">
+    <div class="card">
+      <div class="lock-icon">🔐</div>
+      <div class="lock-title">Claude API Key Vault</div>
+      <div class="lock-sub">AES-256-GCM Encrypted · 100% Local Storage</div>
+
+      <div id="unlockForm">
+        <input type="password" class="lock-input" id="masterPass" placeholder="Enter your personal password" autocomplete="off" autofocus>
+        <button class="btn btn-primary" onclick="doUnlock()">Unlock Vault</button>
+        <p class="msg" id="unlockMsg"></p>
+      </div>
+
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+        <p style="font-size:10px;color:var(--sub);text-align:center;line-height:1.6">
+          <strong style="color:var(--green)">Your key NEVER leaves this browser.</strong><br>
+          Encrypted with AES-256-GCM. Derived via PBKDF2 (200,000 iterations).<br>
+          No network requests. No cloud sync. No server upload.
+        </p>
+        <div style="text-align:center;margin-top:14px">
+          <a href="ClaudeCodeSetup.bat" download
+             style="display:inline-block;padding:8px 18px;border-radius:6px;background:rgba(124,92,252,0.15);border:1px solid rgba(124,92,252,0.3);color:var(--accent);font-size:11px;text-decoration:none;font-weight:600;transition:all 0.2s"
+             onmouseover="this.style.background='rgba(124,92,252,0.25)'"
+             onmouseout="this.style.background='rgba(124,92,252,0.15)'">
+            Download Setup Script (New PC One-Click Install)
+          </a>
+          <p style="font-size:9px;color:var(--sub);margin-top:6px">Run this .bat on any Windows PC to auto-setup Node.js + Git + Claude Code</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== VAULT ====== -->
+  <div id="vaultScreen" class="hidden">
+    <div class="card">
+      <div class="vault-header">
+        <span class="vault-title">🔑 API Key Vault</span>
+        <span class="badge" id="encStatus">AES-256 Encrypted</span>
+      </div>
+
+      <div class="status-row">
+        <span class="status-dot" id="keyDot"></span>
+        <span style="font-size:12px" id="keyLabel">No key configured</span>
+      </div>
+
+      <!-- Anthropic / Claude Key -->
+      <div class="field">
+        <label>Anthropic API Key (Claude)</label>
+        <div class="input-row">
+          <input type="password" id="anthropicKey" placeholder="sk-ant-api03-..." autocomplete="off">
+          <button class="toggle-btn" onclick="toggleVis('anthropicKey')">Show</button>
+        </div>
+      </div>
+
+      <!-- OpenAI Key (optional) -->
+      <div class="field">
+        <label>OpenAI API Key (Optional)</label>
+        <div class="input-row">
+          <input type="password" id="openaiKey" placeholder="sk-..." autocomplete="off">
+          <button class="toggle-btn" onclick="toggleVis('openaiKey')">Show</button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="saveKeys()">Save & Encrypt Keys</button>
+
+      <!-- Actions -->
+      <div class="actions">
+        <button class="btn btn-outline" onclick="exportBackup()">Export Encrypted Backup</button>
+        <button class="btn btn-outline" onclick="importBackup()">Import Backup</button>
+        <button class="btn btn-outline" onclick="copyToClipboard()">Copy Key to Clipboard</button>
+      </div>
+      <div class="actions">
+        <button class="btn btn-outline" onclick="lockVault()">Lock Vault</button>
+        <button class="btn btn-danger" onclick="destroyVault()">Destroy All Data</button>
+      </div>
+
+      <!-- Security Notice -->
+      <div class="security-notice">
+        <strong>Security Guarantees:</strong><br>
+        1. Your API key is encrypted with <strong>AES-256-GCM</strong> before storage<br>
+        2. Encryption key derived via <strong>PBKDF2</strong> (200,000 SHA-256 iterations)<br>
+        3. All data stored in <strong>localStorage only</strong> — your browser, your disk<br>
+        4. This page makes <strong>ZERO network requests</strong> after loading<br>
+        5. No analytics, no telemetry, no cloud sync, no CDN callbacks<br>
+        6. On a shared PC: <strong>Lock the vault or close the browser</strong> when done<br>
+        7. To move between PCs: <strong>Export encrypted backup</strong> to USB
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== Crypto Engine ====================
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+
+async function sha256(text) {
+  const h = await crypto.subtle.digest('SHA-256', encoder.encode(text));
+  return Array.from(new Uint8Array(h)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function deriveKey(password, salt) {
+  const km = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 200000, hash: 'SHA-256' },
+    km, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+  );
+}
+
+async function encrypt(plaintext, password) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveKey(password, salt);
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encoder.encode(plaintext));
+  const combined = new Uint8Array(salt.length + iv.length + new Uint8Array(ct).length);
+  combined.set(salt, 0); combined.set(iv, 16); combined.set(new Uint8Array(ct), 28);
+  return btoa(String.fromCharCode(...combined));
+}
+
+async function decrypt(encB64, password) {
+  try {
+    const combined = Uint8Array.from(atob(encB64), c => c.charCodeAt(0));
+    const key = await deriveKey(password, combined.slice(0, 16));
+    const plain = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: combined.slice(16, 28) }, key, combined.slice(28)
+    );
+    return decoder.decode(plain);
+  } catch { return null; }
+}
+
+// ==================== Storage Keys ====================
+const SK = { HASH: '_cv_ph', DATA: '_cv_data' };
+
+// ==================== DOM ====================
+const $ = id => document.getElementById(id);
+
+// ==================== State ====================
+let masterPass = '';
+let keys = { anthropic: '', openai: '' };
+
+// ==================== FIXED PASSWORD ====================
+// Only the SHA-256 hash is stored here. The password itself is never in source code.
+// SHA-256 is one-way — you cannot reverse the hash to get the password.
+const FIXED_HASH = '9228edf1e1859270c1cc4939937f40d6d61a805f9989d0c5d1f7ad88d25dc7ad';
+
+// ==================== Init ====================
+(function init() {
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') doUnlock();
+  });
+})();
+
+// ==================== Unlock ====================
+async function doUnlock() {
+  const pw = $('masterPass').value;
+  const msg = $('unlockMsg');
+  if (!pw) return;
+
+  const inputHash = await sha256(pw);
+  if (inputHash !== FIXED_HASH) {
+    msg.textContent = 'Wrong password'; msg.className = 'msg error';
+    return;
+  }
+
+  // Store hash for data encryption key derivation
+  localStorage.setItem(SK.HASH, FIXED_HASH);
+
+  masterPass = pw;
+  await loadData();
+  showVault();
+}
+
+function showVault() {
+  $('lockScreen').classList.add('hidden');
+  $('vaultScreen').classList.remove('hidden');
+  $('anthropicKey').value = keys.anthropic;
+  $('openaiKey').value = keys.openai;
+  updateStatus();
+  $('masterPass').value = '';
+}
+
+// ==================== Lock ====================
+function lockVault() {
+  masterPass = '';
+  keys = { anthropic: '', openai: '' };
+  $('vaultScreen').classList.add('hidden');
+  $('lockScreen').classList.remove('hidden');
+  $('unlockMsg').textContent = '';
+  toast('Vault locked');
+}
+
+// ==================== Save / Load ====================
+async function saveKeys() {
+  keys.anthropic = $('anthropicKey').value.trim();
+  keys.openai = $('openaiKey').value.trim();
+  await persistData();
+  updateStatus();
+  toast('Keys encrypted and saved. Never transmitted.');
+}
+
+async function persistData() {
+  const enc = await encrypt(JSON.stringify(keys), masterPass);
+  localStorage.setItem(SK.DATA, enc);
+}
+
+async function loadData() {
+  const enc = localStorage.getItem(SK.DATA);
+  if (!enc) return;
+  const json = await decrypt(enc, masterPass);
+  if (json) {
+    try { keys = JSON.parse(json); } catch { keys = { anthropic: '', openai: '' }; }
+  }
+}
+
+function updateStatus() {
+  const dot = $('keyDot');
+  const label = $('keyLabel');
+  if (keys.anthropic) {
+    dot.className = 'status-dot set';
+    label.textContent = 'Anthropic key configured (' + keys.anthropic.slice(0, 14) + '...)';
+  } else {
+    dot.className = 'status-dot unset';
+    label.textContent = 'No API key configured';
+  }
+}
+
+// ==================== Export / Import ====================
+async function exportBackup() {
+  if (!keys.anthropic && !keys.openai) { toast('No keys to export'); return; }
+  const backup = {
+    v: 1,
+    data: await encrypt(JSON.stringify(keys), masterPass),
+    hash: localStorage.getItem(SK.HASH),
+    exportedAt: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'claude-vault-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+  toast('Encrypted backup exported. Save to USB.');
+}
+
+function importBackup() {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json';
+  inp.onchange = async function() {
+    const file = this.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const backup = JSON.parse(text);
+      if (!backup.v || !backup.data) { toast('Invalid backup file', 'error'); return; }
+      // Restore password hash
+      if (backup.hash) localStorage.setItem(SK.HASH, backup.hash);
+      // Restore encrypted data
+      localStorage.setItem(SK.DATA, backup.data);
+      // Re-lock to force re-auth
+      lockVault();
+      toast('Backup imported. Unlock with your master password.');
+    } catch { toast('Invalid backup file', 'error'); }
+  };
+  inp.click();
+}
+
+// ==================== Helpers ====================
+function toggleVis(id) { const el = $(id); el.type = el.type === 'password' ? 'text' : 'password'; }
+
+function copyToClipboard() {
+  if (!keys.anthropic) { toast('No key to copy'); return; }
+  navigator.clipboard.writeText(keys.anthropic).then(
+    () => toast('API key copied to clipboard. Clear clipboard after use.'),
+    () => toast('Copy failed. Please select and copy manually.')
+  );
+}
+
+function destroyVault() {
+  if (!confirm('PERMANENTLY DELETE all data? This cannot be undone.\n\nThis removes your encrypted password and API keys.')) return;
+  Object.values(SK).forEach(k => localStorage.removeItem(k));
+  masterPass = ''; keys = { anthropic: '', openai: '' };
+  location.reload();
+}
+
+function toast(msg) {
+  const el = $('toast');
+  el.textContent = msg; el.className = 'toast show';
+  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
