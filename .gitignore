@@ -1,0 +1,7 @@
+node_modules/
+out/
+.playwright_profile/
+.douyin_cookies.json
+.cookies.txt
+__pycache__/
+*.pyc

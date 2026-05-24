@@ -1,0 +1,18 @@
+{
+  "id": "ai-video-generator-v2",
+  "name": "ai-video-generator-v2",
+  "version": "2.1.0",
+  "description": "AI视频生成工作流 v2.1",
+  "groups": [
+    "0. 学习参考（可选）",
+    "1. 环境与需求",
+    "2. 文案与分镜优化",
+    "3. 声音与配乐",
+    "4. 代码生成与渲染",
+    "5. 审核与修复"
+  ],
+  "nodes": 24,
+  "connections": 23,
+  "loops": 3,
+  "saved_at": "2026-05-25"
+}

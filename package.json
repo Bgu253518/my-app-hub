@@ -1,0 +1,25 @@
+{
+  "name": "ai-video-template",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npx remotion studio",
+    "render": "npx remotion render AiVideo out/video.mp4",
+    "render:high": "npx remotion render AiVideo out/video.mp4 --codec=h264 --crf=0",
+    "audio": "python generate_audio.py"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.465",
+    "@remotion/lottie": "^4.0.465",
+    "@remotion/paths": "4.0.465",
+    "@remotion/shapes": "4.0.465",
+    "@remotion/transitions": "^4.0.465",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.465"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "typescript": "^5.4.0"
+  }
+}
