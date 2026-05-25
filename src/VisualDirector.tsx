@@ -8,9 +8,11 @@ import {
   interpolate,
   spring,
   Img,
+  getInputProps,
 } from "remotion";
 import { getAnimationStyle, getExitStyle, getGlitchStyle } from "./animation-presets";
 import PostFXWrap, { PostFXConfig } from "./postFX";
+import CaptionOverlay from "./CaptionOverlay";
 
 /* ─── Types ─────────────────────────────────────────────── */
 
@@ -23,6 +25,7 @@ interface SceneElement {
   animation_out: { type: string; duration: number };
   text_effect?: string;
   emphasis?: string;
+  start_delay?: number; // seconds offset before animation starts (for progressive reveal)
 }
 
 interface Scene {
@@ -36,6 +39,7 @@ interface Scene {
     color_palette: string[];
     animation: string;
     effect: string;
+    image?: string; // filename in public/images/ for full-screen background
   };
   elements: SceneElement[];
   transition_to_next: {
@@ -113,12 +117,16 @@ const BgLayer: React.FC<{
     []
   );
 
+  const bgImage = scene.background.image;
+
   return (
     <div
       style={{
         position: "absolute",
         inset: 0,
-        background: bgGradient(styleName, palette),
+        background: bgImage
+          ? `linear-gradient(rgba(10,10,10,0.55), rgba(10,10,14,0.7)), url(${staticFile("images/" + bgImage)}) center/cover no-repeat`
+          : bgGradient(styleName, palette),
       }}
     >
       {/* Geometric particles */}
@@ -173,20 +181,25 @@ const SceneElementRenderer: React.FC<{
   sceneFrames: number;
   fps: number;
 }> = ({ el, styleName, palette, frame, sceneFrames, fps }) => {
+  const delayFrames = Math.round((el.start_delay || 0) * fps);
+  const adjustedFrame = Math.max(0, frame - delayFrames);
   const inDur = Math.round(el.animation_in.duration * fps);
   const outDur = Math.round(el.animation_out.duration * fps);
   const outStart = sceneFrames - outDur;
 
+  // Wait until start_delay has passed
+  if (frame < delayFrames) return null;
+
   // Choose animation style based on phase
   let animStyle: React.CSSProperties = {};
-  if (frame < inDur) {
-    animStyle = getAnimationStyle(el.animation_in.type, frame, inDur, fps);
+  if (adjustedFrame < inDur) {
+    animStyle = getAnimationStyle(el.animation_in.type, adjustedFrame, inDur, fps);
   } else if (frame >= outStart) {
     animStyle = getExitStyle(el.animation_out.type, frame - outStart, outDur);
   } else {
     // Emphasis (pulse) in the middle
     if (el.emphasis === "pulse") {
-      const breathe = Math.sin((frame / fps) * Math.PI * 2) * 0.04 + 1;
+      const breathe = Math.sin((adjustedFrame / fps) * Math.PI * 2) * 0.04 + 1;
       animStyle = { transform: `scale(${breathe})` };
     } else {
       animStyle = { opacity: 1 };
@@ -196,7 +209,7 @@ const SceneElementRenderer: React.FC<{
   // Glitch text effect
   let glitchStyle: React.CSSProperties = {};
   if (el.text_effect === "glitch") {
-    glitchStyle = getGlitchStyle(frame);
+    glitchStyle = getGlitchStyle(adjustedFrame);
   }
 
   const textColor = getTextColor(styleName);
@@ -252,6 +265,23 @@ const SceneElementRenderer: React.FC<{
         </div>
       );
 
+    case "image":
+      return (
+        <Img
+          src={staticFile(el.content)}
+          style={{
+            position: "absolute",
+            left: x,
+            top: y,
+            transform: `translate(-50%, -50%) scale(${scale})`,
+            maxWidth: "100%",
+            maxHeight: "100%",
+            zIndex: 5,
+            ...animStyle,
+          }}
+        />
+      );
+
     default:
       return null;
   }
@@ -267,7 +297,6 @@ const SceneRenderer: React.FC<{
 }> = ({ scene, styleName, fps, sceneFrames }) => {
   const frame = useCurrentFrame();
   const palette = scene.background.color_palette;
-  const textColor = getTextColor(styleName);
   const defaultFx: PostFXConfig = scene.postFX || {
     chromatic: false,
     vignette: styleName === "温暖叙事风",
@@ -283,30 +312,6 @@ const SceneRenderer: React.FC<{
         frame={frame}
         totalFrames={sceneFrames}
       />
-
-      {/* Narration subtitle bar (bottom) */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 60,
-          left: 80,
-          right: 80,
-          textAlign: "center",
-          zIndex: 10,
-        }}
-      >
-        <span
-          style={{
-            fontFamily: FONT_FAMILY,
-            fontSize: 20,
-            color: textColor,
-            opacity: 0.7,
-            letterSpacing: 2,
-          }}
-        >
-          {scene.narration}
-        </span>
-      </div>
 
       {/* Scene elements */}
       {scene.elements?.map((el, i) => (
@@ -361,10 +366,10 @@ const LoadingState: React.FC = () => (
 
 /* ─── Main Visual Director ──────────────────────────────── */
 
-const VisualDirectorVideo: React.FC<{
-  storyboard?: Storyboard;
-}> = ({ storyboard }) => {
+const VisualDirectorVideo: React.FC = () => {
   const fps = 30;
+  const inputProps = getInputProps();
+  const storyboard = (inputProps?.storyboard as Storyboard | undefined);
 
   if (!storyboard || !storyboard.scenes) {
     return <LoadingState />;
@@ -391,6 +396,9 @@ const VisualDirectorVideo: React.FC<{
     <AbsoluteFill style={{ background: "#0a0a0a" }}>
       {/* Audio track: copied by render_engine to public/audio/narration.mp3 */}
       <Audio src={staticFile("audio/narration.mp3")} />
+
+      {/* Bilingual caption overlay (frame-position-aware) */}
+      <CaptionOverlay scenes={scenes} fps={fps} language="auto" />
 
       {/* Auto-adjust total duration */}
       <div style={{ display: "none" }}>

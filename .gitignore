@@ -7,3 +7,10 @@ __pycache__/
 *.pyc
 .claude/
 excel-column-sum/
+
+# AI视频生成工作流 — 生成产物
+output/
+render_output/*.mp4
+render_output/*.mp3
+*.mp3
+public/audio/
