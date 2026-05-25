@@ -4,6 +4,8 @@ import {
   Sequence, Audio, interpolate, spring, staticFile, Composition,
 } from "remotion";
 
+import VisualDirectorVideo from "./VisualDirector";
+
 const CYAN = "#00d4ff"; const PURPLE = "#7c3aed"; const RED = "#ff6b6b";
 const WHITE = "#e2e8f0"; const DARK = "#0a0a14"; const GRAY = "#64748b";
 const FONT = '"Microsoft YaHei","PingFang SC",sans-serif';
@@ -248,14 +250,25 @@ const MainVideo: React.FC = () => (
   <AbsoluteFill>
     <Audio src={staticFile("audio/narration.mp3")} />
     <CaptionBar />
-    {[[S[0],S[1]-S[0],Scene1],[S[1]-8,S[2]-S[1]+16,Scene2],[S[2]-8,S[3]-S[2]+16,Scene3],[S[3]-8,S[4]-S[3]+16,Scene4],[S[4]-8,S[5]-S[4]+16,Scene5],[S[5]-8,S[6]-S[5]+16,Scene6],[S[6]-8,S[7]-S[6]+8,Scene7]].map(([from,dur,Comp],i) =>
-      <Sequence key={i} from={from as number} durationInFrames={dur as number}>
-        <FadeWrap frames={dur as number}><Comp /></FadeWrap>
-      </Sequence>
-    )}
+    {[[S[0],S[1]-S[0],Scene1],[S[1]-8,S[2]-S[1]+16,Scene2],[S[2]-8,S[3]-S[2]+16,Scene3],[S[3]-8,S[4]-S[3]+16,Scene4],[S[4]-8,S[5]-S[4]+16,Scene5],[S[5]-8,S[6]-S[5]+16,Scene6],[S[6]-8,S[7]-S[6]+8,Scene7]].map(([from,dur,Comp],i) => {
+      const SceneComp = Comp as React.FC;
+      return <Sequence key={i} from={from as number} durationInFrames={dur as number}>
+        <FadeWrap frames={dur as number}><SceneComp /></FadeWrap>
+      </Sequence>;
+    })}
   </AbsoluteFill>
 );
 
 export const Root: React.FC = () => (
-  <Composition id="AiVideo" component={MainVideo} durationInFrames={910} fps={30} width={1920} height={1080} />
+  <>
+    <Composition id="AiVideo" component={MainVideo} durationInFrames={910} fps={30} width={1920} height={1080} />
+    <Composition
+      id="VisualDirectorVideo"
+      component={VisualDirectorVideo}
+      durationInFrames={2700}
+      fps={30}
+      width={1920}
+      height={1080}
+    />
+  </>
 );

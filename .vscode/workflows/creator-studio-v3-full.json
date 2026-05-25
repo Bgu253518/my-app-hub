@@ -1,0 +1,650 @@
+{
+  "id": "creator-studio-v3-p1",
+  "name": "创作者智能片场 v3 (完整版)",
+  "version": "3.1.0",
+  "description": "5车间18工位：创意熔炼→叙事锻造→视觉翻译→自动装配→分发进化",
+  "nodes": [
+    {
+      "id": "start-1",
+      "type": "start",
+      "name": "start-1",
+      "position": {
+        "x": 60,
+        "y": 320
+      },
+      "data": {
+        "label": "Start"
+      }
+    },
+    {
+      "id": "group-workshop-0",
+      "type": "group",
+      "name": "group-workshop-0",
+      "position": {
+        "x": 200,
+        "y": 50
+      },
+      "style": {
+        "width": 540,
+        "height": 580
+      },
+      "data": {
+        "label": "🔴 车间0：创意熔炼"
+      }
+    },
+    {
+      "id": "prompt-core-idea",
+      "type": "prompt",
+      "name": "prompt-core-idea",
+      "parentId": "group-workshop-0",
+      "position": {
+        "x": 22,
+        "y": 30
+      },
+      "data": {
+        "label": "0.1 🔴 核心观点打磨",
+        "prompt": "写下你「绝不能在视频中被删掉的一句话」。\n\n这就是你的核心观点。它必须：\n- 足够锋利（让人听完想转发）\n- 足够具体（不是「努力很重要」，而是「别学提示词，要学思维模型」）\n- 是你真正相信的\n\n写完之后，AI 会基于这句话帮你搜集素材、设计角度。"
+      }
+    },
+    {
+      "id": "agent-material",
+      "type": "subAgent",
+      "name": "agent-material",
+      "parentId": "group-workshop-0",
+      "position": {
+        "x": 22,
+        "y": 150
+      },
+      "data": {
+        "label": "0.2 🔵 素材弹药装填",
+        "description": "调查记者模式：搜反直觉数据/翻车案例/高赞反对意见",
+        "agentDefinition": "General-purpose agent for code modifications, file creation/editing, and shell execution.",
+        "prompt": "## 数据持久化\n工作流使用 .workflow_state/ 目录跨节点共享数据。\n\n写入状态文件：\n- 将素材结果写入 .workflow_state/materials.txt\n\n---\n\n你是一位调查记者。为核心观点搜集「有摩擦感」的真实素材。\n\n核心观点：{上游输入}\n\n搜集要求：\n1. 反直觉数据：看起来不可能但是真的（1条，附来源）\n2. 翻车案例：按常理出牌结果栽了的（1个）\n3. 高赞反对意见：评论区最刺耳但点赞很多的（1条）\n禁止使用「随着XX发展」「在当今社会」等万能废话。\n\n每一条素材必须标注：「可用于什么角度」\n\n## 循环与异常处理\n- 如果这是第3轮全部重来，请在输出开头标注【建议直接进入角度阶段】\n- 素材搜集出错时重试一次，仍失败则输出已有素材并继续",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "agent-angle",
+      "type": "subAgent",
+      "name": "agent-angle",
+      "parentId": "group-workshop-0",
+      "position": {
+        "x": 22,
+        "y": 290
+      },
+      "data": {
+        "label": "0.3 🔵 多维角度爆破",
+        "description": "基于真实素材设计5个切入角度",
+        "agentDefinition": "General-purpose agent for code modifications, file creation/editing, and shell execution.",
+        "prompt": "## 数据持久化\n工作流使用 .workflow_state/ 目录跨节点共享数据。\n\n读取状态文件：\n- .workflow_state/core_idea.txt — 核心观点\n- .workflow_state/materials.txt — 真实素材\n\n写入状态文件：\n- 将完整角度方案写入 .workflow_state/angles.txt\n\n当前指令/反馈：{上游输入}\n（完整上下文已从 .workflow_state/ 中读取）\n---\n\n你是一位资深选题策划。基于核心观点和真实素材，设计5个切入角度。\n\n要求：\n1. 反常识角度：用「反直觉数据」做钩子\n2. 情感共鸣角度：用「翻车案例」引发共情\n3. 实用干货角度：直接给步骤/清单/工具\n4. 争议挑战角度：回应「高赞反对意见」\n5. 趋势预判角度：基于素材预测变化\n\n每个角度含：钩子开头（1句）+ 信息骨架（3点）+ 理想结尾（1句）\n\n## 循环与异常处理\n- 如果这是第3轮修改，请在输出开头标注【建议终版】，提醒用户先通过再迭代\n- 任何步骤出错，在输出中报告错误原因并继续，不要阻塞流程",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "ask-angle-satisfied",
+      "type": "askUserQuestion",
+      "name": "ask-angle-satisfied",
+      "parentId": "group-workshop-0",
+      "position": {
+        "x": 22,
+        "y": 450
+      },
+      "data": {
+        "label": "0.4 🔴 角度满意？",
+        "questionText": "以上5个角度质量如何？\n\n⚠️ 提示：最多微调或重来3轮。超过后建议先选一个进入下一阶段，后续可再优化。",
+        "options": [
+          {
+            "id": "opt-ok",
+            "label": "满意，选一个角度",
+            "description": "从5个角度中选定一个，进入叙事锻造阶段"
+          },
+          {
+            "id": "opt-partial",
+            "label": "部分微调",
+            "description": "某些角度方向对但不够好，告诉AI具体哪几个，原地重生成"
+          },
+          {
+            "id": "opt-redo",
+            "label": "全部重来",
+            "description": "全部不满意，换一批素材重新开始"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 3
+      }
+    },
+    {
+      "id": "group-workshop-1",
+      "type": "group",
+      "name": "group-workshop-1",
+      "position": {
+        "x": 800,
+        "y": 50
+      },
+      "style": {
+        "width": 540,
+        "height": 580
+      },
+      "data": {
+        "label": "🔴 车间1：叙事锻造"
+      }
+    },
+    {
+      "id": "ask-framework",
+      "type": "askUserQuestion",
+      "name": "ask-framework",
+      "parentId": "group-workshop-1",
+      "position": {
+        "x": 22,
+        "y": 30
+      },
+      "data": {
+        "label": "1.1 🔴 叙事框架选择",
+        "questionText": "选择口播文案的叙事框架：",
+        "options": [
+          {
+            "id": "opt-golden-circle",
+            "label": "黄金圈",
+            "description": "Why → How → What — 适合理念/品牌视频"
+          },
+          {
+            "id": "opt-scqa",
+            "label": "SCQA",
+            "description": "情境 → 冲突 → 问题 → 答案 — 适合商业分析/知识科普"
+          },
+          {
+            "id": "opt-hero",
+            "label": "英雄之旅",
+            "description": "平凡世界 → 冒险召唤 → 磨难 → 归来 — 适合个人故事/品牌叙事"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 3
+      }
+    },
+    {
+      "id": "agent-copy",
+      "type": "subAgent",
+      "name": "agent-copy",
+      "parentId": "group-workshop-1",
+      "position": {
+        "x": 22,
+        "y": 160
+      },
+      "data": {
+        "label": "1.2 🔵 口播文案锻造",
+        "description": "基于叙事框架+观点+素材撰写口播逐字稿",
+        "agentDefinition": "General-purpose agent for code modifications, file creation/editing, and shell execution.",
+        "prompt": "## 数据持久化\n工作流使用 .workflow_state/ 目录跨节点共享数据。\n\n读取状态文件：\n- .workflow_state/core_idea.txt — 核心观点\n- .workflow_state/materials.txt — 真实素材与大纲\n\n写入状态文件：\n- 将文案初稿写入 .workflow_state/copy_draft.txt\n- 文案终稿确认后写入 .workflow_state/copy_final.txt\n\n当前指令：{上游输入}\n（叙事框架选择或修改反馈）\n---\n\n# 角色：顶尖文案写手\n# 任务：根据提供的框架、大纲和素材，撰写一份口播逐字稿。\n\n**写作要求：**\n1. **开头**：必须是一个让人无法划走的「黄金3秒」钩子。直接抛出冲突、悬念或惊人的事实。\n2. **结构**：严格遵循选定的叙事框架，段落过渡要自然。\n3. **语言**：口语化，像在跟一个朋友面对面交谈。多用「你」「我们」。每句话不超过20字。\n4. **节奏**：在关键信息处用【此处加重/停顿】标注。在需要视觉辅助的地方用【此处：视觉高光-全屏大字报/数据图表】标注。\n5. **结尾**：一个有力的金句总结，并自然引导互动（关注/评论）。\n\n## 循环与异常处理\n- 如果这是第3轮修改，在文案开头标注【建议终版】，提醒用户先通过再精修\n- 文案生成出错时重试一次，仍失败则在输出中报告错误",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "prompt-review",
+      "type": "prompt",
+      "name": "prompt-review",
+      "parentId": "group-workshop-1",
+      "position": {
+        "x": 22,
+        "y": 310
+      },
+      "data": {
+        "label": "1.3 🔴 朗读审核",
+        "prompt": "请大声朗读一遍你刚才写下的文案。\n\n朗读时请逐项检查：\n- [ ] 开头3秒是否钩住人？\n- [ ] 有没有任何一句话你觉得「不像人话」？\n- [ ] 关键信息点是否标注了【此处加重/停顿】？\n- [ ] 结尾是否自然引导互动？\n\n把拗口、不自然的地方全部改掉。这是你的脸面。\n\n确认无误后，在下一环节标记「通过」。"
+      }
+    },
+    {
+      "id": "ask-copy-pass",
+      "type": "askUserQuestion",
+      "name": "ask-copy-pass",
+      "parentId": "group-workshop-1",
+      "position": {
+        "x": 22,
+        "y": 430
+      },
+      "data": {
+        "label": "1.4 🔴 文案通过？",
+        "questionText": "文案审核是否通过？\n\n⚠️ 提示：最多修改3轮。超过后建议先通过进入下一阶段，后续可再精修。",
+        "options": [
+          {
+            "id": "opt-pass",
+            "label": "通过，进入下一阶段",
+            "description": "文案终稿确认，进入视觉翻译阶段"
+          },
+          {
+            "id": "opt-revise",
+            "label": "需要修改",
+            "description": "告诉AI具体修改方向，重新生成"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 2
+      }
+    },
+    {
+      "id": "group-workshop-2",
+      "type": "group",
+      "name": "group-workshop-2",
+      "position": {
+        "x": 1370,
+        "y": 50
+      },
+      "style": {
+        "width": 540,
+        "height": 480
+      },
+      "data": {
+        "label": "🔴 车间2：视觉翻译"
+      }
+    },
+    {
+      "id": "ask-visual-style",
+      "type": "askUserQuestion",
+      "name": "ask-visual-style",
+      "parentId": "group-workshop-2",
+      "position": {
+        "x": 22,
+        "y": 30
+      },
+      "data": {
+        "label": "2.1 🔴 全片视觉定调",
+        "questionText": "选择视频的视觉风格方向：",
+        "options": [
+          {
+            "id": "opt-tech",
+            "label": "科技冷峻风",
+            "description": "暗色背景+冷色数据可视化+干净排版 — 适配：科技批判/行业分析/反常识观点"
+          },
+          {
+            "id": "opt-warm",
+            "label": "温暖叙事风",
+            "description": "暖色渐变+故事感画面+柔和动画 — 适配：情感共鸣/个人故事/品牌叙事"
+          },
+          {
+            "id": "opt-bold",
+            "label": "极简冲击风",
+            "description": "黑底白字+极简构图+大字号金句 — 适配：金句类/争议挑战/短视频传播"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "agent-storyboard",
+      "type": "subAgent",
+      "name": "agent-storyboard",
+      "parentId": "group-workshop-2",
+      "position": {
+        "x": 22,
+        "y": 160
+      },
+      "data": {
+        "label": "2.2 🔵 分镜脚本生成",
+        "description": "根据文案+视觉定调生成带视觉元素的分镜JSON",
+        "agentDefinition": "General-purpose agent for code modifications, file creation/editing, and shell execution.",
+        "prompt": "# 角色：资深视觉导演\n# 任务：根据口播文案和视觉定调，生成30-40秒讲解视频的完整分镜脚本（JSON）\n\n## 数据持久化\n工作流使用 .workflow_state/ 目录跨节点共享数据。\n\n读取状态文件：\n- .workflow_state/copy_final.txt — 口播文案终稿\n\n写入状态文件：\n- 将完整分镜JSON写入 .workflow_state/storyboard.json\n- 将视觉定调风格写入 .workflow_state/visual_style.txt（从 {上游输入} 中提取）\n\n---\n\n## 输入材料\n\n**口播文案**：从 .workflow_state/copy_final.txt 读取\n**视觉定调**：{上游输入（用户选择的风格方向）}\n\n**视频规格**：\n- 总时长：30-40秒\n- 画面比例：16:9 横版\n- 帧率：30fps\n\n---\n\n## 分镜设计原则\n\n### 1. 镜头数量与节奏\n- 控制在5-7个镜头，每个镜头3-6秒\n- 第1个镜头（钩子）必须在前3秒内完成视觉冲击\n- 倒数第2个镜头为\"视觉高光点\"（全屏大字报/极端特写/色彩反转）\n- 最后1个镜头为结尾引导（温和收束）\n\n### 2. 动画即语言\n每个动画必须服务于信息传递：\n- **抛出观点** → 弹性弹入(elasticOut) + 强调脉冲(pulse emphasis)\n- **数据展示** → 数字滚动(countUp) | 柱状生长(growUp)\n- **对比冲突** → 分屏滑入(splitSlide) | 碰撞弹入(collision)\n- **概念连接** → 线条流动(flowLine) | 光点拖尾(trail)\n- **情绪转折** → 色彩渐变(colorShift) | 模糊到清晰(blurIn)\n- **普通展现** → 淡入(fadeIn) | 滑入(slideIn) | 弹性(fadeIn+scale)\n\n### 3. 转场设计（镜头之间）\n| 文案逻辑 | 转场类型 | 时长 | 说明 |\n|---------|---------|------|------|\n| 递进/深入 | pushIn | 0.4s | 画面放大过渡 |\n| 转折/但是 | swipe | 0.3s | 从左到右快速切过 |\n| 对比/对立 | flip | 0.5s | 画面3D翻转 |\n| 举例/比如 | iris | 0.4s | 从中心点圆形展开 |\n| 总结/所以 | fadeToWhite | 0.6s | 短暂白场停顿 |\n\n### 4. 特效清单（每镜头最多选2个）\n**文字特效**：typewriter(逐字出现) / scalePerChar(逐字弹入) / glitch(故障干扰) / handwrite(手写描边) / none\n**画面特效**：chromatic(色差) / vignette(暗角) / glow(辉光) / grain(噪点) / none\n**背景特效**：slowParticles(慢速粒子) / gradientFlow(渐变流动) / geometryDrift(几何漂移) / none\n**元素类型**：text(文字) / image(图片,content填URL) / icon(图标,content填emoji) / chart(柱状图,content填JSON数组)\n**出场动画**：fadeOut(渐隐缩小) / blurOut(模糊渐隐) / none\n**强调动画**：pulse(脉搏呼吸, loop可控) / none\n**入场动画**：elasticOut(弹性) / slideIn(滑动) / fadeIn(淡入) / pulse(脉冲弹入) / countUp(数字滚动) / splitSlide(分屏滑入) / blurIn(模糊清晰) / colorShift(色彩渐变) / growUp(柱状生长) / collision(碰撞弹入) / flowLine(线条流动) / trail(光点拖尾)\n\n### 5. 背景要求\n- 每个镜头必须有动态背景\n- 背景色系必须与视觉定调风格一致\n\n### 6. 文字布局与可见性\n- 每个 text 元素的 position.x 必须在 10-90% 之间，position.y 在 15-85% 之间（避免被画面边缘裁切）\n- 长文本（超过8个汉字）应降低 scale 至 0.8-1.0，或拆分为多行\n- 短文本（2-4字）可使用高 scale（1.2-1.6）突出\n- chart 元素建议 scale 0.5-0.8，确保柱状图和标签完整显示\n- icon 元素（emoji）建议 scale 1.5-3.0\n- 同一场景中多个元素注意 y 轴间隔至少 15%，避免重叠\n\n### 7. 音效标记\n用【】标注音效触发点：hit / rise / whoosh / bass\n\n---\n\n## 输出 JSON 格式\n\n```json\n{\n  \"video_meta\": {\n    \"total_duration\": \"预计秒数\",\n    \"style\": \"选定的风格\",\n    \"visual_metaphor\": \"核心视觉隐喻\"\n  },\n  \"scenes\": [\n    {\n      \"scene_id\": 1,\n      \"name\": \"hook\",\n      \"duration\": \"秒数\",\n      \"narration\": \"这一段对应的文案原文\",\n      \"background\": {\n        \"description\": \"背景描述\",\n        \"color_palette\": [\"#主色\", \"#辅色\", \"#点缀色\"],\n        \"animation\": \"背景动画类型\",\n        \"effect\": \"画面特效\"\n      },\n      \"elements\": [\n        {\n          \"type\": \"text\",\n          \"content\": \"元素内容\",\n          \"position\": {\"x\": \"画面位置%\", \"y\": \"画面位置%\"},\n          \"scale\": 1.0,\n          \"animation_in\": {\"type\": \"elasticOut/fadeIn/slideIn\", \"duration\": 0.6},\n          \"animation_out\": {\"type\": \"fadeOut\", \"duration\": 0.3},\n          \"text_effect\": \"scalePerChar/typewriter/glitch/none\"\n        }\n      ],\n      \"transition_to_next\": {\n        \"type\": \"pushIn/swipe/flip/iris/fadeToWhite\",\n        \"duration\": \"秒\"\n      },\n      \"sfx\": [\"音效标记\"]\n    }\n  ]\n}\n```\n\n直接输出 JSON，不要额外说明。请确保：\n- 总场景数5-7个，总时长30-40秒\n- 第1镜头前3秒内有冲击力\n- 每个动画服务于信息传递\n- 转场类型与文案逻辑对应\n\n## 循环与异常处理\n- 如果这是第3轮修改，在输出JSON的 description 字段中添加【建议终版】标记\n- 分镜生成出错时重试一次，仍失败则输出错误信息并继续",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "ask-storyboard-ok",
+      "type": "askUserQuestion",
+      "name": "ask-storyboard-ok",
+      "parentId": "group-workshop-2",
+      "position": {
+        "x": 22,
+        "y": 340
+      },
+      "data": {
+        "label": "2.3 🔴 分镜审核",
+        "questionText": "分镜脚本是否满足视觉要求？\n逐项检查：\n- 场景数≥6？\n- 画面描述是否具体？\n- 视觉高光点是否有冲击力设计？\n\n⚠️ 提示：最多修改3轮。超过后建议先通过。",
+        "options": [
+          {
+            "id": "opt-ok",
+            "label": "通过，进入装配",
+            "description": "分镜确认，进入音频与视频渲染阶段"
+          },
+          {
+            "id": "opt-revise",
+            "label": "需修改分镜",
+            "description": "告诉AI具体哪个场景需要调整，原地重生成"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 2
+      }
+    },
+    {
+      "id": "group-workshop-3",
+      "type": "group",
+      "name": "group-workshop-3",
+      "position": {
+        "x": 1940,
+        "y": 50
+      },
+      "style": {
+        "width": 540,
+        "height": 480
+      },
+      "data": {
+        "label": "🔵 车间3：自动装配"
+      }
+    },
+    {
+      "id": "agent-audio",
+      "type": "subAgent",
+      "name": "agent-audio",
+      "parentId": "group-workshop-3",
+      "position": {
+        "x": 22,
+        "y": 30
+      },
+      "data": {
+        "label": "3.1 🔵 音频轨道生成",
+        "description": "基于终稿文案生成配音音频",
+        "agentDefinition": "General-purpose agent for code modifications, file creation/editing, and shell execution.",
+        "prompt": "## 数据持久化\n工作流使用 .workflow_state/ 目录跨节点共享数据。\n\n读取状态文件：\n- .workflow_state/storyboard.json — 分镜JSON（含 narration 和 duration）\n\n写入状态文件：\n- 将音频信息写入 .workflow_state/audio_info.txt\n\n当前指令：{上游输入}\n（通过确认或音频修复反馈）\n---\n\n根据分镜脚本生成配音音频，确保音频时长与视频时长匹配。\n\n## 执行步骤\n\n### 1. 计算总时长\n从分镜JSON计算视频总时长（含转场）：sum(scenes[i].duration) + sum(transitions[i].duration)\n\n### 2. 拼接完整文案\n将所有 scenes[].narration 用句号拼接。估算配音语速约 4-5字/秒，确保配音时长接近视频总时长。\n\n### 3. 生成配音\n使用 edge-tts 生成配音：\n```bash\npython -m edge_tts --voice zh-CN-YunxiNeural --text \"拼接后的完整文案\" --write-media ./temp_audio.mp3\n```\n如果文案包含特殊符号导致命令行报错，则写入临时文件后用 --file 参数。\n\n### 4. 检查音频\n- 确认 temp_audio.mp3 已生成且非空\n- 用 ffprobe 或 mutagen 获取音频时长\n- 如果音频时长 < 视频总时长-1秒，用 ffmpeg 拉伸或添加静音填充\n- 如果音频时长 > 视频总时长+1秒，裁剪至视频时长\n\n### 5. 输出\n输出格式（纯文本）：\n```\n音频文件: ./temp_audio.mp3\n音频时长: XX秒\n视频时长: XX秒\n```\n\n### 6. 持久化\n将输出内容同时写入 .workflow_state/audio_info.txt\n\n## 注意\n- 中文语音使用 zh-CN-YunxiNeural\n- 确保音频文件路径后续能被 agent-render 直接使用\n\n## 循环与异常处理\n- 如果这是第2轮音频修复，在输出中标注【建议通过】\n- edge-tts 命令失败时重试一次；仍失败则输出具体错误信息并继续\n- ffprobe 不可用时估算时长即可，不要阻塞",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "agent-render",
+      "type": "subAgent",
+      "name": "agent-render",
+      "parentId": "group-workshop-3",
+      "position": {
+        "x": 22,
+        "y": 160
+      },
+      "data": {
+        "label": "3.2 🔵 视频合成渲染",
+        "description": "根据分镜JSON+视觉定调+音频生成最终视频",
+        "agentDefinition": "General-purpose agent for code modifications, file creation/editing, and shell execution.",
+        "prompt": "## 数据持久化\n工作流使用 .workflow_state/ 目录跨节点共享数据。\n\n读取状态文件：\n- .workflow_state/storyboard.json — 完整分镜JSON\n- .workflow_state/visual_style.txt — 视觉定调风格\n\n当前指令/音频信息：{上游输入}\n（音频文件路径+时长，或画面修复反馈）\n---\n\n根据分镜脚本和配音音频，使用 render_engine.js 生成完整视频。\n\n## 工具链（已就绪）\n- render_engine.js — v2.1 版（完整支持所有动画/转场/文字特效/元素类型）\n- node_modules/puppeteer — Chrome 148 浏览器\n- ffmpeg v7.1 — 视频编码 + 后期特效合成\n\n## 关键约束\n\n### 帧率\n必须使用 **30fps**，否则视频会卡顿。不要为了测试改低帧率。\n\n### 后期特效\n根据视觉定调选择 postFX 参数：\n- 科技冷峻风 → { chromatic: true, vignette: true, grain: false, glow: false }\n- 温暖叙事风 → { chromatic: false, vignette: true, grain: true, glow: true }\n- 极简冲击风 → { chromatic: false, vignette: false, grain: false, glow: false }\n\n### 常见问题\n- 转场时长不能超过场景时长的一半\n- 文字特效（scalePerChar/handwrite）和入场动画不冲突，可以同时设置\n- chart 元素的 content 必须是 JSON 数组格式: [{\"label\":\"名\",\"value\":数}]\n\n## 执行步骤\n\n### 1. 确认音频文件可用\n检查从 {上游输入} 中解析出的音频文件路径是否存在，文件大小 > 1KB。\n\n### 2. 编写渲染脚本\n创建 run_render.js：\n\n```js\nconst RenderEngine = require(\"./render_engine\");\nconst storyboard = require(\"./.workflow_state/storyboard.json\");\n// 或者：const storyboard = JSON.parse(fs.readFileSync(\"./.workflow_state/storyboard.json\", \"utf-8\"));\nconst engine = new RenderEngine({\n  fps: 30,\n  outputDir: \"./render_output\",\n  audioFile: \"从上游输入解析的音频路径\"\n});\nengine.renderFromStoryboard(storyboard, {\n  postFX: { /* 根据视觉定调选择 */ }\n}).then(p => console.log(\"DONE:\", p));\n```\n\n### 3. 运行\n```bash\nnode run_render.js\n```\n\n### 4. 验证输出\n检查 final_output.mp4：\n- 分辨率应为 1920×1080\n- 时长与预期一致\n- 文件大小合理\n\n### 5. 报告\n输出最终视频路径、时长、文件大小、使用的 postFX 参数\n\n## 循环与异常处理\n- 如果这是第2轮画面修复，在输出中标注【建议通过】\n- puppeteer 渲染失败时重试一次\n- ffmpeg 命令失败时重试一次\n- 任何步骤失败，在输出中报告具体错误并继续，不要阻塞流程",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "ask-final-check",
+      "type": "askUserQuestion",
+      "name": "ask-final-check",
+      "parentId": "group-workshop-3",
+      "position": {
+        "x": 22,
+        "y": 340
+      },
+      "data": {
+        "label": "3.3 🔴 终检抽检",
+        "questionText": "视频终检 — 三点跳跃检查法：\n\n1️⃣ 0-30秒：钩子是否抓人？画面/声音/字幕是否同步？\n2️⃣ 中间高光点：视觉冲击力是否达标？\n3️⃣ 结尾引导：关注/评论引导是否清晰？\n4️⃣ 随机快进：有无视觉穿帮或文字错误？\n\n⚠️ 提示：画面/音频修复最多各2轮。超过后建议先通过。",
+        "options": [
+          {
+            "id": "opt-pass",
+            "label": "通过，准予发布",
+            "description": "三个关键点没问题，进入分发阶段"
+          },
+          {
+            "id": "opt-fix-visual",
+            "label": "画面问题",
+            "description": "描述具体问题，返回渲染阶段修复"
+          },
+          {
+            "id": "opt-fix-audio",
+            "label": "音频问题",
+            "description": "描述音频问题，返回音频生成阶段修复"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 3
+      }
+    },
+    {
+      "id": "group-workshop-4",
+      "type": "group",
+      "name": "group-workshop-4",
+      "position": {
+        "x": 2510,
+        "y": 50
+      },
+      "style": {
+        "width": 540,
+        "height": 380
+      },
+      "data": {
+        "label": "🔵 车间4：分发与进化"
+      }
+    },
+    {
+      "id": "agent-distribute",
+      "type": "subAgent",
+      "name": "agent-distribute",
+      "parentId": "group-workshop-4",
+      "position": {
+        "x": 22,
+        "y": 30
+      },
+      "data": {
+        "label": "4.1 🔵 多平台文案创作",
+        "description": "根据视频文案生成分发内容：标题/切片文案/图文版",
+        "agentDefinition": "General-purpose agent for code modifications, file creation/editing, and shell execution.",
+        "prompt": "## 数据持久化\n工作流使用 .workflow_state/ 目录跨节点共享数据。\n\n读取状态文件：\n- .workflow_state/copy_final.txt — 视频文案终稿\n\n当前指令：{上游输入}\n---\n\n请根据视频文案，生成用于分发的配套内容。\n\n生成任务：\n1. **3个爆款标题**：分别针对B站、抖音、公众号的推荐机制\n2. **5条短视频文案**：适用于抖音/小红书，带表情和话题标签\n3. **1篇图文版**：结构完整，可直接发布在知乎、公众号次条\n\n## 异常处理\n- 文案读取失败时使用 {上游输入} 作为备选\n- 生成过程出错在输出中报告并继续",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "agent-archive",
+      "type": "subAgent",
+      "name": "agent-archive",
+      "parentId": "group-workshop-4",
+      "position": {
+        "x": 22,
+        "y": 190
+      },
+      "data": {
+        "label": "4.2 🔵 资产归档与学习",
+        "description": "归档工程文件+更新案例库+生成效能报告",
+        "agentDefinition": "General-purpose agent for code modifications, file creation/editing, and shell execution.",
+        "prompt": "## 数据持久化\n工作流使用 .workflow_state/ 目录跨节点共享数据。\n\n读取状态文件：\n- .workflow_state/copy_final.txt — 文案终稿\n- .workflow_state/storyboard.json — 分镜JSON\n- .workflow_state/video_info.txt — 视频输出信息（如存在）\n\n当前指令：{上游输入}\n---\n\n本次视频生产已完成。请自动完成归档。\n\n## 异常处理\n- 状态文件不存在时跳过对应的归档项，不要报错终止\n- 归档目录已存在时覆盖，不要报错\n\n步骤：\n1. 提取关键参数：[题材类型] + [使用风格] + [总时长] + [文案字数]\n2. 创建归档目录：archive/[日期]_[题材缩写]/\n3. 复制以下文件到归档目录：文案终稿、分镜JSON、视频文件\n4. 更新风格匹配记录：在 archive/style_match_log.csv 追加一条记录\n5. 检索 archive 目录，检查是否已累积满10期记录\n6. 如果满10期 → 生成《风格效能简报》：\n   - 最高/最低频使用的风格\n   - 建议调整的方向\n   - 发现的问题模式\n\n归档目录结构：\narchive/\n├── style_match_log.csv\n├── performance_report.md（满10期生成）\n└── [日期]_[题材]/\n    ├── copy_final.md\n    ├── storyboard.json\n    └── video.mp4",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "end-2",
+      "type": "end",
+      "name": "end-2",
+      "position": {
+        "x": 3120,
+        "y": 280
+      },
+      "data": {
+        "label": "End — 全流程完成"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "c1",
+      "from": "start-1",
+      "to": "prompt-core-idea",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c2",
+      "from": "prompt-core-idea",
+      "to": "agent-material",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c3",
+      "from": "agent-material",
+      "to": "agent-angle",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c4",
+      "from": "agent-angle",
+      "to": "ask-angle-satisfied",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c5",
+      "from": "ask-angle-satisfied",
+      "to": "ask-framework",
+      "fromPort": "branch-0",
+      "toPort": "input"
+    },
+    {
+      "id": "c6",
+      "from": "ask-angle-satisfied",
+      "to": "agent-angle",
+      "fromPort": "branch-1",
+      "toPort": "input"
+    },
+    {
+      "id": "c7",
+      "from": "ask-angle-satisfied",
+      "to": "agent-material",
+      "fromPort": "branch-2",
+      "toPort": "input"
+    },
+    {
+      "id": "c8",
+      "from": "ask-framework",
+      "to": "agent-copy",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c9",
+      "from": "agent-copy",
+      "to": "prompt-review",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c10",
+      "from": "prompt-review",
+      "to": "ask-copy-pass",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c12",
+      "from": "ask-copy-pass",
+      "to": "agent-copy",
+      "fromPort": "branch-1",
+      "toPort": "input"
+    },
+    {
+      "id": "c13",
+      "from": "ask-copy-pass",
+      "to": "ask-visual-style",
+      "fromPort": "branch-0",
+      "toPort": "input"
+    },
+    {
+      "id": "c14",
+      "from": "ask-visual-style",
+      "to": "agent-storyboard",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c15",
+      "from": "agent-storyboard",
+      "to": "ask-storyboard-ok",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c16",
+      "from": "ask-storyboard-ok",
+      "to": "agent-audio",
+      "fromPort": "branch-0",
+      "toPort": "input"
+    },
+    {
+      "id": "c17",
+      "from": "ask-storyboard-ok",
+      "to": "agent-storyboard",
+      "fromPort": "branch-1",
+      "toPort": "input"
+    },
+    {
+      "id": "c19",
+      "from": "agent-audio",
+      "to": "agent-render",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c20",
+      "from": "agent-render",
+      "to": "ask-final-check",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c21",
+      "from": "ask-final-check",
+      "to": "agent-distribute",
+      "fromPort": "branch-0",
+      "toPort": "input"
+    },
+    {
+      "id": "c22",
+      "from": "ask-final-check",
+      "to": "agent-render",
+      "fromPort": "branch-1",
+      "toPort": "input"
+    },
+    {
+      "id": "c23",
+      "from": "ask-final-check",
+      "to": "agent-audio",
+      "fromPort": "branch-2",
+      "toPort": "input"
+    },
+    {
+      "id": "c25",
+      "from": "agent-distribute",
+      "to": "agent-archive",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c26",
+      "from": "agent-archive",
+      "to": "end-2",
+      "fromPort": "output",
+      "toPort": "input"
+    }
+  ],
+  "subAgentFlows": []
+}

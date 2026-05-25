@@ -1,0 +1,156 @@
+{
+  "id": "creator-studio-v4",
+  "name": "创作者智能片场 v4 (Visual Director Engine)",
+  "version": "4.0.0",
+  "description": "5车间18工位：创意熔炼→叙事锻造→视觉翻译(↑Visual Director Engine)→自动装配→分发进化",
+  "workflow": {
+    "workshop_0": {
+      "name": "🔴 车间0：创意熔炼",
+      "stations": [
+        {
+          "id": "0.1",
+          "name": "核心观点打磨",
+          "type": "prompt",
+          "description": "用户输入核心观点（3个约束）"
+        },
+        {
+          "id": "0.2",
+          "name": "素材弹药装填",
+          "type": "subAgent",
+          "description": "调查记者模式搜集反直觉数据/翻车案例/高赞反对意见"
+        },
+        {
+          "id": "0.3",
+          "name": "多维角度爆破",
+          "type": "subAgent",
+          "description": "5个切入角度（反常识/情感/干货/争议/趋势）"
+        },
+        {
+          "id": "0.4",
+          "name": "角度满意？",
+          "type": "askUserQuestion",
+          "description": "人工审核，支持驳回重来"
+        }
+      ]
+    },
+    "workshop_1": {
+      "name": "🔴 车间1：叙事锻造",
+      "stations": [
+        {
+          "id": "1.1",
+          "name": "叙事框架选择",
+          "type": "askUserQuestion",
+          "description": "黄金圈/SCQA/英雄之旅"
+        },
+        {
+          "id": "1.1b",
+          "name": "视频时长选择",
+          "type": "askUserQuestion",
+          "description": "15秒/30秒/60秒/90秒"
+        },
+        {
+          "id": "1.2",
+          "name": "口播文案锻造",
+          "type": "subAgent",
+          "description": "根据字数公式（时长×4~5字）生成逐字稿"
+        },
+        {
+          "id": "1.3",
+          "name": "朗读审核",
+          "type": "prompt",
+          "description": "5项检查清单，含字数合规审核"
+        },
+        {
+          "id": "1.4",
+          "name": "文案通过？",
+          "type": "askUserQuestion",
+          "description": "人工确认，支持返回修改"
+        }
+      ]
+    },
+    "workshop_2": {
+      "name": "🔴 车间2：视觉翻译",
+      "stations": [
+        {
+          "id": "2.1",
+          "name": "全片视觉定调",
+          "type": "askUserQuestion",
+          "description": "科技冷峻/温暖叙事/极简冲击/极简人文+科技冷感(新)"
+        },
+        {
+          "id": "2.2",
+          "name": "分镜脚本生成",
+          "type": "subAgent",
+          "description": "JSON格式，含情感四幕/12动画/5转场/8音效/视觉隐喻"
+        },
+        {
+          "id": "2.3",
+          "name": "分镜审核",
+          "type": "askUserQuestion",
+          "description": "7项检查，含情感节拍/视觉隐喻/转场逻辑审查"
+        }
+      ]
+    },
+    "workshop_3": {
+      "name": "🔵 车间3：自动装配",
+      "stations": [
+        {
+          "id": "3.1",
+          "name": "音频轨道生成",
+          "type": "subAgent",
+          "description": "edge-tts中文语音合成，自动时长匹配"
+        },
+        {
+          "id": "3.2",
+          "name": "视频合成渲染",
+          "type": "subAgent",
+          "description": "render_engine.js v4 + Remotion 4.0（12动画/5转场/4后效）"
+        },
+        {
+          "id": "3.3",
+          "name": "终检抽检",
+          "type": "askUserQuestion",
+          "description": "画面/音频问题可分别追溯修复"
+        }
+      ]
+    },
+    "workshop_4": {
+      "name": "🔵 车间4：分发与进化",
+      "stations": [
+        {
+          "id": "4.1",
+          "name": "多平台文案创作",
+          "type": "subAgent",
+          "description": "爆款标题+切片+图文版"
+        },
+        {
+          "id": "4.2",
+          "name": "资产归档与学习",
+          "type": "subAgent",
+          "description": "归档+效能简报（满10期自动生成）"
+        }
+      ]
+    }
+  },
+  "core_formula": "文案字数 = 视频时长(秒) × 4~5字/秒 + 情感四幕分析(起承转合)",
+  "error_handling": [
+    "上游为空 → 输出ERROR",
+    "素材不足 → 降级产出并标注原因",
+    "字数超标 → 自我裁剪不输出超长版",
+    "审核不通过 → 回退到前序工位（4个回退分支）"
+  ],
+  "visual_director": {
+    "animations": 12,
+    "transitions": 5,
+    "sfx_types": 8,
+    "postFX": 4,
+    "styles": 4,
+    "emotional_beats": [
+      "起(hook)",
+      "承(context)",
+      "转(conflict)",
+      "合(resolution)"
+    ],
+    "visual_metaphor": "贯穿全片的视觉意象（如：迷雾中前行）"
+  }
+}

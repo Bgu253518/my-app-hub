@@ -5,3 +5,5 @@ out/
 .cookies.txt
 __pycache__/
 *.pyc
+.claude/
+excel-column-sum/

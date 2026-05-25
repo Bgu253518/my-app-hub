@@ -1,0 +1,702 @@
+{
+  "id": "creator-studio-v4",
+  "name": "创作者智能片场 v4 (Visual Director Engine)",
+  "version": "4.0.0",
+  "description": "5车间18工位：创意熔炼→叙事锻造→视觉翻译(↑Visual Director Engine)→自动装配→分发进化",
+  "nodes": [
+    {
+      "id": "start-1",
+      "type": "start",
+      "name": "start-1",
+      "position": {
+        "x": 60,
+        "y": 320
+      },
+      "data": {
+        "label": "Start"
+      }
+    },
+    {
+      "id": "group-workshop-0",
+      "type": "group",
+      "name": "group-workshop-0",
+      "position": {
+        "x": 200,
+        "y": 50
+      },
+      "style": {
+        "width": 540,
+        "height": 580
+      },
+      "data": {
+        "label": "🔴 车间0：创意熔炼"
+      }
+    },
+    {
+      "id": "prompt-core-idea",
+      "type": "prompt",
+      "name": "prompt-core-idea",
+      "parentId": "group-workshop-0",
+      "position": {
+        "x": 22,
+        "y": 30
+      },
+      "data": {
+        "label": "0.1 🔴 核心观点打磨",
+        "prompt": "写下你「绝不能在视频中被删掉的一句话」。\n\n这就是你的核心观点。它必须：\n- 足够锋利（让人听完想转发）\n- 足够具体（不是「努力很重要」，而是「别学提示词，要学思维模型」）\n- 是你真正相信的\n\n写完之后，AI 会基于这句话帮你搜集素材、设计角度。"
+      }
+    },
+    {
+      "id": "agent-material",
+      "type": "subAgent",
+      "name": "agent-material",
+      "parentId": "group-workshop-0",
+      "position": {
+        "x": 22,
+        "y": 150
+      },
+      "data": {
+        "label": "0.2 🔵 素材弹药装填",
+        "description": "调查记者模式：搜反直觉数据/翻车案例/高赞反对意见",
+        "agentDefinition": "General-purpose agent for code modifications, file creation/editing, and shell execution.",
+        "prompt": "# 角色：调查记者（交叉验证专家）\n\n你是一位以「刺猬式追问」闻名的调查记者。你的工作信条：\n1. 永远找得到原始出处\n2. 永远问「这个数据对谁有利？」\n3. 永远准备一个反例\n\n## 任务\n为核心观点搜集「有摩擦感」的真实素材，用于后续视频创作。\n\n核心观点：{上游输入}\n\n## 必须搜集的3类素材（缺一不可）\n\n### 1. 反直觉数据（1条）\n看起来不可能但被同行评审研究证实的数据。\n格式：一句话结论 → 具体数字 → 来源（期刊/机构+年份）\n\n### 2. 翻车案例（1个）\n按常理出牌但结果栽了的真实事件。\n格式：人物/组织 → 做了什么 → 结果 → 关键数字\n\n### 3. 高赞反对意见（1条）\n评论区/社交媒体上最刺耳但获得大量认同的观点。\n格式：原话 → 出处 → 点赞/评论量级\n\n## 质量红线\n- 数据必须有可追溯来源（无来源=无效）\n- 禁止使用「随着XX发展」「在当今社会」等万能废话\n- 禁止编造或模糊化来源\n\n## 异常处理\n- 如果某类素材实在找不到 → 输出「未找到：原因说明」，不要伪造\n- 如果上游核心观点为空 → 输出错误「ERROR：缺乏核心观点，无法搜集素材」\n\n## 输出格式\n\n每条素材包含3个字段，用「---」分隔：\n\n**素材标题**\n\n一句话陈述\n\n> 关键数字/细节\n\n来源：[出处]\n\n可用于什么角度：[具体说明]\n\n---",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "agent-angle",
+      "type": "subAgent",
+      "name": "agent-angle",
+      "parentId": "group-workshop-0",
+      "position": {
+        "x": 22,
+        "y": 290
+      },
+      "data": {
+        "label": "0.3 🔵 多维角度爆破",
+        "description": "基于真实素材设计5个切入角度",
+        "agentDefinition": "Software architect agent for designing implementation plans.",
+        "prompt": "# 角色：资深选题策划（爆款角度挖掘专家）\n\n你在一家头部MCN机构负责选题策划。你的核心能力：\n1. 同一个话题能找到5个完全不重样的切入面\n2. 一眼就能判断「这个角度有没有传播势能」\n3. 每个角度都能在30秒内让观众产生「这我得听听」的冲动\n\n## 输入\n\n### 输入A：核心观点\n{上游输入[0]}\n\n### 输入B：真实素材\n{上游输入[1]}\n\n## 任务\n基于核心观点和真实素材，设计5个彼此独立、不重复的切入角度。\n\n## 角度类型清单（每个类型严格1个）\n\n| # | 类型 | 钩子策略 | 必须使用的素材 |\n|---|------|---------|---------------|\n| 1 | 🔥 反常识 | 用「反直觉数据」做钩子 | 素材1（反直觉数据） |\n| 2 | 💛 情感共鸣 | 用「翻车案例」引发「我也干过」 | 素材2（翻车案例） |\n| 3 | 🛠 实用干货 | 直接给步骤/清单/工具 | 自选或综合 |\n| 4 | ⚔️ 争议挑战 | 回应「高赞反对意见」并部分反驳 | 素材3（高赞反对） |\n| 5 | 🔮 趋势预判 | 基于素材预测变化 | 综合3个素材 |\n\n## 每个角度的结构\n\n**角度名称：** [10字以内]\n\n**钩子开头（1句，≤25字）：** 让人听完想点进来的第一句话\n\n**信息骨架（3点，每点≤15字）：**\n1. [核心论据]\n2. [支撑论据]\n3. [升维观点]\n\n**理想结尾（1句，≤20字）：** 让人想转发的那句话\n\n## 质量红线\n- 5个角度必须彼此独立，出现语义重复则整批不合格\n- 每个角度必须引用至少1条真实素材，不可以凭空编造\n- 钩子开头超过25字则不合格\n\n## 异常处理\n- 如果输入B（素材）不足3条 → 用已有素材设计3-4个角度，不足5个时标注「仅生成N个，原因：素材不足」\n- 如果输入A（核心观点）为空 → 输出「ERROR：缺乏核心观点，无法设计角度」\n\n## 输出格式\n\n按顺序输出5个角度，每个角度以「---」分隔。",
+        "builtInType": "plan",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "ask-angle-satisfied",
+      "type": "askUserQuestion",
+      "name": "ask-angle-satisfied",
+      "parentId": "group-workshop-0",
+      "position": {
+        "x": 22,
+        "y": 450
+      },
+      "data": {
+        "label": "0.4 🔴 角度满意？",
+        "questionText": "以上5个角度质量如何？",
+        "options": [
+          {
+            "id": "opt-ok",
+            "label": "满意，选一个角度",
+            "description": "从5个角度中选定一个，进入叙事锻造阶段"
+          },
+          {
+            "id": "opt-partial",
+            "label": "部分微调",
+            "description": "某些角度方向对但不够好，告诉AI具体哪几个，原地重生成"
+          },
+          {
+            "id": "opt-redo",
+            "label": "全部重来",
+            "description": "全部不满意，换一批素材重新开始"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 3
+      }
+    },
+    {
+      "id": "group-workshop-1",
+      "type": "group",
+      "name": "group-workshop-1",
+      "position": {
+        "x": 800,
+        "y": 50
+      },
+      "style": {
+        "width": 540,
+        "height": 620
+      },
+      "data": {
+        "label": "🔴 车间1：叙事锻造"
+      }
+    },
+    {
+      "id": "ask-framework",
+      "type": "askUserQuestion",
+      "name": "ask-framework",
+      "parentId": "group-workshop-1",
+      "position": {
+        "x": 22,
+        "y": 30
+      },
+      "data": {
+        "label": "1.1 🔴 叙事框架选择",
+        "questionText": "选择口播文案的叙事框架：",
+        "options": [
+          {
+            "id": "opt-golden-circle",
+            "label": "黄金圈",
+            "description": "Why → How → What — 适合理念/品牌视频"
+          },
+          {
+            "id": "opt-scqa",
+            "label": "SCQA",
+            "description": "情境 → 冲突 → 问题 → 答案 — 适合商业分析/知识科普"
+          },
+          {
+            "id": "opt-hero",
+            "label": "英雄之旅",
+            "description": "平凡世界 → 冒险召唤 → 磨难 → 归来 — 适合个人故事/品牌叙事"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "ask-duration",
+      "type": "askUserQuestion",
+      "name": "ask-duration",
+      "parentId": "group-workshop-1",
+      "position": {
+        "x": 22,
+        "y": 100
+      },
+      "data": {
+        "label": "1.1b 🎬 视频时长选择",
+        "questionText": "选择目标视频时长：\n\n不同时长的适配策略：\n- 15秒：快节奏卡段，适合纯钩子/金句类\n- 30秒：标准短视频，适合1个核心观点+1个论据\n- 60秒：深度内容，适合1个核心观点+2~3个论据\n- 90秒：完整讲解，适合有展开/对比/案例的完整叙事",
+        "options": [
+          {
+            "id": "opt-15s",
+            "label": "15秒（快节奏卡段）",
+            "description": "60-75字，3-4个镜头，适合纯金句/抛出观点"
+          },
+          {
+            "id": "opt-30s",
+            "label": "30秒（标准短视频）",
+            "description": "120-150字，5-7个镜头，适合1观点+1论据"
+          },
+          {
+            "id": "opt-60s",
+            "label": "60秒（深度内容）",
+            "description": "240-300字，8-12个镜头，适合完整叙事"
+          },
+          {
+            "id": "opt-90s",
+            "label": "90秒（完整讲解）",
+            "description": "360-450字，12-16个镜头，适合深度分析"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "agent-copy",
+      "type": "subAgent",
+      "name": "agent-copy",
+      "parentId": "group-workshop-1",
+      "position": {
+        "x": 22,
+        "y": 190
+      },
+      "data": {
+        "label": "1.2 🔵 口播文案锻造",
+        "description": "基于叙事框架+观点+素材+时长撰写口播逐字稿",
+        "agentDefinition": "General-purpose agent for code modifications, file creation/editing, and shell execution.",
+        "prompt": "# 角色：顶尖文案写手（口播领域）\n\n你从业8年，写过300+条爆款口播视频。你的三大原则：\n1. 一条视频只讲一个观点，多一个都不要\n2. 口语不是「写」出来的，是「说」出来的——写完后念一遍，拗口就改\n3. 好的金句让观众停下来截图\n\n## 输入\n\n**叙事框架**：[来自工位1.1的选择]\n{上游输入[0]}\n\n**视频时长**：[来自工位1.1b的选择]\n{上游输入[1]}\n\n**视频核心观点**：\n{上游输入[2]}\n\n**大纲与素材**：\n{上游输入[3]}\n\n## 字数公式（硬约束）\n根据选定的视频时长计算文案字数上限：\n\n**目标时长（秒） × 4~5字/秒 = 总字数**\n\n| 时长 | 总字数 | 镜头数 |\n|:----:|:------:|:-----:|\n| 15秒 | 60~75字 | 3~4个 |\n| 30秒 | 120~150字 | 5~7个 |\n| 60秒 | 240~300字 | 8~12个 |\n| 90秒 | 360~450字 | 12~16个 |\n\n严格按上表字数执行。如果写完后超出字数上限，必须自行删减到位。\n\n## 质量标准\n\n### 开头（黄金3秒）\n必须制造冲突/悬念/反常识。禁止用「你有没有想过？」这种烂大街开头。\n\n### 语言风格（口语化检查清单）\n✅ 多用「你」「我们」「是不是」\n✅ 短句为主，每句只说一件事\n❌ 禁止「随着」「在...方面」「值得注意的是」等书面语\n\n### 节奏标注\n- 关键结论 → 【此处加重/停顿】\n- 视觉配合点 → 【此处：视觉高光-内容说明】\n- 禁止过度标注（每3-4句最多1处）\n\n### 结尾\n必须有：1句金句总结 + 1句互动引导（关注/评论）\n\n## 输出格式\n\n直接输出逐字稿，不要额外说明。格式：\n\n```\n[场景1 - hook]\n文案内容...【此处加重/停顿】\n\n[场景2 - 情境]\n文案内容...【此处：视觉高光-全屏大字报/具体内容】\n\n...\n\n[场景N - 结尾]\n金句总结。关注我，下期聊...评论区告诉我...\n```\n\n## 异常处理\n- 如果上游输入为空或明显不完整 → 输出「ERROR：输入缺失，无法生成文案」\n- 如果字数第一次写超 → 必须在输出前自行删减到字数上限以内，不允许输出超长版本",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "prompt-review",
+      "type": "prompt",
+      "name": "prompt-review",
+      "parentId": "group-workshop-1",
+      "position": {
+        "x": 22,
+        "y": 330
+      },
+      "data": {
+        "label": "1.3 🔴 朗读审核",
+        "prompt": "请大声朗读一遍你刚才写下的文案。\n\n朗读时请逐项检查：\n- [ ] 开头3秒是否钩住人？\n- [ ] 有没有任何一句话你觉得「不像人话」？\n- [ ] 关键信息点是否标注了【此处加重/停顿】？\n- [ ] 结尾是否自然引导互动？\n- [ ] **全文字数是否符合选定时长对应的字数上限？**（15秒≤75字 / 30秒≤150字 / 60秒≤300字 / 90秒≤450字）\n\n把拗口、不自然的地方全部改掉。超长的部分必须删减到字数上限以内。这是你的脸面。\n\n确认无误后，在下一环节标记「通过」。",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "ask-copy-pass",
+      "type": "askUserQuestion",
+      "name": "ask-copy-pass",
+      "parentId": "group-workshop-1",
+      "position": {
+        "x": 22,
+        "y": 450
+      },
+      "data": {
+        "label": "1.4 🔴 文案通过？",
+        "questionText": "文案审核是否通过？",
+        "options": [
+          {
+            "id": "opt-pass",
+            "label": "通过，进入下一阶段",
+            "description": "文案终稿确认，进入视觉翻译阶段"
+          },
+          {
+            "id": "opt-revise",
+            "label": "需要修改",
+            "description": "告诉AI具体修改方向，重新生成"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 2
+      }
+    },
+    {
+      "id": "group-workshop-2",
+      "type": "group",
+      "name": "group-workshop-2",
+      "position": {
+        "x": 1370,
+        "y": 50
+      },
+      "style": {
+        "width": 540,
+        "height": 580
+      },
+      "data": {
+        "label": "🔴 车间2：视觉翻译"
+      }
+    },
+    {
+      "id": "ask-visual-style",
+      "type": "askUserQuestion",
+      "name": "ask-visual-style",
+      "parentId": "group-workshop-2",
+      "position": {
+        "x": 22,
+        "y": 30
+      },
+      "data": {
+        "label": "2.1 🔴 全片视觉定调",
+        "questionText": "选择视频的视觉风格方向：\n\n1. 科技冷峻风 — 暗色+冷色+数据可视化\n2. 温暖叙事风 — 暖色+故事感+柔和\n3. 极简冲击风 — 黑底白字+大字金句\n4. 极简人文+科技冷感 — 极深黑+暖白+噪点纹理",
+        "options": [
+          {
+            "id": "opt-tech",
+            "label": "科技冷峻风",
+            "description": "暗色背景+冷色数据可视化+干净排版 — 适配：科技批判/行业分析/反常识观点"
+          },
+          {
+            "id": "opt-warm",
+            "label": "温暖叙事风",
+            "description": "暖色渐变+故事感画面+柔和动画 — 适配：情感共鸣/个人故事/品牌叙事"
+          },
+          {
+            "id": "opt-bold",
+            "label": "极简冲击风",
+            "description": "黑底白字+极简构图+大字号金句 — 适配：金句类/争议挑战/短视频传播"
+          },
+          {
+            "id": "opt-human-tech",
+            "label": "极简人文+科技冷感",
+            "description": "#0a0a0a 极深黑背景+#e8e8e8 暖白文字+噪点纹理+微发光 — 适配：深度观点/人文科技/品牌调性"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "agent-storyboard",
+      "type": "subAgent",
+      "name": "agent-storyboard",
+      "parentId": "group-workshop-2",
+      "position": {
+        "x": 22,
+        "y": 160
+      },
+      "data": {
+        "label": "2.2 🔵 分镜脚本生成",
+        "description": "根据文案+视觉定调生成带视觉元素的分镜JSON",
+        "agentDefinition": "General-purpose agent for code modifications, file creation/editing, and shell execution.",
+        "prompt": "# 角色：资深视觉导演（情感节拍与视觉隐喻专家）\n\n你从业10年，擅长将文本转化为有情绪节奏的视觉叙事。你的核心理念：\n1. 每个动画都必须服务于信息传递——没有「随便选」的动画\n2. 转场是逻辑的视觉化——「但是」和「所以」不能用同一种转场\n3. 好的视频让观众「感觉到」结构，而不是「看到」结构\n\n---\n\n## 前置校验（重要！）\n\n检查上游口播文案的字数是否超过选定时长对应的上限：\n- 15秒 → ≤75字\n- 30秒 → ≤150字\n- 60秒 → ≤300字\n- 90秒 → ≤450字\n\n如果超限，必须先自动压缩到上限以内再分配到各场景。\n\n---\n\n## 输入材料\n\n**口播文案**：{上游输入（如超字数上限，使用压缩版本）}\n**视觉定调**：{上游输入（用户选择的风格方向）}\n**视频时长**：{上游输入（用户选择的时长）}\n\n**视频规格**：\n- 画面比例：16:9 横版\n- 帧率：30fps\n\n---\n\n## 情感节拍分析（起承转合）\n\n分析全文情感走向，将文案划分到以下四幕：\n\n| 幕 | 功能 | 情感基调 | 时长占比 | 视觉策略 |\n|:--:|------|---------|:--------:|---------|\n| 起 | 吸引注意，抛出钩子 | 好奇/冲击 | ~20% | 大字冲击/极简构图/强视觉开局 |\n| 承 | 建立逻辑，给出论据 | 理性/信任 | ~35% | 数据可视化/清晰排版/线性叙事 |\n| 转 | 制造冲突，提出挑战 | 紧张/反思 | ~30% | 对比构图/色彩转折/节奏加速 |\n| 合 | 升华总结，引导行动 | 温暖/力量 | ~15% | 情感画面/留白收束/温和结尾 |\n\n---\n\n## 时长与镜头数对照\n\n| 总时长 | 镜头数 | 每镜头时长 | 起 | 承 | 转 | 合 |\n|:-----:|:------:|:----------:|:--:|:--:|:--:|:--:|\n| 15秒 | 3~4个 | 3~5秒 | 1镜 | 1镜 | 1镜 | 1镜 |\n| 30秒 | 5~7个 | 3~6秒 | 1~2镜 | 2镜 | 1~2镜 | 1镜 |\n| 60秒 | 8~12个 | 5~8秒 | 2镜 | 3~4镜 | 2~3镜 | 1~2镜 |\n| 90秒 | 12~16个 | 5~8秒 | 2~3镜 | 4~5镜 | 3~4镜 | 2镜 |\n\n第1个镜头必须在前3秒内完成视觉冲击。\n倒数第2个镜头为「视觉高光点」（全屏大字报/极端特写/色彩反转/粒子汇聚）。\n最后1个镜头为结尾引导（温和收束）。\n\n---\n\n## 动画即语言（12种动画类型）\n\n每个动画严格按信息语义选择：\n\n| 语义 | 入场动画 | 说明 | 典型场景 |\n|------|---------|------|---------|\n| 抛出观点/冲击结论 | elasticOut + scaleBounce | 弹性弹入+缩放弹跳 | 开头钩子/金句 |\n| 数据/数字展示 | countUp | 数字从0滚到目标值 | 统计数据/年份 |\n| 强调/脉动呼吸 | pulse + glow | 脉搏式放大+微发光 | 关键结论 |\n| 对比/转折 | splitSlide + erase | 画面从中间分开展开 | 然而/但是/另一方面 |\n| 情绪渲染/回忆 | blurIn | 模糊到清晰渐显 | 情感段落/回顾 |\n| 高潮汇聚 | particleGather | 粒子从四周聚拢成形 | 视觉高光点/高潮句 |\n| 概念连接 | flowLine | 线条/光点沿路径流动 | 因果关系/逻辑推导 |\n| 冲突/警示 | glitch（text_effect） | 文字故障闪烁+色差 | 批判性观点/警示 |\n| 列表/步骤 | slideIn | 元素从左/右依次滑入 | 列举要点/步骤 |\n| 图表生长 | growUp | 柱状/饼图从底部生长 | 趋势对比/比例展示 |\n| 细微呈现 | fadeIn + scale | 淡入带轻微缩放 | 辅助信息/标注 |\n| 色彩过渡 | colorShift | 元素颜色渐变过渡 | 情绪/状态变化 |\n\n出场动画：fadeOut / blurOut / slideOut / shrinkOut / none\n\n---\n\n## 转场即逻辑（5种转场类型）\n\n严格按文案逻辑词选择转场：\n\n| 文案关键词 | 转场类型 | 时长 | 视觉效果 |\n|-----------|---------|:----:|---------|\n| 比如/例如/想象一下 | pushIn + crossFade | 0.4s | 画面推近+交叉淡化 |\n| 但是/然而/却/不过 | glitchTransition | 0.3s | 故障闪烁+RGB偏移 |\n| 对比/另一方面/不同的是 | flipCut | 0.5s | 画面3D水平翻转 |\n| 此外/还有/同时/另外 | swipeLeft | 0.3s | 新画面从左扫入覆盖 |\n| 所以/因此/总之/说到底 | fadeToBlack | 0.6s | 短暂黑场停顿后亮起 |\n\n如果镜头间没有明确逻辑词 → 使用 crossFade 0.3s（中性过渡）。\n\n---\n\n## 音效标记系统\n\n每个场景用【】嵌入音效标记（每镜最多2个，不可重叠）：\n\n| 标记 | 类型 | 情绪 | 典型场景 |\n|------|------|------|---------|\n| 【ticktock】 | 倒计时滴答声 | 紧迫/期待 | 倒计时/时间流逝 |\n| 【boom】 | 冲击爆炸声 | 震撼/力量 | 重磅数据/冲击结论 |\n| 【heartbeat】 | 心跳声 | 紧张/共鸣 | 人性化时刻/情感共鸣 |\n| 【piano】 | 钢琴单音/和弦 | 温暖/情感 | 回忆/升华/结尾 |\n| 【whoosh】 | 呼啸过渡声 | 流畅/动感 | 画面切换/快速移动 |\n| 【digital】 | 电子提示音 | 科技/现代 | 数据出现/科技元素 |\n| 【camera】 | 相机快门声 | 定格/强调 | 关键画面定格/金句 |\n| 【bass】 | 低频轰鸣 | 宏大/警示 | 转折预警/宏大叙事 |\n\n---\n\n## 后期特效系统（per scene）\n\n| 特效 | 效果 | 适用风格 |\n|------|------|---------|\n| chromatic | RGB通道色差偏移 | 科技冷峻、极简冲击 |\n| vignette | 四角暗角压暗 | 温暖叙事、极简人文 |\n| glow | 物体微发光晕 | 科技冷峻、极简人文 |\n| grain | 胶片噪点纹理 | 温暖叙事、极简人文 |\n\n每镜最多选2个。\n\n---\n\n## 视觉隐喻（贯穿全片）\n\n设定1个核心视觉隐喻，在至少2个场景中出现。\n在 video_meta.visual_metaphor 字段标明，在场景的 background.description 和 color_palette 中体现。\n\n---\n\n## 视觉风格调色板\n\n### 1. 科技冷峻风\n背景: #0a0a14→#1a1a2e / 主色: #00d4ff / 辅色: #7c3aed / 文字: #e2e8f0\n背景动画: slowParticles/geometryDrift / 默认postFX: chromatic+glow\n\n### 2. 温暖叙事风\n背景: #1a1410→#2a2018 / 主色: #f59e0b / 辅色: #ef4444 / 文字: #f5f0eb\n背景动画: gradientFlow / 默认postFX: vignette+grain\n\n### 3. 极简冲击风\n背景: #000000 / 主色/文字: #ffffff / 辅色: #ef4444仅高亮\n背景动画: none或geometryDrift极淡 / 默认postFX: none\n\n### 4. 极简人文+科技冷感\n背景: #0a0a0a / 文字: #e8e8e8 / 点缀: #4a4a4a / 高亮: #ffffff\n字体: Noto Sans SC（中文）/ Neue Machack（数字）\n纹理: grain 0.08 + glow 0.3强度\n背景动画: geometryDrift极慢+细线光晕\n构图: 留白>60%，极细边框1px\n禁用: 渐变色块、emoji、卡通图标\n默认postFX: grain+glow\n\n---\n\n## 文字布局与可见性\n\n- position.x 10~90%, position.y 15~85%\n- 超8字文本 scale 0.8~1.0，短文本2~4字 scale 1.2~1.6\n- chart scale 0.5~0.8，icon scale 1.5~3.0\n- 同一场景多元素 y轴间隔至少15%\n- 金句/核心结论：居中 + 大字号 + text_effect=typewriter\n\n---\n\n## 输出 JSON 格式\n\n```json\n{\n  \"video_meta\": {\n    \"total_duration\": \"总秒数\",\n    \"style\": \"选定的风格\",\n    \"visual_metaphor\": \"核心视觉隐喻\",\n    \"emotional_arc\": {\n      \"beat_intro\": \"起 - 场景ID\",\n      \"beat_build\": \"承 - 场景ID\",\n      \"beat_conflict\": \"转 - 场景ID\",\n      \"beat_resolution\": \"合 - 场景ID\"\n    }\n  },\n  \"scenes\": [\n    {\n      \"scene_id\": 1,\n      \"name\": \"场景名称\",\n      \"beat\": \"起|承|转|合\",\n      \"duration\": \"秒数\",\n      \"narration\": \"该场景文案\",\n      \"background\": {\n        \"description\": \"背景描述（体现视觉隐喻）\",\n        \"color_palette\": [\"#主色\",\"#辅色\",\"#点缀色\"],\n        \"animation\": \"背景动画类型\",\n        \"effect\": \"none\"\n      },\n      \"elements\": [{\n        \"type\": \"text|image|icon|chart\",\n        \"content\": \"元素内容\",\n        \"position\": {\"x\":\"%\",\"y\":\"%\"},\n        \"scale\": 1.0,\n        \"animation_in\": {\"type\":\"动画类型\",\"duration\":0.6},\n        \"animation_out\": {\"type\":\"fadeOut\",\"duration\":0.3},\n        \"text_effect\": \"none\",\n        \"emphasis\": \"none\"\n      }],\n      \"transition_to_next\": {\"type\":\"转场类型\",\"duration\":\"秒\"},\n      \"sfx\": [\"【音效标记】\"],\n      \"postFX\": {\"chromatic\":false,\"vignette\":false,\"glow\":false,\"grain\":false}\n    }\n  ]\n}\n```\n\n直接输出 JSON。确保：镜头数和总时长符合档位；narration字数÷duration≈4~5；第1镜头前3秒有冲击力；动画严格按语义；转场与逻辑词对应；视觉隐喻贯穿至少2个场景。",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "ask-storyboard-ok",
+      "type": "askUserQuestion",
+      "name": "ask-storyboard-ok",
+      "parentId": "group-workshop-2",
+      "position": {
+        "x": 22,
+        "y": 340
+      },
+      "data": {
+        "label": "2.3 🔴 分镜审核",
+        "questionText": "分镜脚本是否满足视觉要求？\n逐项检查：\n- 场景数是否符合选定时长档位？\n- 情感四幕（起承转合）是否完整覆盖文案？\n- 各场景narration字数是否与duration匹配？（正常语速4~5字/秒）\n- 动画类型是否按语义正确选择？\n- 转场是否与文案逻辑词对应？\n- 视觉隐喻是否贯穿至少2个场景？\n- 视觉高光点是否有冲击力设计？",
+        "options": [
+          {
+            "id": "opt-ok",
+            "label": "通过，进入装配",
+            "description": "分镜确认，进入音频与视频渲染阶段"
+          },
+          {
+            "id": "opt-revise",
+            "label": "需修改分镜",
+            "description": "告诉AI具体哪个场景需要调整，原地重生成"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 2
+      }
+    },
+    {
+      "id": "group-workshop-3",
+      "type": "group",
+      "name": "group-workshop-3",
+      "position": {
+        "x": 1940,
+        "y": 50
+      },
+      "style": {
+        "width": 540,
+        "height": 480
+      },
+      "data": {
+        "label": "🔵 车间3：自动装配"
+      }
+    },
+    {
+      "id": "agent-audio",
+      "type": "subAgent",
+      "name": "agent-audio",
+      "parentId": "group-workshop-3",
+      "position": {
+        "x": 22,
+        "y": 30
+      },
+      "data": {
+        "label": "3.1 🔵 音频轨道生成",
+        "description": "基于终稿文案生成配音音频",
+        "agentDefinition": "General-purpose agent for code modifications, file creation/editing, and shell execution.",
+        "prompt": "根据分镜脚本生成配音音频，确保音频时长与视频时长匹配。\n\n## 输入\n- **分镜JSON**：{上游输入}\n- 包含 scenes[].narration（每段台词）和 scenes[].duration（每段时长）\n\n## 执行步骤\n\n### 1. 计算总时长\n从分镜JSON计算视频总时长（含转场）：sum(scenes[i].duration) + sum(transitions[i].duration)\n\n### 2. 拼接完整文案\n将所有 scenes[].narration 用句号拼接。估算配音语速约 4~5字/秒，确保配音时长接近视频总时长。\n\n### 3. 生成配音\n使用 edge-tts 生成配音：\n```bash\npython -m edge_tts --voice zh-CN-YunxiNeural --text \"拼接后的完整文案\" --write-media ./temp_audio.mp3\n```\n如果文案包含特殊符号导致命令行报错，则写入临时文件后用 --file 参数。\n\n### 4. 检查音频\n- 确认 temp_audio.mp3 已生成且非空\n- 用 ffprobe 或 mutagen 获取音频时长\n- 如果音频时长 < 视频总时长-1秒，用 ffmpeg 拉伸或添加静音填充\n- 如果音频时长 > 视频总时长+1秒，裁剪至视频时长\n\n### 5. 输出\n输出格式（纯文本）：\n```\n音频文件: ./temp_audio.mp3\n音频时长: XX秒\n视频时长: XX秒\n```\n\n## 注意\n- 中文语音使用 zh-CN-YunxiNeural\n- 确保音频文件路径后续能被 agent-render 直接使用",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "agent-render",
+      "type": "subAgent",
+      "name": "agent-render",
+      "parentId": "group-workshop-3",
+      "position": {
+        "x": 22,
+        "y": 160
+      },
+      "data": {
+        "label": "3.2 🔵 视频合成渲染",
+        "description": "根据分镜JSON+视觉定调+音频生成最终视频",
+        "agentDefinition": "General-purpose agent for code modifications, file creation/editing, and shell execution.",
+        "prompt": "根据分镜脚本和配音音频，使用 render_engine.js 生成完整视频。\n\n**分镜脚本**：{上游输入（JSON，来自agent-storyboard，含完整情感节拍/动画/转场/音效/后效规格）}\n**视觉定调**：{上游输入（风格方向，来自ask-visual-style）}\n**音频文件**：{上游输入（来自agent-audio）}\n\n## 渲染引擎\n\nrender_engine.js — v4.0 版，基于 Remotion 4.0，完整支持以下能力：\n- 12种入场动画：elasticOut, scaleBounce, countUp, pulse, splitSlide, erase, blurIn, particleGather, flowLine, slideIn, growUp, colorShift\n- 5种转场：pushIn+crossFade, glitchTransition, flipCut, swipeLeft, fadeToBlack\n- 8种音效标记：ticktock, boom, heartbeat, piano, whoosh, digital, camera, bass\n- 4种 postFX：chromatic, vignette, glow, grain\n- 全部6种元素类型：text, image, icon, chart, shape, particle\n- 全部文字特效：typewriter, scalePerChar, glitch, handwrite, none\n\n## 关键约束\n\n### 帧率\n必须使用 30fps。\n\n### 后期特效\n分镜JSON中每个scene已包含 postFX 配置，直接使用即可。\n如果 postFX 为 null 或 undefined，根据视觉定调选择默认值：\n- 科技冷峻风 → { chromatic: true, vignette: true, grain: false, glow: false }\n- 温暖叙事风 → { chromatic: false, vignette: true, grain: true, glow: true }\n- 极简冲击风 → { chromatic: false, vignette: false, grain: false, glow: false }\n- 极简人文+科技冷感 → { chromatic: false, vignette: false, grain: true, glow: true }\n\n### 常见问题\n- 转场时长不能超过场景时长的一半\n- 文字特效（scalePerChar/handwrite/glitch）和入场动画不冲突，可同时设置\n- chart 元素的 content 必须是 JSON 数组格式: [{\"label\":\"名\",\"value\":数}]\n- sfx 音效使用内置音效库，路径为 ./public/sfx/{type}.mp3\n- 如果某音效文件不存在，跳过该音效，不要中断渲染\n\n## 执行步骤\n\n### 1. 确认音频文件可用\n检查 {上游输入（音频文件）} 路径是否存在，文件大小 > 1KB。\n\n### 2. 编写渲染脚本\n创建 run_render.js：\n\n```js\nconst RenderEngine = require(\"./render_engine\");\nconst storyboard = { /* 完整分镜 JSON */ };\nconst engine = new RenderEngine({\n  fps: 30,\n  outputDir: \"./render_output\",\n  audioFile: \"{上游输入（音频文件路径）}\",\n  remotionProjectDir: \".\"\n});\nengine.renderFromStoryboard(storyboard).then(p => console.log(\"DONE:\", p));\n```\n\n### 3. 运行\n```bash\nnode run_render.js\n```\n\n### 4. 验证输出\n检查 final_output.mp4：\n- 分辨率应为 1920×1080\n- 时长与预期一致（±1秒）\n- 文件大小合理\n\n### 5. 报告\n输出最终视频路径、时长、文件大小、使用的场景数、情感四幕覆盖情况",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "ask-final-check",
+      "type": "askUserQuestion",
+      "name": "ask-final-check",
+      "parentId": "group-workshop-3",
+      "position": {
+        "x": 22,
+        "y": 340
+      },
+      "data": {
+        "label": "3.3 🔴 终检抽检",
+        "questionText": "视频终检 — 三点跳跃检查法：\n\n1️⃣ 0-30秒：钩子是否抓人？画面/声音/字幕是否同步？\n2️⃣ 中间高光点：视觉冲击力是否达标？\n3️⃣ 结尾引导：关注/评论引导是否清晰？\n4️⃣ 随机快进：有无视觉穿帮或文字错误？",
+        "options": [
+          {
+            "id": "opt-pass",
+            "label": "通过，准予发布",
+            "description": "三个关键点没问题，进入分发阶段"
+          },
+          {
+            "id": "opt-fix-visual",
+            "label": "画面问题",
+            "description": "描述具体问题，返回渲染阶段修复"
+          },
+          {
+            "id": "opt-fix-audio",
+            "label": "音频问题",
+            "description": "描述音频问题，返回音频生成阶段修复"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 3
+      }
+    },
+    {
+      "id": "group-workshop-4",
+      "type": "group",
+      "name": "group-workshop-4",
+      "position": {
+        "x": 2510,
+        "y": 50
+      },
+      "style": {
+        "width": 540,
+        "height": 380
+      },
+      "data": {
+        "label": "🔵 车间4：分发与进化"
+      }
+    },
+    {
+      "id": "agent-distribute",
+      "type": "subAgent",
+      "name": "agent-distribute",
+      "parentId": "group-workshop-4",
+      "position": {
+        "x": 22,
+        "y": 30
+      },
+      "data": {
+        "label": "4.1 🔵 多平台文案创作",
+        "description": "根据视频文案生成分发内容：标题/切片文案/图文版",
+        "agentDefinition": "General-purpose agent for code modifications, file creation/editing, and shell execution.",
+        "prompt": "请根据以下视频文案，生成用于分发的配套内容。\n\n**视频文案**：{上游输入}\n\n生成任务：\n1. **3个爆款标题**：分别针对B站、抖音、公众号的推荐机制\n2. **5条短视频文案**：适用于抖音/小红书，带表情和话题标签\n3. **1篇图文版**：结构完整，可直接发布在知乎、公众号次条",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "agent-archive",
+      "type": "subAgent",
+      "name": "agent-archive",
+      "parentId": "group-workshop-4",
+      "position": {
+        "x": 22,
+        "y": 190
+      },
+      "data": {
+        "label": "4.2 🔵 资产归档与学习",
+        "description": "归档工程文件+更新案例库+生成效能报告",
+        "agentDefinition": "General-purpose agent for code modifications, file creation/editing, and shell execution.",
+        "prompt": "本次视频生产已完成。请自动完成归档。\n\n步骤：\n1. 提取关键参数：[题材类型] + [使用风格] + [视频时长] + [文案字数]\n2. 创建归档目录：archive/[日期]_[题材缩写]/\n3. 复制以下文件到归档目录：文案终稿、分镜JSON、视频文件\n4. 更新风格匹配记录：在 archive/style_match_log.csv 追加一条记录\n5. 检索 archive 目录，检查是否已累积满10期记录\n6. 如果满10期 → 生成《风格效能简报》：\n   - 最高/最低频使用的风格\n   - 建议调整的方向\n   - 发现的问题模式\n\n归档目录结构：\narchive/\n├── style_match_log.csv\n├── performance_report.md（满10期生成）\n└── [日期]_[题材]/\n    ├── copy_final.md\n    ├── storyboard.json\n    └── video.mp4",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "end-2",
+      "type": "end",
+      "name": "end-2",
+      "position": {
+        "x": 3120,
+        "y": 280
+      },
+      "data": {
+        "label": "End — 全流程完成"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "c1",
+      "from": "start-1",
+      "to": "prompt-core-idea",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c2",
+      "from": "prompt-core-idea",
+      "to": "agent-material",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c3",
+      "from": "agent-material",
+      "to": "agent-angle",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c4",
+      "from": "agent-angle",
+      "to": "ask-angle-satisfied",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c5",
+      "from": "ask-angle-satisfied",
+      "to": "ask-framework",
+      "fromPort": "branch-0",
+      "toPort": "input"
+    },
+    {
+      "id": "c6",
+      "from": "ask-angle-satisfied",
+      "to": "agent-angle",
+      "fromPort": "branch-1",
+      "toPort": "input"
+    },
+    {
+      "id": "c7",
+      "from": "ask-angle-satisfied",
+      "to": "agent-material",
+      "fromPort": "branch-2",
+      "toPort": "input"
+    },
+    {
+      "id": "c8",
+      "from": "ask-framework",
+      "to": "ask-duration",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c8b",
+      "from": "ask-duration",
+      "to": "agent-copy",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c9",
+      "from": "agent-copy",
+      "to": "prompt-review",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c10",
+      "from": "prompt-review",
+      "to": "ask-copy-pass",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c12",
+      "from": "ask-copy-pass",
+      "to": "agent-copy",
+      "fromPort": "branch-1",
+      "toPort": "input"
+    },
+    {
+      "id": "c13",
+      "from": "ask-copy-pass",
+      "to": "ask-visual-style",
+      "fromPort": "branch-0",
+      "toPort": "input"
+    },
+    {
+      "id": "c14",
+      "from": "ask-visual-style",
+      "to": "agent-storyboard",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c15",
+      "from": "agent-storyboard",
+      "to": "ask-storyboard-ok",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c16",
+      "from": "ask-storyboard-ok",
+      "to": "agent-audio",
+      "fromPort": "branch-0",
+      "toPort": "input"
+    },
+    {
+      "id": "c17",
+      "from": "ask-storyboard-ok",
+      "to": "agent-storyboard",
+      "fromPort": "branch-1",
+      "toPort": "input"
+    },
+    {
+      "id": "c19",
+      "from": "agent-audio",
+      "to": "agent-render",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c20",
+      "from": "agent-render",
+      "to": "ask-final-check",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c21",
+      "from": "ask-final-check",
+      "to": "agent-distribute",
+      "fromPort": "branch-0",
+      "toPort": "input"
+    },
+    {
+      "id": "c22",
+      "from": "ask-final-check",
+      "to": "agent-render",
+      "fromPort": "branch-1",
+      "toPort": "input"
+    },
+    {
+      "id": "c23",
+      "from": "ask-final-check",
+      "to": "agent-audio",
+      "fromPort": "branch-2",
+      "toPort": "input"
+    },
+    {
+      "id": "c25",
+      "from": "agent-distribute",
+      "to": "agent-archive",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c26",
+      "from": "agent-archive",
+      "to": "end-2",
+      "fromPort": "output",
+      "toPort": "input"
+    }
+  ],
+  "subAgentFlows": []
+}
