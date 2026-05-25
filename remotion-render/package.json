@@ -1,0 +1,22 @@
+{
+  "name": "remotion-render",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "remotion studio",
+    "render": "remotion render AlibabaVideo out/video.mp4"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@remotion/cli": "^4.0.466",
+    "@remotion/player": "^4.0.466",
+    "@remotion/renderer": "^4.0.466",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "remotion": "^4.0.466"
+  }
+}
