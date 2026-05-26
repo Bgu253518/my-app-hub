@@ -1,0 +1,1275 @@
+{
+  "id": "short-film-studio",
+  "name": "short-film-studio",
+  "version": "1.0.0",
+  "nodes": [
+    {
+      "id": "group-ws-0",
+      "type": "group",
+      "name": "group-ws-0",
+      "position": {
+        "x": 200,
+        "y": 35
+      },
+      "data": {
+        "label": "车间0：创意熔炼"
+      },
+      "style": {
+        "width": 540,
+        "height": 640
+      }
+    },
+    {
+      "id": "group-ws-1",
+      "type": "group",
+      "name": "group-ws-1",
+      "position": {
+        "x": 800,
+        "y": 35
+      },
+      "data": {
+        "label": "车间1：视觉定调"
+      },
+      "style": {
+        "width": 540,
+        "height": 420
+      }
+    },
+    {
+      "id": "group-ws-2",
+      "type": "group",
+      "name": "group-ws-2",
+      "position": {
+        "x": 1400,
+        "y": 35
+      },
+      "data": {
+        "label": "车间2：分镜骨架+文案锻造"
+      },
+      "style": {
+        "width": 540,
+        "height": 780
+      }
+    },
+    {
+      "id": "group-ws-3",
+      "type": "group",
+      "name": "group-ws-3",
+      "position": {
+        "x": 2000,
+        "y": 35
+      },
+      "data": {
+        "label": "车间3：分镜细化+素材工场"
+      },
+      "style": {
+        "width": 540,
+        "height": 880
+      }
+    },
+    {
+      "id": "group-ws-4",
+      "type": "group",
+      "name": "group-ws-4",
+      "position": {
+        "x": 2600,
+        "y": 250
+      },
+      "data": {
+        "label": "车间4：引擎分流"
+      },
+      "style": {
+        "width": 540,
+        "height": 260
+      }
+    },
+    {
+      "id": "group-ws-5A",
+      "type": "group",
+      "name": "group-ws-5A",
+      "position": {
+        "x": 3200,
+        "y": -100
+      },
+      "data": {
+        "label": "车间5A：Remotion装配+音频"
+      },
+      "style": {
+        "width": 540,
+        "height": 680
+      }
+    },
+    {
+      "id": "group-ws-5B",
+      "type": "group",
+      "name": "group-ws-5B",
+      "position": {
+        "x": 3200,
+        "y": 560
+      },
+      "data": {
+        "label": "车间5B：小云雀创意生成"
+      },
+      "style": {
+        "width": 540,
+        "height": 420
+      }
+    },
+    {
+      "id": "group-ws-6",
+      "type": "group",
+      "name": "group-ws-6",
+      "position": {
+        "x": 3840,
+        "y": 180
+      },
+      "data": {
+        "label": "车间6：分发与进化"
+      },
+      "style": {
+        "width": 540,
+        "height": 340
+      }
+    },
+    {
+      "id": "start-1",
+      "type": "start",
+      "name": "start-1",
+      "position": {
+        "x": 60,
+        "y": 320
+      },
+      "data": {
+        "label": "Start"
+      }
+    },
+    {
+      "id": "ask-content-type",
+      "type": "askUserQuestion",
+      "name": "ask-content-type",
+      "position": {
+        "x": 130,
+        "y": 320
+      },
+      "data": {
+        "label": "0.0 创作模式",
+        "questionText": "你今天要做什么？",
+        "options": [
+          {
+            "id": "opt-idea",
+            "label": "我有一个观点，帮我从零创作",
+            "description": "完整流程：观点->观众->风格->分镜->文案->细化->渲染"
+          },
+          {
+            "id": "opt-material",
+            "label": "我已有文案/分镜，帮我渲染成片",
+            "description": "快速通道：跳过创意打磨，直接素材生成->渲染输出"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 2
+      }
+    },
+    {
+      "id": "agent-quick-ingest",
+      "type": "subAgent",
+      "name": "agent-quick-ingest",
+      "position": {
+        "x": 30,
+        "y": 740
+      },
+      "data": {
+        "label": "快速通道：材料结构化",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "prompt-director-adapt",
+      "type": "prompt",
+      "name": "prompt-director-adapt",
+      "position": {
+        "x": 270,
+        "y": 740
+      },
+      "data": {
+        "label": "导演改编解读",
+        "prompt": "拿到素材后的第一件事：重新解读。用3句话总结理解，标注关键场景，提出改编建议。"
+      }
+    },
+    {
+      "id": "prompt-core-idea",
+      "type": "prompt",
+      "name": "prompt-core-idea",
+      "position": {
+        "x": 22,
+        "y": 20
+      },
+      "data": {
+        "label": "0.1 核心观点打磨",
+        "prompt": "写下你「绝不能在视频中被删掉的一句话」。必须足够锋利、足够具体、是你真正相信的。"
+      },
+      "parentId": "group-ws-0"
+    },
+    {
+      "id": "ask-audience",
+      "type": "askUserQuestion",
+      "name": "ask-audience",
+      "position": {
+        "x": 22,
+        "y": 75
+      },
+      "data": {
+        "label": "0.2 观众画像定义",
+        "questionText": "你的目标观众是谁？他们处在什么样的文化时刻？",
+        "options": [
+          {
+            "id": "opt-professional",
+            "label": "职场白领"
+          },
+          {
+            "id": "opt-student",
+            "label": "学生群体"
+          },
+          {
+            "id": "opt-entrepreneur",
+            "label": "创业者/自由职业"
+          },
+          {
+            "id": "opt-general",
+            "label": "普通大众"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 1
+      },
+      "parentId": "group-ws-0"
+    },
+    {
+      "id": "agent-material",
+      "type": "subAgent",
+      "name": "agent-material",
+      "position": {
+        "x": 22,
+        "y": 195
+      },
+      "data": {
+        "label": "0.3 素材弹药装填",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      },
+      "parentId": "group-ws-0"
+    },
+    {
+      "id": "agent-angle",
+      "type": "subAgent",
+      "name": "agent-angle",
+      "position": {
+        "x": 22,
+        "y": 335
+      },
+      "data": {
+        "label": "0.4 多维角度爆破",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      },
+      "parentId": "group-ws-0"
+    },
+    {
+      "id": "ask-angle-satisfied",
+      "type": "askUserQuestion",
+      "name": "ask-angle-satisfied",
+      "position": {
+        "x": 22,
+        "y": 495
+      },
+      "data": {
+        "label": "0.5 角度满意？",
+        "questionText": "以上5个角度质量如何？",
+        "options": [
+          {
+            "id": "opt-ok",
+            "label": "满意，选一个角度",
+            "description": "进入分镜骨架设计"
+          },
+          {
+            "id": "opt-partial",
+            "label": "部分微调(最多2次)"
+          },
+          {
+            "id": "opt-redo",
+            "label": "全部重来(最多2次)"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 3,
+        "description": "进入分镜骨架设计（非视觉定调）"
+      },
+      "parentId": "group-ws-0"
+    },
+    {
+      "id": "ask-visual-style",
+      "type": "askUserQuestion",
+      "name": "ask-visual-style",
+      "position": {
+        "x": 22,
+        "y": 20
+      },
+      "data": {
+        "label": "1.1 全片视觉定调",
+        "questionText": "基于分镜骨架的情绪和内容，选择最适合的视觉风格方向：",
+        "options": [
+          {
+            "id": "opt-tech",
+            "label": "科技冷峻风"
+          },
+          {
+            "id": "opt-warm",
+            "label": "温暖叙事风"
+          },
+          {
+            "id": "opt-bold",
+            "label": "极简冲击风"
+          },
+          {
+            "id": "opt-human-tech",
+            "label": "极简人文+科技冷感"
+          },
+          {
+            "id": "opt-data-info",
+            "label": "数据信息图风"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 1
+      },
+      "parentId": "group-ws-1"
+    },
+    {
+      "id": "agent-xyq-style-sample",
+      "type": "subAgent",
+      "name": "agent-xyq-style-sample",
+      "position": {
+        "x": 22,
+        "y": 120
+      },
+      "data": {
+        "label": "1.2 小云雀风格样图",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      },
+      "parentId": "group-ws-1"
+    },
+    {
+      "id": "ask-style-confirm",
+      "type": "askUserQuestion",
+      "name": "ask-style-confirm",
+      "position": {
+        "x": 22,
+        "y": 270
+      },
+      "data": {
+        "label": "1.3 确认风格样图",
+        "questionText": "小云雀已生成风格样图。视觉方向是否满意？",
+        "options": [
+          {
+            "id": "opt-ok",
+            "label": "确认，进入叙事框架"
+          },
+          {
+            "id": "opt-redo",
+            "label": "重新生成(最多2次)"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 2
+      },
+      "parentId": "group-ws-1"
+    },
+    {
+      "id": "agent-storyboard-skeleton",
+      "type": "subAgent",
+      "name": "agent-storyboard-skeleton",
+      "position": {
+        "x": 22,
+        "y": 20
+      },
+      "data": {
+        "label": "2.1 分镜骨架+情绪曲线+视觉母题",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      },
+      "parentId": "group-ws-2"
+    },
+    {
+      "id": "ask-framework",
+      "type": "askUserQuestion",
+      "name": "ask-framework",
+      "position": {
+        "x": 22,
+        "y": 170
+      },
+      "data": {
+        "label": "2.2 叙事框架选择",
+        "questionText": "选择口播文案的叙事框架：",
+        "options": [
+          {
+            "id": "opt-golden-circle",
+            "label": "黄金圈(Why->How->What)"
+          },
+          {
+            "id": "opt-scqa",
+            "label": "SCQA(情境->冲突->问题->答案)"
+          },
+          {
+            "id": "opt-hero",
+            "label": "英雄之旅"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 1
+      },
+      "parentId": "group-ws-2"
+    },
+    {
+      "id": "ask-duration",
+      "type": "askUserQuestion",
+      "name": "ask-duration",
+      "position": {
+        "x": 22,
+        "y": 250
+      },
+      "data": {
+        "label": "2.3 视频时长选择",
+        "questionText": "选择目标视频时长：",
+        "options": [
+          {
+            "id": "opt-15s",
+            "label": "15秒"
+          },
+          {
+            "id": "opt-30s",
+            "label": "30秒"
+          },
+          {
+            "id": "opt-60s",
+            "label": "60秒"
+          },
+          {
+            "id": "opt-90s",
+            "label": "90秒"
+          },
+          {
+            "id": "opt-custom",
+            "label": "自定义"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 1
+      },
+      "parentId": "group-ws-2"
+    },
+    {
+      "id": "agent-copy",
+      "type": "subAgent",
+      "name": "agent-copy",
+      "position": {
+        "x": 22,
+        "y": 340
+      },
+      "data": {
+        "label": "2.4 口播文案锻造",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      },
+      "parentId": "group-ws-2"
+    },
+    {
+      "id": "prompt-review",
+      "type": "prompt",
+      "name": "prompt-review",
+      "position": {
+        "x": 22,
+        "y": 480
+      },
+      "data": {
+        "label": "2.5 朗读审核",
+        "prompt": "请大声朗读你的文案。检查：开头3秒钩子、口语自然度、标注准确、字数合规。改掉拗口处。"
+      },
+      "parentId": "group-ws-2"
+    },
+    {
+      "id": "ask-copy-pass",
+      "type": "askUserQuestion",
+      "name": "ask-copy-pass",
+      "position": {
+        "x": 22,
+        "y": 590
+      },
+      "data": {
+        "label": "2.6 文案通过？",
+        "questionText": "文案审核是否通过？",
+        "options": [
+          {
+            "id": "opt-pass",
+            "label": "通过"
+          },
+          {
+            "id": "opt-revise",
+            "label": "需要修改(最多2次)"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 2
+      },
+      "parentId": "group-ws-2"
+    },
+    {
+      "id": "agent-storyboard-full",
+      "type": "subAgent",
+      "name": "agent-storyboard-full",
+      "position": {
+        "x": 22,
+        "y": 20
+      },
+      "data": {
+        "label": "3.1 分镜细化+并行音频草图",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      },
+      "parentId": "group-ws-3"
+    },
+    {
+      "id": "agent-xyq-media-gen",
+      "type": "subAgent",
+      "name": "agent-xyq-media-gen",
+      "position": {
+        "x": 22,
+        "y": 170
+      },
+      "data": {
+        "label": "3.2 媒体素材生成",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      },
+      "parentId": "group-ws-3"
+    },
+    {
+      "id": "agent-subtitle-gen",
+      "type": "subAgent",
+      "name": "agent-subtitle-gen",
+      "position": {
+        "x": 270,
+        "y": 170
+      },
+      "data": {
+        "label": "3.3 字幕时间轴生成",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      },
+      "parentId": "group-ws-3"
+    },
+    {
+      "id": "agent-audio-sketch",
+      "type": "subAgent",
+      "name": "agent-audio-sketch",
+      "position": {
+        "x": 270,
+        "y": 20
+      },
+      "data": {
+        "label": "3.1b 音频设计草图（并行）",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      },
+      "parentId": "group-ws-3"
+    },
+    {
+      "id": "agent-xyq-highlight",
+      "type": "subAgent",
+      "name": "agent-xyq-highlight",
+      "position": {
+        "x": 22,
+        "y": 370
+      },
+      "data": {
+        "label": "3.5 小云雀视觉高光",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      },
+      "parentId": "group-ws-3"
+    },
+    {
+      "id": "ask-storyboard-review",
+      "type": "askUserQuestion",
+      "name": "ask-storyboard-review",
+      "position": {
+        "x": 22,
+        "y": 680
+      },
+      "data": {
+        "label": "3.6 分镜+素材审核",
+        "questionText": "请审核：场景数/情绪曲线/视觉母题/B-roll/字幕同步/色彩一致/转场/高光",
+        "options": [
+          {
+            "id": "opt-ok",
+            "label": "通过，进入引擎分流"
+          },
+          {
+            "id": "opt-revise",
+            "label": "需修改(最多2次)"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 2
+      },
+      "parentId": "group-ws-3"
+    },
+    {
+      "id": "agent-engine-recommend",
+      "type": "subAgent",
+      "name": "agent-engine-recommend",
+      "position": {
+        "x": 22,
+        "y": 20
+      },
+      "data": {
+        "label": "4.1 引擎推荐",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      },
+      "parentId": "group-ws-4"
+    },
+    {
+      "id": "ask-engine-confirm",
+      "type": "askUserQuestion",
+      "name": "ask-engine-confirm",
+      "position": {
+        "x": 22,
+        "y": 140
+      },
+      "data": {
+        "label": "4.2 确认渲染引擎",
+        "questionText": "引擎推荐结果已出。请确认渲染方式：",
+        "options": [
+          {
+            "id": "opt-remotion",
+            "label": "Remotion精确装配"
+          },
+          {
+            "id": "opt-xyq",
+            "label": "小云雀创意生成"
+          },
+          {
+            "id": "opt-hybrid",
+            "label": "混合模式"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 3
+      },
+      "parentId": "group-ws-4"
+    },
+    {
+      "id": "agent-audio-design",
+      "type": "subAgent",
+      "name": "agent-audio-design",
+      "position": {
+        "x": 22,
+        "y": 20
+      },
+      "data": {
+        "label": "5A.1 音频设计",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      },
+      "parentId": "group-ws-5A"
+    },
+    {
+      "id": "agent-audio",
+      "type": "subAgent",
+      "name": "agent-audio",
+      "position": {
+        "x": 22,
+        "y": 170
+      },
+      "data": {
+        "label": "5A.2 TTS配音生成",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      },
+      "parentId": "group-ws-5A"
+    },
+    {
+      "id": "agent-render-remotion",
+      "type": "subAgent",
+      "name": "agent-render-remotion",
+      "position": {
+        "x": 22,
+        "y": 320
+      },
+      "data": {
+        "label": "5A.3 Remotion渲染+音频合成",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      },
+      "parentId": "group-ws-5A"
+    },
+    {
+      "id": "prompt-director-review",
+      "type": "prompt",
+      "name": "prompt-director-review",
+      "position": {
+        "x": 22,
+        "y": 395
+      },
+      "data": {
+        "label": "5A.4 导演审片",
+        "prompt": "完整观看一遍粗剪。不暂停，不记笔记，只是感受。然后回答唯一一个问题：这个东西有灵魂吗？"
+      },
+      "parentId": "group-ws-5A"
+    },
+    {
+      "id": "ask-final-check-a",
+      "type": "askUserQuestion",
+      "name": "ask-final-check-a",
+      "position": {
+        "x": 22,
+        "y": 470
+      },
+      "data": {
+        "label": "5A.5 终检(QC)",
+        "questionText": "专业QC：LUFS响度/安全区/首帧/尾帧/字幕同步/转场/情绪节奏/静默时刻/随机快进",
+        "options": [
+          {
+            "id": "opt-pass",
+            "label": "通过"
+          },
+          {
+            "id": "opt-fix-visual",
+            "label": "画面问题(最多2次)"
+          },
+          {
+            "id": "opt-fix-audio",
+            "label": "音频问题(最多2次)"
+          },
+          {
+            "id": "opt-fix-subtitle",
+            "label": "字幕问题(最多2次)"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 4
+      },
+      "parentId": "group-ws-5A"
+    },
+    {
+      "id": "agent-xyq-submit",
+      "type": "subAgent",
+      "name": "agent-xyq-submit",
+      "position": {
+        "x": 22,
+        "y": 20
+      },
+      "data": {
+        "label": "5B.1 提交小云雀全片",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      },
+      "parentId": "group-ws-5B"
+    },
+    {
+      "id": "agent-xyq-poll",
+      "type": "subAgent",
+      "name": "agent-xyq-poll",
+      "position": {
+        "x": 22,
+        "y": 150
+      },
+      "data": {
+        "label": "5B.2 轮询下载成品",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      },
+      "parentId": "group-ws-5B"
+    },
+    {
+      "id": "ask-final-check-b",
+      "type": "askUserQuestion",
+      "name": "ask-final-check-b",
+      "position": {
+        "x": 22,
+        "y": 290
+      },
+      "data": {
+        "label": "5B.3 成品审核",
+        "questionText": "小云雀成品审核：视觉连贯/特效质量/文字准确/整体观感",
+        "options": [
+          {
+            "id": "opt-pass",
+            "label": "通过"
+          },
+          {
+            "id": "opt-fallback",
+            "label": "不通过，降级到Remotion混合模式"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 2
+      },
+      "parentId": "group-ws-5B"
+    },
+    {
+      "id": "agent-distribute",
+      "type": "subAgent",
+      "name": "agent-distribute",
+      "position": {
+        "x": 22,
+        "y": 20
+      },
+      "data": {
+        "label": "6.1 多平台分发文案",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      },
+      "parentId": "group-ws-6"
+    },
+    {
+      "id": "agent-archive",
+      "type": "subAgent",
+      "name": "agent-archive",
+      "position": {
+        "x": 22,
+        "y": 160
+      },
+      "data": {
+        "label": "6.2 资产归档与学习",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      },
+      "parentId": "group-ws-6"
+    },
+    {
+      "id": "end-2",
+      "type": "end",
+      "name": "end-2",
+      "position": {
+        "x": 4460,
+        "y": 340
+      },
+      "data": {
+        "label": "End"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "c0",
+      "from": "start-1",
+      "to": "ask-content-type",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c0a",
+      "from": "ask-content-type",
+      "to": "prompt-core-idea",
+      "fromPort": "branch-0",
+      "toPort": "input"
+    },
+    {
+      "id": "c0b",
+      "from": "ask-content-type",
+      "to": "agent-quick-ingest",
+      "fromPort": "branch-1",
+      "toPort": "input"
+    },
+    {
+      "id": "c1",
+      "from": "prompt-core-idea",
+      "to": "ask-audience",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c1b",
+      "from": "ask-audience",
+      "to": "agent-material",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c2",
+      "from": "agent-material",
+      "to": "agent-angle",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c3",
+      "from": "agent-angle",
+      "to": "ask-angle-satisfied",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c4",
+      "from": "ask-angle-satisfied",
+      "to": "agent-storyboard-skeleton",
+      "fromPort": "branch-0",
+      "toPort": "input"
+    },
+    {
+      "id": "c5",
+      "from": "ask-angle-satisfied",
+      "to": "agent-angle",
+      "fromPort": "branch-1",
+      "toPort": "input"
+    },
+    {
+      "id": "c6",
+      "from": "ask-angle-satisfied",
+      "to": "agent-material",
+      "fromPort": "branch-2",
+      "toPort": "input"
+    },
+    {
+      "id": "c7",
+      "from": "agent-storyboard-skeleton",
+      "to": "ask-visual-style",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c8",
+      "from": "ask-visual-style",
+      "to": "agent-xyq-style-sample",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c9",
+      "from": "agent-xyq-style-sample",
+      "to": "ask-style-confirm",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c10",
+      "from": "ask-style-confirm",
+      "to": "ask-framework",
+      "fromPort": "branch-0",
+      "toPort": "input"
+    },
+    {
+      "id": "c11",
+      "from": "ask-style-confirm",
+      "to": "agent-xyq-style-sample",
+      "fromPort": "branch-1",
+      "toPort": "input"
+    },
+    {
+      "id": "c12",
+      "from": "ask-framework",
+      "to": "ask-duration",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c13",
+      "from": "ask-duration",
+      "to": "agent-copy",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c14",
+      "from": "agent-copy",
+      "to": "prompt-review",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c15",
+      "from": "prompt-review",
+      "to": "ask-copy-pass",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c16",
+      "from": "ask-copy-pass",
+      "to": "agent-storyboard-full",
+      "fromPort": "branch-0",
+      "toPort": "input"
+    },
+    {
+      "id": "c17",
+      "from": "ask-copy-pass",
+      "to": "agent-copy",
+      "fromPort": "branch-1",
+      "toPort": "input"
+    },
+    {
+      "id": "c18",
+      "from": "agent-storyboard-full",
+      "to": "agent-xyq-media-gen",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c19",
+      "from": "agent-storyboard-full",
+      "to": "agent-subtitle-gen",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c19b",
+      "from": "agent-storyboard-full",
+      "to": "agent-audio-sketch",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c20",
+      "from": "agent-xyq-media-gen",
+      "to": "agent-xyq-highlight",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c21",
+      "from": "agent-xyq-highlight",
+      "to": "ask-storyboard-review",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c22",
+      "from": "agent-subtitle-gen",
+      "to": "ask-storyboard-review",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c22b",
+      "from": "agent-audio-sketch",
+      "to": "ask-storyboard-review",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c23",
+      "from": "ask-storyboard-review",
+      "to": "agent-engine-recommend",
+      "fromPort": "branch-0",
+      "toPort": "input"
+    },
+    {
+      "id": "c24",
+      "from": "ask-storyboard-review",
+      "to": "agent-storyboard-full",
+      "fromPort": "branch-1",
+      "toPort": "input"
+    },
+    {
+      "id": "c25",
+      "from": "agent-quick-ingest",
+      "to": "prompt-director-adapt",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c25b",
+      "from": "prompt-director-adapt",
+      "to": "agent-xyq-media-gen",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c26",
+      "from": "prompt-director-adapt",
+      "to": "agent-subtitle-gen",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c27",
+      "from": "agent-engine-recommend",
+      "to": "ask-engine-confirm",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c28",
+      "from": "ask-engine-confirm",
+      "to": "agent-audio-design",
+      "fromPort": "branch-0",
+      "toPort": "input"
+    },
+    {
+      "id": "c29",
+      "from": "ask-engine-confirm",
+      "to": "agent-xyq-submit",
+      "fromPort": "branch-1",
+      "toPort": "input"
+    },
+    {
+      "id": "c30",
+      "from": "ask-engine-confirm",
+      "to": "agent-audio-design",
+      "fromPort": "branch-2",
+      "toPort": "input"
+    },
+    {
+      "id": "c31",
+      "from": "agent-audio-design",
+      "to": "agent-audio",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c32",
+      "from": "agent-audio",
+      "to": "agent-render-remotion",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c33",
+      "from": "agent-render-remotion",
+      "to": "prompt-director-review",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c33b",
+      "from": "prompt-director-review",
+      "to": "ask-final-check-a",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c34",
+      "from": "ask-final-check-a",
+      "to": "agent-distribute",
+      "fromPort": "branch-0",
+      "toPort": "input"
+    },
+    {
+      "id": "c35",
+      "from": "ask-final-check-a",
+      "to": "agent-render-remotion",
+      "fromPort": "branch-1",
+      "toPort": "input"
+    },
+    {
+      "id": "c36",
+      "from": "ask-final-check-a",
+      "to": "agent-audio",
+      "fromPort": "branch-2",
+      "toPort": "input"
+    },
+    {
+      "id": "c37",
+      "from": "ask-final-check-a",
+      "to": "agent-subtitle-gen",
+      "fromPort": "branch-3",
+      "toPort": "input"
+    },
+    {
+      "id": "c38",
+      "from": "agent-xyq-submit",
+      "to": "agent-xyq-poll",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c39",
+      "from": "agent-xyq-poll",
+      "to": "ask-final-check-b",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c40",
+      "from": "ask-final-check-b",
+      "to": "agent-distribute",
+      "fromPort": "branch-0",
+      "toPort": "input"
+    },
+    {
+      "id": "c41",
+      "from": "ask-final-check-b",
+      "to": "agent-audio-design",
+      "fromPort": "branch-1",
+      "toPort": "input"
+    },
+    {
+      "id": "c42",
+      "from": "agent-distribute",
+      "to": "agent-archive",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c43",
+      "from": "agent-archive",
+      "to": "end-2",
+      "fromPort": "output",
+      "toPort": "input"
+    }
+  ],
+  "subAgentFlows": []
+}
