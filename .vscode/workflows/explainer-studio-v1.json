@@ -1,0 +1,458 @@
+{
+  "id": "explainer-studio-v1",
+  "name": "explainer-studio-v1",
+  "version": "1.0.0",
+  "nodes": [
+    {
+      "id": "group-entry",
+      "type": "group",
+      "name": "group-entry",
+      "position": {
+        "x": 200,
+        "y": 100
+      },
+      "data": {
+        "label": "入口分流"
+      },
+      "style": {
+        "width": 540,
+        "height": 280
+      }
+    },
+    {
+      "id": "group-data",
+      "type": "group",
+      "name": "group-data",
+      "position": {
+        "x": 860,
+        "y": -120
+      },
+      "data": {
+        "label": "管线A：数据分析报告"
+      },
+      "style": {
+        "width": 520,
+        "height": 420
+      }
+    },
+    {
+      "id": "group-tool",
+      "type": "group",
+      "name": "group-tool",
+      "position": {
+        "x": 860,
+        "y": 320
+      },
+      "data": {
+        "label": "管线B：工具/插件教学"
+      },
+      "style": {
+        "width": 520,
+        "height": 420
+      }
+    },
+    {
+      "id": "group-ai",
+      "type": "group",
+      "name": "group-ai",
+      "position": {
+        "x": 860,
+        "y": 760
+      },
+      "data": {
+        "label": "管线C：AI知识科普"
+      },
+      "style": {
+        "width": 520,
+        "height": 360
+      }
+    },
+    {
+      "id": "group-knowledge",
+      "type": "group",
+      "name": "group-knowledge",
+      "position": {
+        "x": 860,
+        "y": 1140
+      },
+      "data": {
+        "label": "管线D：通用知识讲解"
+      },
+      "style": {
+        "width": 520,
+        "height": 360
+      }
+    },
+    {
+      "id": "group-shared",
+      "type": "group",
+      "name": "group-shared",
+      "position": {
+        "x": 1480,
+        "y": 320
+      },
+      "data": {
+        "label": "共享产线：配音+渲染+输出"
+      },
+      "style": {
+        "width": 520,
+        "height": 520
+      }
+    },
+    {
+      "id": "start-1",
+      "type": "start",
+      "name": "start-1",
+      "position": {
+        "x": 60,
+        "y": 220
+      },
+      "data": {
+        "label": "Start"
+      }
+    },
+    {
+      "id": "ask-scene-type",
+      "type": "askUserQuestion",
+      "name": "ask-scene-type",
+      "position": {
+        "x": 150,
+        "y": 220
+      },
+      "data": {
+        "label": "0.0 视频类型",
+        "questionText": "你今天要做什么类型的视频？",
+        "options": [
+          {
+            "id": "opt-data",
+            "label": "数据分析报告",
+            "description": "经济数据/行业分析，深蓝大屏+图表动画"
+          },
+          {
+            "id": "opt-tool",
+            "label": "工具/插件教学",
+            "description": "Python工具/Excel插件操作演示"
+          },
+          {
+            "id": "opt-ai",
+            "label": "AI知识科普",
+            "description": "向非技术同事科普AI概念"
+          },
+          {
+            "id": "opt-knowledge",
+            "label": "通用知识讲解",
+            "description": "某个话题的观点解读"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 4
+      }
+    },
+    {
+      "id": "agent-data-collect",
+      "type": "subAgent",
+      "name": "agent-data-collect",
+      "position": {
+        "x": 22,
+        "y": 20
+      },
+      "data": {
+        "label": "A.1 数据搜集整理",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      },
+      "parentId": "group-data"
+    },
+    {
+      "id": "agent-data-storyboard",
+      "type": "subAgent",
+      "name": "agent-data-storyboard",
+      "position": {
+        "x": 22,
+        "y": 140
+      },
+      "data": {
+        "label": "A.2 数据分镜+文案",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      },
+      "parentId": "group-data"
+    },
+    {
+      "id": "prompt-tool-input",
+      "type": "prompt",
+      "name": "prompt-tool-input",
+      "position": {
+        "x": 22,
+        "y": 20
+      },
+      "data": {
+        "label": "B.1 工具信息输入",
+        "prompt": "请提供：1.工具名称 2.功能描述 3.操作步骤（3-8步）4.截图路径（可选）"
+      },
+      "parentId": "group-tool"
+    },
+    {
+      "id": "agent-tool-steps",
+      "type": "subAgent",
+      "name": "agent-tool-steps",
+      "position": {
+        "x": 22,
+        "y": 140
+      },
+      "data": {
+        "label": "B.2 步骤拆解+文案",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      },
+      "parentId": "group-tool"
+    },
+    {
+      "id": "prompt-ai-input",
+      "type": "prompt",
+      "name": "prompt-ai-input",
+      "position": {
+        "x": 22,
+        "y": 20
+      },
+      "data": {
+        "label": "C.1 AI概念输入",
+        "prompt": "请提供：1.AI概念名称 2.观众技术水平"
+      },
+      "parentId": "group-ai"
+    },
+    {
+      "id": "agent-ai-content",
+      "type": "subAgent",
+      "name": "agent-ai-content",
+      "position": {
+        "x": 22,
+        "y": 120
+      },
+      "data": {
+        "label": "C.2 科普内容生成",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      },
+      "parentId": "group-ai"
+    },
+    {
+      "id": "prompt-knowledge-input",
+      "type": "prompt",
+      "name": "prompt-knowledge-input",
+      "position": {
+        "x": 22,
+        "y": 20
+      },
+      "data": {
+        "label": "D.1 主题观点输入",
+        "prompt": "请提供：1.核心主题 2.目标观众 3.期望效果"
+      },
+      "parentId": "group-knowledge"
+    },
+    {
+      "id": "agent-knowledge-copy",
+      "type": "subAgent",
+      "name": "agent-knowledge-copy",
+      "position": {
+        "x": 22,
+        "y": 120
+      },
+      "data": {
+        "label": "D.2 讲解文案生成",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      },
+      "parentId": "group-knowledge"
+    },
+    {
+      "id": "agent-tts",
+      "type": "subAgent",
+      "name": "agent-tts",
+      "position": {
+        "x": 22,
+        "y": 20
+      },
+      "data": {
+        "label": "5.1 TTS配音生成",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      },
+      "parentId": "group-shared"
+    },
+    {
+      "id": "agent-remotion-render",
+      "type": "subAgent",
+      "name": "agent-remotion-render",
+      "position": {
+        "x": 22,
+        "y": 150
+      },
+      "data": {
+        "label": "5.2 Remotion构图+渲染",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      },
+      "parentId": "group-shared"
+    },
+    {
+      "id": "agent-verify",
+      "type": "subAgent",
+      "name": "agent-verify",
+      "position": {
+        "x": 22,
+        "y": 280
+      },
+      "data": {
+        "label": "5.3 输出验证",
+        "agentDefinition": "General-purpose agent",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      },
+      "parentId": "group-shared"
+    },
+    {
+      "id": "end-2",
+      "type": "end",
+      "name": "end-2",
+      "position": {
+        "x": 2140,
+        "y": 570
+      },
+      "data": {
+        "label": "End"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "c0",
+      "from": "start-1",
+      "to": "ask-scene-type",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c1a",
+      "from": "ask-scene-type",
+      "to": "agent-data-collect",
+      "fromPort": "branch-0",
+      "toPort": "input"
+    },
+    {
+      "id": "c1b",
+      "from": "ask-scene-type",
+      "to": "prompt-tool-input",
+      "fromPort": "branch-1",
+      "toPort": "input"
+    },
+    {
+      "id": "c1c",
+      "from": "ask-scene-type",
+      "to": "prompt-ai-input",
+      "fromPort": "branch-2",
+      "toPort": "input"
+    },
+    {
+      "id": "c1d",
+      "from": "ask-scene-type",
+      "to": "prompt-knowledge-input",
+      "fromPort": "branch-3",
+      "toPort": "input"
+    },
+    {
+      "id": "c2a",
+      "from": "agent-data-collect",
+      "to": "agent-data-storyboard",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c2b",
+      "from": "prompt-tool-input",
+      "to": "agent-tool-steps",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c2c",
+      "from": "prompt-ai-input",
+      "to": "agent-ai-content",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c2d",
+      "from": "prompt-knowledge-input",
+      "to": "agent-knowledge-copy",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c3a",
+      "from": "agent-data-storyboard",
+      "to": "agent-tts",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c3b",
+      "from": "agent-tool-steps",
+      "to": "agent-tts",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c3c",
+      "from": "agent-ai-content",
+      "to": "agent-tts",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c3d",
+      "from": "agent-knowledge-copy",
+      "to": "agent-tts",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c4",
+      "from": "agent-tts",
+      "to": "agent-remotion-render",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c5",
+      "from": "agent-remotion-render",
+      "to": "agent-verify",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c6",
+      "from": "agent-verify",
+      "to": "end-2",
+      "fromPort": "output",
+      "toPort": "input"
+    }
+  ],
+  "subAgentFlows": []
+}

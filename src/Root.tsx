@@ -5,6 +5,8 @@ import {
 } from "remotion";
 
 import VisualDirectorVideo from "./VisualDirector";
+import BuHuaYuan from "./BuHuaYuan";
+import ChongqingEcon from "./ChongqingEcon";
 
 const CYAN = "#00d4ff"; const PURPLE = "#7c3aed"; const RED = "#ff6b6b";
 const WHITE = "#e2e8f0"; const DARK = "#0a0a14"; const GRAY = "#64748b";
@@ -266,6 +268,22 @@ export const Root: React.FC = () => (
       id="VisualDirectorVideo"
       component={VisualDirectorVideo}
       durationInFrames={2700}
+      fps={30}
+      width={1920}
+      height={1080}
+    />
+    <Composition
+      id="BuHuaYuan"
+      component={BuHuaYuan}
+      durationInFrames={1800}
+      fps={30}
+      width={1920}
+      height={1080}
+    />
+    <Composition
+      id="ChongqingEcon"
+      component={ChongqingEcon}
+      durationInFrames={1890}
       fps={30}
       width={1920}
       height={1080}
