@@ -1,0 +1,12 @@
+{
+  "ffmpeg": {"available": true, "version": "7.1", "path": "C:\\Users\\bgu\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\imageio_ffmpeg\\binaries\\ffmpeg-win-x86_64-v7.1.exe"},
+  "tongyi_wanxiang": {"available": true, "mode": "api", "note": "通过德勤内网代理调用Qwen3.5-VL"},
+  "deepseek": {"available": true, "note": "当前对话模型即为DeepSeek"},
+  "xiao_yun_que": {"available": false, "note": "未配置API"},
+  "librosa": {"available": false, "note": "需 pip install librosa"},
+  "soulx": {"available": false},
+  "ace_studio": {"available": false},
+  "pipeline_strategy": "limited",
+  "action_items": ["安装 librosa (pip install librosa) 用于音乐BPM分析"],
+  "summary": "FFmpeg + DeepSeek + 通义万相可用。缺少librosa(需安装)、小云雀(需配置)、SoulX和ACE Studio(不可用，歌声合成需走TTS兜底)"
+}
