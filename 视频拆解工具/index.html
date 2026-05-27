@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>视频拆解工具 — 虾人动画流水线</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, "Microsoft YaHei", sans-serif;
+  background: #0f0f1a; color: #e0e0e0;
+  min-height: 100vh; display: flex; justify-content: center;
+}
+.container {
+  width: 100%; max-width: 800px; padding: 40px 24px;
+}
+h1 { text-align: center; font-size: 24px; margin-bottom: 4px; }
+.sub { text-align: center; color: #888; font-size: 13px; margin-bottom: 32px; }
+
+/* ─── 上传区 ─── */
+.drop-zone {
+  border: 2px dashed #3a3a5c; border-radius: 16px;
+  padding: 48px 24px; text-align: center;
+  cursor: pointer; transition: all .2s;
+  background: #16162a; margin-bottom: 16px;
+}
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: #6c5ce7; background: #1a1a36;
+}
+.drop-zone .icon { font-size: 48px; margin-bottom: 12px; }
+.drop-zone .hint { color: #888; font-size: 13px; }
+.drop-zone .hint strong { color: #6c5ce7; }
+#fileInput { display: none; }
+
+/* ─── 设置行 ─── */
+.settings {
+  display: flex; gap: 16px; align-items: center;
+  margin-bottom: 20px; flex-wrap: wrap;
+}
+.settings label { font-size: 13px; color: #aaa; display: flex; align-items: center; gap: 6px; }
+.settings input[type=number] {
+  width: 52px; padding: 6px 8px; border-radius: 6px;
+  border: 1px solid #3a3a5c; background: #16162a; color: #fff; text-align: center;
+}
+.settings input[type=checkbox] { accent-color: #6c5ce7; }
+
+/* ─── 按钮 ─── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 28px; border-radius: 8px; border: none;
+  font-size: 14px; font-weight: 600; cursor: pointer; transition: all .15s;
+}
+.btn-primary { background: #6c5ce7; color: #fff; }
+.btn-primary:hover { background: #7d6ff0; }
+.btn-primary:disabled { background: #3a3a5c; color: #666; cursor: not-allowed; }
+.btn-ghost { background: transparent; color: #aaa; border: 1px solid #3a3a5c; }
+.btn-ghost:hover { border-color: #6c5ce7; color: #fff; }
+.btn-row { display: flex; gap: 12px; justify-content: center; margin-bottom: 24px; }
+
+/* ─── 进度面板 ─── */
+.progress-panel {
+  background: #16162a; border-radius: 12px; padding: 24px;
+  margin-bottom: 20px; display: none;
+}
+.progress-panel.active { display: block; }
+.progress-bar-wrap {
+  height: 6px; background: #2a2a44; border-radius: 3px;
+  margin-bottom: 16px; overflow: hidden;
+}
+.progress-bar {
+  height: 100%; background: linear-gradient(90deg, #6c5ce7, #a29bfe);
+  border-radius: 3px; transition: width .4s; width: 0%;
+}
+.steps { display: flex; flex-direction: column; gap: 8px; }
+.step {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 14px; padding: 8px 12px; border-radius: 8px;
+}
+.step.pending { color: #555; }
+.step.running { color: #6c5ce7; background: rgba(108,92,231,.08); }
+.step.done { color: #00b894; }
+.step.error { color: #e17055; }
+.step .step-icon { width: 24px; text-align: center; }
+.step .step-spinner { width: 16px; height: 16px; border: 2px solid #3a3a5c; border-top-color: #6c5ce7; border-radius: 50%; animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── 结果区 ─── */
+.results { display: none; }
+.results.active { display: block; }
+.section-title {
+  font-size: 15px; font-weight: 600; color: #aaa;
+  margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+}
+
+/* 元数据卡片 */
+.meta-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 24px; }
+.meta-card {
+  background: #16162a; border-radius: 10px; padding: 16px; text-align: center;
+}
+.meta-card .val { font-size: 22px; font-weight: 700; color: #fff; }
+.meta-card .lbl { font-size: 11px; color: #777; margin-top: 4px; }
+
+/* 帧预览 */
+.frame-gallery { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 24px; }
+.frame-gallery img {
+  width: 160px; height: 90px; object-fit: cover; border-radius: 8px;
+  cursor: pointer; border: 2px solid transparent; transition: all .15s;
+}
+.frame-gallery img:hover { border-color: #6c5ce7; transform: scale(1.02); }
+
+/* 字幕文本 */
+.subtitle-box {
+  background: #16162a; border-radius: 10px; padding: 20px;
+  max-height: 300px; overflow-y: auto; margin-bottom: 24px;
+}
+.subtitle-box .seg {
+  display: flex; gap: 12px; padding: 6px 0;
+  border-bottom: 1px solid #1e1e36; font-size: 13px;
+}
+.subtitle-box .seg .ts { color: #6c5ce7; white-space: nowrap; min-width: 80px; }
+.subtitle-box .seg .txt { color: #ccc; }
+
+/* 图片大预览 Modal */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85);
+  z-index: 100; justify-content: center; align-items: center;
+}
+.modal-overlay.show { display: flex; }
+.modal-overlay img { max-width: 90vw; max-height: 90vh; border-radius: 8px; }
+.modal-overlay .close { position: absolute; top: 20px; right: 30px; font-size: 32px; color: #fff; cursor: pointer; }
+
+/* ─── 空状态/文件信息 ─── */
+.file-info {
+  display: none; align-items: center; gap: 10px;
+  background: #16162a; border-radius: 10px; padding: 14px 18px;
+  margin-bottom: 16px; font-size: 14px;
+}
+.file-info.active { display: flex; }
+.file-info .fn { color: #fff; font-weight: 600; flex: 1; }
+.file-info .fs { color: #888; font-size: 12px; }
+
+/* ─── 状态提示 ─── */
+.status-bar {
+  text-align: center; font-size: 12px; color: #555; margin-top: 32px;
+}
+.status-bar span.ok { color: #00b894; }
+.status-bar span.err { color: #e17055; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🎬 虾人动画 · 视频拆解</h1>
+  <p class="sub">投喂视频 → 自动抽帧 + 语音识别 → 投喂 AI 拆模板卡</p>
+
+  <!-- 上传区 -->
+  <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+    <div class="icon">📤</div>
+    <div>拖拽视频到此处，或 <strong>点击选择文件</strong></div>
+    <div class="hint">支持 MP4 / MOV / AVI / WebM</div>
+  </div>
+  <input type="file" id="fileInput" accept="video/*" onchange="handleFile(this.files[0])">
+
+  <!-- 文件信息 -->
+  <div class="file-info" id="fileInfo">
+    <span>📹</span>
+    <span class="fn" id="fileName"></span>
+    <span class="fs" id="fileSize"></span>
+    <button class="btn btn-ghost" onclick="clearFile()" style="padding:4px 10px;font-size:12px;">清除</button>
+  </div>
+
+  <!-- 设置行 -->
+  <div class="settings">
+    <label>抽帧间隔 <input type="number" id="frameInterval" value="3" min="1" max="10"> 秒</label>
+    <label><input type="checkbox" id="extractSubtitles" checked> 提取字幕（Whisper）</label>
+  </div>
+
+  <!-- 操作按钮 -->
+  <div class="btn-row">
+    <button class="btn btn-primary" id="analyzeBtn" disabled onclick="startAnalyze()">🔍 开始拆解</button>
+  </div>
+
+  <!-- 进度面板 -->
+  <div class="progress-panel" id="progressPanel">
+    <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="steps" id="stepsContainer"></div>
+  </div>
+
+  <!-- 结果区 -->
+  <div class="results" id="results">
+    <div class="section-title">📊 视频信息</div>
+    <div class="meta-cards" id="metaCards"></div>
+
+    <div class="section-title" id="framesTitle" style="display:none;">🖼️ 关键帧（点击放大）</div>
+    <div class="frame-gallery" id="frameGallery"></div>
+
+    <div class="section-title" id="subtitlesTitle" style="display:none;">💬 配音文本</div>
+    <div class="subtitle-box" id="subtitleBox"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="openOutput()">📁 打开输出文件夹</button>
+    </div>
+    <div style="text-align:center; margin-top:8px;" id="outputPath"></div>
+  </div>
+
+  <!-- 图片大预览 -->
+  <div class="modal-overlay" id="imgModal" onclick="this.classList.remove('show')">
+    <span class="close">&times;</span>
+    <img id="modalImg" src="">
+  </div>
+
+  <!-- 状态条 -->
+  <div class="status-bar" id="statusBar">正在检查环境...</div>
+</div>
+
+<script>
+const SERVER = 'http://localhost:8765';
+let currentVideoId = null;
+let currentFileName = null;
+
+// ── 页面加载：检查环境 ──
+(async function init() {
+  try {
+    const r = await fetch(SERVER + '/api/status');
+    const s = await r.json();
+    const sb = document.getElementById('statusBar');
+    sb.innerHTML = `FFmpeg <span class="${s.ffmpeg ? 'ok' : 'err'}">${s.ffmpeg ? '✓' : '✗ 未安装'}</span> &nbsp;|&nbsp; Whisper <span class="${s.whisper ? 'ok' : 'err'}">${s.whisper ? '✓' : '✗ 未安装（pip install openai-whisper）'}</span>`;
+  } catch(e) {
+    document.getElementById('statusBar').innerHTML = '<span class="err">⚠ 服务未启动，请运行 server.py</span>';
+  }
+})();
+
+// ── 拖拽 ──
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('video/')) handleFile(file);
+});
+
+// ── 文件选择 ──
+function handleFile(file) {
+  if (!file) return;
+  currentFileName = file.name;
+  document.getElementById('fileName').textContent = file.name;
+  document.getElementById('fileSize').textContent = formatSize(file.size);
+  document.getElementById('fileInfo').classList.add('active');
+  document.getElementById('analyzeBtn').disabled = false;
+  window._selectedFile = file;
+}
+
+function clearFile() {
+  window._selectedFile = null;
+  currentVideoId = null;
+  currentFileName = null;
+  document.getElementById('fileInfo').classList.remove('active');
+  document.getElementById('analyzeBtn').disabled = true;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('results').classList.remove('active');
+  document.getElementById('progressPanel').classList.remove('active');
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(0) + ' KB';
+  return (bytes/(1024*1024)).toFixed(1) + ' MB';
+}
+
+// ── 开始拆解 ──
+async function startAnalyze() {
+  const file = window._selectedFile;
+  if (!file) return;
+
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ 上传中...';
+
+  // 1. 上传
+  const form = new FormData();
+  form.append('file', file);
+  const up = await fetch(SERVER + '/api/upload', { method: 'POST', body: form });
+  const upData = await up.json();
+  if (!upData.ok) { alert('上传失败: ' + upData.error); btn.disabled = false; btn.textContent = '🔍 开始拆解'; return; }
+  currentVideoId = upData.video_id;
+
+  // 2. 发起分析
+  btn.textContent = '⏳ 分析中...';
+  const interval = parseInt(document.getElementById('frameInterval').value) || 3;
+  const extract = document.getElementById('extractSubtitles').checked;
+  await fetch(SERVER + '/api/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ video_id: currentVideoId, frame_interval: interval, extract_subtitles: extract })
+  });
+
+  // 3. 监听进度
+  document.getElementById('progressPanel').classList.add('active');
+  document.getElementById('results').classList.remove('active');
+  initSteps();
+
+  const es = new EventSource(SERVER + '/api/progress?job_id=' + currentVideoId);
+  es.onmessage = e => {
+    const job = JSON.parse(e.data);
+    document.getElementById('progressBar').style.width = job.progress + '%';
+    updateSteps(job.steps);
+
+    if (job.status === 'done') {
+      es.close();
+      btn.disabled = false;
+      btn.textContent = '🔍 开始拆解';
+      showResults(job.results);
+    }
+    if (job.status === 'error') {
+      es.close();
+      btn.disabled = false;
+      btn.textContent = '🔍 开始拆解';
+      alert('拆解失败: ' + job.error);
+    }
+  };
+  es.onerror = () => { es.close(); };
+}
+
+// ── 步骤 UI ──
+function initSteps() {
+  const container = document.getElementById('stepsContainer');
+  container.innerHTML = `
+    <div class="step pending" id="step0"><span class="step-icon">🖼️</span>抽取关键帧</div>
+    <div class="step pending" id="step1"><span class="step-icon">🎤</span>语音识别（Whisper）</div>
+    <div class="step pending" id="step2"><span class="step-icon">📄</span>生成拆解报告</div>
+  `;
+}
+
+function updateSteps(steps) {
+  steps.forEach((s, i) => {
+    const el = document.getElementById('step' + i);
+    if (!el) return;
+    el.className = 'step ' + s.status;
+    const icon = el.querySelector('.step-icon');
+    if (s.status === 'running') icon.innerHTML = '<span class="step-spinner"></span>';
+    else if (s.status === 'done') icon.textContent = '✅';
+    else if (s.status === 'error') icon.textContent = '❌';
+    if (s.error) el.title = s.error;
+  });
+}
+
+// ── 展示结果 ──
+function showResults(res) {
+  document.getElementById('results').classList.add('active');
+
+  // 元数据
+  const meta = res.metadata || {};
+  document.getElementById('metaCards').innerHTML = `
+    <div class="meta-card"><div class="val">${meta.duration || '-'}s</div><div class="lbl">时长</div></div>
+    <div class="meta-card"><div class="val">${meta.resolution || '-'}</div><div class="lbl">分辨率</div></div>
+    <div class="meta-card"><div class="val">${meta.fps || '-'}</div><div class="lbl">帧率</div></div>
+    <div class="meta-card"><div class="val">${(res.frames || {}).count || 0}</div><div class="lbl">关键帧</div></div>
+  `;
+
+  // 帧预览
+  const frames = res.frames || {};
+  const urls = frames.urls || [];
+  const fTitle = document.getElementById('framesTitle');
+  const gallery = document.getElementById('frameGallery');
+  if (urls.length > 0) {
+    fTitle.style.display = '';
+    gallery.innerHTML = urls.map(u =>
+      `<img src="${SERVER}${u}" onclick="showImage('${SERVER}${u}')" loading="lazy">`
+    ).join('');
+  } else {
+    fTitle.style.display = 'none';
+    gallery.innerHTML = '';
+  }
+
+  // 字幕
+  const sub = res.subtitles || {};
+  const segs = sub.segments || [];
+  const sTitle = document.getElementById('subtitlesTitle');
+  const box = document.getElementById('subtitleBox');
+  if (segs.length > 0) {
+    sTitle.style.display = '';
+    box.innerHTML = segs.map(s =>
+      `<div class="seg"><span class="ts">${s.start}s-${s.end}s</span><span class="txt">${s.text}</span></div>`
+    ).join('');
+  } else {
+    sTitle.style.display = '';
+    box.innerHTML = '<div style="color:#555;">未提取字幕（Whisper 未安装或已禁用）</div>';
+  }
+}
+
+function showImage(url) {
+  document.getElementById('modalImg').src = url;
+  document.getElementById('imgModal').classList.add('show');
+}
+
+async function openOutput() {
+  try {
+    await fetch(SERVER + '/api/open-folder');
+  } catch(e) {}
+}
+
+async function showOutputPath() {
+  try {
+    const r = await fetch(SERVER + '/api/output-path');
+    const p = await r.json();
+    document.getElementById('outputPath').textContent = '输出目录: ' + p.report_dir;
+  } catch(e) {}
+}
+showOutputPath();
+</script>
+</body>
+</html>
