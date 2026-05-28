@@ -10,39 +10,23 @@
       "id": "start-1",
       "type": "start",
       "name": "start-1",
-      "position": {
-        "x": 60,
-        "y": 300
-      },
-      "data": {
-        "label": "▶ 开始"
-      }
+      "position": { "x": 60, "y": 300 },
+      "data": { "label": "▶ 开始" }
     },
     {
       "id": "group-stage1",
       "type": "group",
       "name": "group-stage1",
-      "position": {
-        "x": 200,
-        "y": 180
-      },
-      "data": {
-        "label": "阶段1：需求分诊"
-      },
-      "style": {
-        "width": 680,
-        "height": 260
-      }
+      "position": { "x": 200, "y": 180 },
+      "data": { "label": "阶段1：需求分诊" },
+      "style": { "width": 680, "height": 260 }
     },
     {
       "id": "prompt-input",
       "type": "prompt",
       "name": "prompt-input",
       "parentId": "group-stage1",
-      "position": {
-        "x": 30,
-        "y": 25
-      },
+      "position": { "x": 30, "y": 25 },
       "data": {
         "label": "1.1 输入你的开发需求",
         "prompt": "请描述你想要开发的工具/功能：\n\n请尽量包含以下信息（不拘泥格式，说清楚即可）：\n1. 这个工具是做什么的？\n2. 输入是什么（文件格式、数据来源）？\n3. 期望输出什么？\n4. 有没有参考的现有工具或模板？"
@@ -53,10 +37,7 @@
       "type": "subAgent",
       "name": "agent-triage",
       "parentId": "group-stage1",
-      "position": {
-        "x": 30,
-        "y": 140
-      },
+      "position": { "x": 30, "y": 140 },
       "data": {
         "label": "1.2 DeepSeek 需求分诊",
         "description": "分析需求复杂度，判断级别并输出结构化需求文档",
@@ -72,21 +53,12 @@
       "type": "ifElse",
       "name": "ifElse-simple",
       "parentId": "group-stage1",
-      "position": {
-        "x": 430,
-        "y": 85
-      },
+      "position": { "x": 430, "y": 85 },
       "data": {
         "label": "是否为简单需求？",
         "branches": [
-          {
-            "label": "是-简单",
-            "condition": "上一步输出包含【复杂度判定】🟢 简单"
-          },
-          {
-            "label": "否-中等/复杂",
-            "condition": "上一步输出包含【复杂度判定】🟡 中等 或 🔴 复杂"
-          }
+          { "label": "是-简单", "condition": "上一步输出包含【复杂度判定】🟢 简单" },
+          { "label": "否-中等/复杂", "condition": "上一步输出包含【复杂度判定】🟡 中等 或 🔴 复杂" }
         ],
         "outputPorts": 2
       }
@@ -95,27 +67,16 @@
       "id": "group-stage2a",
       "type": "group",
       "name": "group-stage2a",
-      "position": {
-        "x": 1000,
-        "y": 90
-      },
-      "data": {
-        "label": "简单路径：直接编码（阶段4-6）"
-      },
-      "style": {
-        "width": 500,
-        "height": 160
-      }
+      "position": { "x": 1000, "y": 90 },
+      "data": { "label": "简单路径：直接编码（阶段4-6）" },
+      "style": { "width": 500, "height": 160 }
     },
     {
       "id": "agent-direct-code",
       "type": "subAgent",
       "name": "agent-direct-code",
       "parentId": "group-stage2a",
-      "position": {
-        "x": 30,
-        "y": 30
-      },
+      "position": { "x": 30, "y": 30 },
       "data": {
         "label": "直接编码（简单需求）",
         "description": "根据需求文档直接编写单脚本代码",
@@ -130,10 +91,7 @@
       "id": "agent-verify-simple",
       "type": "subAgent",
       "name": "agent-verify-simple",
-      "position": {
-        "x": 1250,
-        "y": 150
-      },
+      "position": { "x": 1250, "y": 150 },
       "data": {
         "label": "验证修复（简单路径）",
         "description": "语法检查+冒烟测试+代码审查，最多2轮",
@@ -148,10 +106,7 @@
       "id": "agent-deliver-simple",
       "type": "subAgent",
       "name": "agent-deliver-simple",
-      "position": {
-        "x": 1550,
-        "y": 150
-      },
+      "position": { "x": 1550, "y": 150 },
       "data": {
         "label": "交付（简单路径）",
         "description": "整理文件结构，更新项目文档",
@@ -166,27 +121,16 @@
       "id": "group-stage2",
       "type": "group",
       "name": "group-stage2",
-      "position": {
-        "x": 1000,
-        "y": 480
-      },
-      "data": {
-        "label": "阶段2：快速原型 + 蓝图"
-      },
-      "style": {
-        "width": 520,
-        "height": 220
-      }
+      "position": { "x": 1000, "y": 480 },
+      "data": { "label": "阶段2：快速原型 + 蓝图" },
+      "style": { "width": 520, "height": 220 }
     },
     {
       "id": "agent-blueprint",
       "type": "subAgent",
       "name": "agent-blueprint",
       "parentId": "group-stage2",
-      "position": {
-        "x": 30,
-        "y": 25
-      },
+      "position": { "x": 30, "y": 25 },
       "data": {
         "label": "2.1 DeepSeek 出技术架构",
         "description": "输出项目骨架 + 核心接口设计",
@@ -202,10 +146,7 @@
       "type": "subAgent",
       "name": "agent-features",
       "parentId": "group-stage2",
-      "position": {
-        "x": 30,
-        "y": 130
-      },
+      "position": { "x": 30, "y": 130 },
       "data": {
         "label": "2.2 Qwen 出功能清单（用户视角）",
         "description": "输出用户视角的功能清单供确认",
@@ -220,22 +161,13 @@
       "id": "ask-confirm",
       "type": "askUserQuestion",
       "name": "ask-confirm",
-      "position": {
-        "x": 1620,
-        "y": 500
-      },
+      "position": { "x": 1620, "y": 500 },
       "data": {
         "label": "阶段3：用户确认",
         "questionText": "请查看 docs-文档/feature_list.md，确认是否符合你的期望？",
         "options": [
-          {
-            "label": "确认，开始编码",
-            "description": "功能清单没问题，进入编码阶段"
-          },
-          {
-            "label": "需要调整",
-            "description": "功能需要修改，返回调整"
-          }
+          { "label": "确认，开始编码", "description": "功能清单没问题，进入编码阶段" },
+          { "label": "需要调整", "description": "功能需要修改，返回调整" }
         ],
         "outputPorts": 2
       }
@@ -244,27 +176,16 @@
       "id": "group-stage4",
       "type": "group",
       "name": "group-stage4",
-      "position": {
-        "x": 2000,
-        "y": 480
-      },
-      "data": {
-        "label": "阶段4：分工编码（三模型并行）"
-      },
-      "style": {
-        "width": 500,
-        "height": 220
-      }
+      "position": { "x": 2000, "y": 480 },
+      "data": { "label": "阶段4：分工编码（三模型并行）" },
+      "style": { "width": 500, "height": 220 }
     },
     {
       "id": "agent-coding",
       "type": "subAgent",
       "name": "agent-coding",
       "parentId": "group-stage4",
-      "position": {
-        "x": 30,
-        "y": 30
-      },
+      "position": { "x": 30, "y": 30 },
       "data": {
         "label": "4.0 三模型分工编码",
         "description": "DeepSeek核心 + Kimi配置文档 + Qwen测试",
@@ -279,10 +200,7 @@
       "id": "agent-verify",
       "type": "subAgent",
       "name": "agent-verify",
-      "position": {
-        "x": 2250,
-        "y": 560
-      },
+      "position": { "x": 2250, "y": 560 },
       "data": {
         "label": "阶段5：验证 + 修复",
         "description": "语法检查→冒烟测试→代码审查，最多2轮",
@@ -297,10 +215,7 @@
       "id": "agent-deliver",
       "type": "subAgent",
       "name": "agent-deliver",
-      "position": {
-        "x": 2550,
-        "y": 560
-      },
+      "position": { "x": 2550, "y": 560 },
       "data": {
         "label": "阶段6：交付",
         "description": "组织项目文件结构，输出交付报告",
@@ -315,121 +230,26 @@
       "id": "end-1",
       "type": "end",
       "name": "end-1",
-      "position": {
-        "x": 2850,
-        "y": 350
-      },
-      "data": {
-        "label": "结束 - 交付完成"
-      }
+      "position": { "x": 2850, "y": 350 },
+      "data": { "label": "结束 - 交付完成" }
     }
   ],
   "connections": [
-    {
-      "id": "c1",
-      "from": "start-1",
-      "to": "prompt-input",
-      "fromPort": "output",
-      "toPort": "input"
-    },
-    {
-      "id": "c2",
-      "from": "prompt-input",
-      "to": "agent-triage",
-      "fromPort": "output",
-      "toPort": "input"
-    },
-    {
-      "id": "c3",
-      "from": "agent-triage",
-      "to": "ifElse-simple",
-      "fromPort": "output",
-      "toPort": "input"
-    },
-    {
-      "id": "c4",
-      "from": "ifElse-simple",
-      "to": "agent-direct-code",
-      "fromPort": "branch-0",
-      "toPort": "input"
-    },
-    {
-      "id": "c5",
-      "from": "ifElse-simple",
-      "to": "agent-blueprint",
-      "fromPort": "branch-1",
-      "toPort": "input"
-    },
-    {
-      "id": "c6",
-      "from": "agent-direct-code",
-      "to": "agent-verify-simple",
-      "fromPort": "output",
-      "toPort": "input"
-    },
-    {
-      "id": "c7",
-      "from": "agent-verify-simple",
-      "to": "agent-deliver-simple",
-      "fromPort": "output",
-      "toPort": "input"
-    },
-    {
-      "id": "c8",
-      "from": "agent-deliver-simple",
-      "to": "end-1",
-      "fromPort": "output",
-      "toPort": "input"
-    },
-    {
-      "id": "c9",
-      "from": "agent-blueprint",
-      "to": "agent-features",
-      "fromPort": "output",
-      "toPort": "input"
-    },
-    {
-      "id": "c10",
-      "from": "agent-features",
-      "to": "ask-confirm",
-      "fromPort": "output",
-      "toPort": "input"
-    },
-    {
-      "id": "c11",
-      "from": "ask-confirm",
-      "to": "agent-coding",
-      "fromPort": "branch-0",
-      "toPort": "input"
-    },
-    {
-      "id": "c12",
-      "from": "ask-confirm",
-      "to": "end-1",
-      "fromPort": "branch-1",
-      "toPort": "input"
-    },
-    {
-      "id": "c13",
-      "from": "agent-coding",
-      "to": "agent-verify",
-      "fromPort": "output",
-      "toPort": "input"
-    },
-    {
-      "id": "c14",
-      "from": "agent-verify",
-      "to": "agent-deliver",
-      "fromPort": "output",
-      "toPort": "input"
-    },
-    {
-      "id": "c15",
-      "from": "agent-deliver",
-      "to": "end-1",
-      "fromPort": "output",
-      "toPort": "input"
-    }
+    { "id": "c1", "from": "start-1", "to": "prompt-input", "fromPort": "output", "toPort": "input" },
+    { "id": "c2", "from": "prompt-input", "to": "agent-triage", "fromPort": "output", "toPort": "input" },
+    { "id": "c3", "from": "agent-triage", "to": "ifElse-simple", "fromPort": "output", "toPort": "input" },
+    { "id": "c4", "from": "ifElse-simple", "to": "agent-direct-code", "fromPort": "branch-0", "toPort": "input" },
+    { "id": "c5", "from": "ifElse-simple", "to": "agent-blueprint", "fromPort": "branch-1", "toPort": "input" },
+    { "id": "c6", "from": "agent-direct-code", "to": "agent-verify-simple", "fromPort": "output", "toPort": "input" },
+    { "id": "c7", "from": "agent-verify-simple", "to": "agent-deliver-simple", "fromPort": "output", "toPort": "input" },
+    { "id": "c8", "from": "agent-deliver-simple", "to": "end-1", "fromPort": "output", "toPort": "input" },
+    { "id": "c9", "from": "agent-blueprint", "to": "agent-features", "fromPort": "output", "toPort": "input" },
+    { "id": "c10", "from": "agent-features", "to": "ask-confirm", "fromPort": "output", "toPort": "input" },
+    { "id": "c11", "from": "ask-confirm", "to": "agent-coding", "fromPort": "branch-0", "toPort": "input" },
+    { "id": "c12", "from": "ask-confirm", "to": "end-1", "fromPort": "branch-1", "toPort": "input" },
+    { "id": "c13", "from": "agent-coding", "to": "agent-verify", "fromPort": "output", "toPort": "input" },
+    { "id": "c14", "from": "agent-verify", "to": "agent-deliver", "fromPort": "output", "toPort": "input" },
+    { "id": "c15", "from": "agent-deliver", "to": "end-1", "fromPort": "output", "toPort": "input" }
   ],
   "subAgentFlows": []
 }
