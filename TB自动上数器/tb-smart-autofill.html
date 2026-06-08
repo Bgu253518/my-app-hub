@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TB 智能上数器 — 顾力菡·应用工坊</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<style>
+:root {
+  --bg-deep: #0a0a14; --bg-card: rgba(22,22,44,0.6); --glass-border: rgba(255,255,255,0.08);
+  --text-primary: #e8e8f0; --text-secondary: #9999b0;
+  --accent-1: #7c5cfc; --accent-2: #5cfca0; --accent-3: #fc5c9c; --accent-warn: #f5a623;
+  --radius: 14px; --radius-sm: 8px;
+}
+body {
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background: linear-gradient(160deg,#0a0a14 0%,#12122a 30%,#16163a 60%,#0d0d24 100%);
+  color: var(--text-primary); min-height:100vh; line-height:1.6;
+}
+body::before {
+  content:''; position:fixed; inset:0;
+  background: radial-gradient(ellipse at 20% 20%, rgba(124,92,252,0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 60%, rgba(252,92,156,0.04) 0%, transparent 50%);
+  pointer-events:none; z-index:0;
+}
+::-webkit-scrollbar { width:5px; } ::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(124,92,252,0.25); border-radius:3px; }
+
+.header {
+  position:sticky; top:0; z-index:50; background:rgba(10,10,20,0.85); backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--glass-border); padding:0 20px; height:56px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.header .brand { font-size:16px; font-weight:700; }
+.header a { color:var(--text-secondary); text-decoration:none; font-size:13px; }
+.header a:hover { color:var(--text-primary); }
+.main { position:relative; z-index:1; max-width:1500px; margin:0 auto; padding:20px; }
+
+.card {
+  background:var(--bg-card); border:1px solid var(--glass-border);
+  border-radius:var(--radius); padding:20px; margin-bottom:16px; backdrop-filter:blur(10px);
+}
+.card-title { font-size:15px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.card-hint { font-size:12px; color:var(--text-secondary); margin-bottom:12px; }
+
+.btn {
+  display:inline-flex; align-items:center; gap:4px; padding:7px 14px; border-radius:6px;
+  font-size:12px; font-weight:600; cursor:pointer; border:1px solid var(--glass-border);
+  background:rgba(255,255,255,0.05); color:var(--text-primary); transition:all 0.2s; white-space:nowrap;
+}
+.btn:hover { background:rgba(255,255,255,0.1); }
+.btn-primary { background:linear-gradient(135deg,#7c5cfc,#5ccafc); border:none; color:#fff; }
+.btn-primary:hover { opacity:0.9; transform:translateY(-1px); box-shadow:0 4px 16px rgba(124,92,252,0.3); }
+.btn-primary:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+.btn-danger { border-color:rgba(252,92,156,0.3); color:var(--accent-3); }
+.btn-success { border-color:rgba(92,252,160,0.3); color:var(--accent-2); }
+.btn-warn { border-color:rgba(245,166,35,0.3); color:var(--accent-warn); }
+.btn-xs { padding:3px 8px; font-size:10px; }
+.btn-sm { padding:5px 10px; font-size:11px; }
+
+input,select,textarea {
+  background:rgba(255,255,255,0.05); border:1px solid var(--glass-border);
+  border-radius:6px; padding:7px 10px; color:var(--text-primary); font-size:12px; outline:none;
+}
+input:focus,select:focus,textarea:focus { border-color:var(--accent-1); }
+select option { background:#1a1a2e; color:#e8e8f0; }
+
+.steps { display:flex; gap:0; margin-bottom:20px; }
+.step {
+  flex:1; text-align:center; padding:10px 8px; cursor:pointer;
+  background:rgba(255,255,255,0.03); border:1px solid var(--glass-border);
+  font-size:12px; color:var(--text-secondary); transition:all 0.2s;
+}
+.step:first-child { border-radius:var(--radius) 0 0 var(--radius); }
+.step:last-child { border-radius:0 var(--radius) var(--radius) 0; }
+.step.active { background:rgba(124,92,252,0.15); border-color:var(--accent-1); color:#fff; font-weight:600; }
+.step.done { background:rgba(92,252,160,0.08); border-color:rgba(92,252,160,0.3); color:var(--accent-2); }
+
+.table-wrap { max-height:450px; overflow:auto; border:1px solid var(--glass-border); border-radius:var(--radius-sm); }
+.table-wrap table { border-collapse:collapse; font-size:12px; width:max-content; min-width:100%; }
+.table-wrap th, .table-wrap td { border:1px solid rgba(255,255,255,0.1); padding:5px 8px; white-space:nowrap; }
+.table-wrap th { background:rgba(124,92,252,0.15); font-weight:600; position:sticky; top:0; z-index:1; text-align:center; }
+.table-wrap td { background:rgba(0,0,0,0.2); }
+.table-wrap td.filled { background:rgba(92,252,160,0.12) !important; }
+.table-wrap td.skipped { background:rgba(255,255,255,0.03); color:var(--text-secondary); }
+.table-wrap td.unmatched { background:rgba(252,92,156,0.1) !important; }
+.table-wrap td.formula { background:rgba(124,92,252,0.08) !important; color:var(--accent-1); font-style:italic; }
+.table-wrap td.matched { background:rgba(92,252,160,0.08) !important; }
+.table-wrap td.manual { background:rgba(245,166,35,0.08) !important; }
+
+.toast {
+  position:fixed; bottom:20px; right:20px; z-index:100;
+  background:rgba(22,22,44,0.95); border:1px solid var(--glass-border);
+  padding:10px 18px; border-radius:var(--radius-sm); font-size:12px;
+  backdrop-filter:blur(12px); transform:translateY(100px); opacity:0; transition:all 0.3s;
+}
+.toast.show { transform:translateY(0); opacity:1; }
+
+.hidden { display:none !important; }
+.flex-center { display:flex; align-items:center; gap:8px; }
+.gap2 { display:flex; gap:8px; flex-wrap:wrap; }
+.mt2 { margin-top:8px; } .mt3 { margin-top:12px; } .mb2 { margin-bottom:8px; }
+.text-sm { font-size:12px; } .text-xs { font-size:10px; }
+.text-secondary { color:var(--text-secondary); }
+.font-mono { font-family:monospace; }
+
+@media (max-width:768px) { .main { padding:12px; } .steps { flex-wrap:wrap; } .step { flex:auto; } }
+
+/* Password Gate */
+.pwd-gate {
+  position: fixed; inset: 0; z-index: 99999;
+  background: linear-gradient(160deg, #0a0a14 0%, #12122a 50%, #0d0d24 100%);
+  display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 24px;
+}
+.pwd-gate::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center, rgba(124,92,252,0.1) 0%, transparent 60%);
+  pointer-events: none;
+}
+.gate-icon { font-size: 64px; animation: pulse 2s ease-in-out infinite; position: relative; }
+@keyframes pulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } }
+.gate-box {
+  position: relative; background: rgba(22,22,44,0.6); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px; padding: 40px 36px; width: 380px; max-width: 90vw;
+  backdrop-filter: blur(20px); display: flex; flex-direction: column; gap: 16px;
+}
+.gate-box h2 { text-align: center; font-size: 20px; font-weight: 700; }
+.gate-box .hint { text-align: center; font-size: 13px; color: #9999b0; }
+.gate-box input {
+  width: 100%; padding: 12px 16px; border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px; background: rgba(0,0,0,0.3); color: #e8e8f0;
+  font-size: 15px; outline: none; box-sizing: border-box;
+}
+.gate-box input:focus { border-color: #7c5cfc; box-shadow: 0 0 0 3px rgba(124,92,252,0.15); }
+.gate-box .btn {
+  padding: 12px; border: none; border-radius: 8px;
+  background: #7c5cfc; color: #fff; font-size: 15px; font-weight: 600;
+  cursor: pointer; transition: 0.2s;
+}
+.gate-box .btn:hover { background: #9578ff; }
+.gate-box .error { color: #fc5c9c; font-size: 13px; text-align: center; display: none; }
+
+/* Match status badge */
+.badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:600; }
+.badge-auto { background:rgba(92,252,160,0.15); color:#5cfca0; border:1px solid rgba(92,252,160,0.2); }
+.badge-amount { background:rgba(92,202,252,0.15); color:#5ccafc; border:1px solid rgba(92,202,252,0.2); }
+.badge-manual { background:rgba(245,166,35,0.15); color:#f5a623; border:1px solid rgba(245,166,35,0.2); }
+.badge-none { background:rgba(252,92,156,0.15); color:#fc5c9c; border:1px solid rgba(252,92,156,0.2); }
+</style>
+</head>
+<body>
+
+<!-- Password Gate -->
+<div class="pwd-gate" id="pwdGate">
+  <div class="gate-icon">🔐</div>
+  <div class="gate-box">
+    <h2>TB 智能上数器</h2>
+    <p class="hint">请输入访问密码以使用本工具</p>
+    <input type="password" id="pwdInput" placeholder="请输入密码..." autofocus>
+    <button class="btn" id="pwdBtn">验 证</button>
+    <p class="error" id="pwdError">密码错误，请重试</p>
+  </div>
+</div>
+
+<div class="header">
+  <span class="brand">📊 TB 智能上数器 <span style="font-size:12px;color:var(--text-secondary);font-weight:400">— 编码匹配 · 期初金额反向映射 · 自动上数</span></span>
+  <a href="../index.html">← 返回应用工坊</a>
+</div>
+
+<div class="main">
+
+  <!-- Steps -->
+  <div class="steps">
+    <div class="step active" data-st="1">① 导入 TB 模板</div>
+    <div class="step" data-st="2">② 导入科目余额表</div>
+    <div class="step" data-st="3">③ 智能匹配</div>
+    <div class="step" data-st="4">④ 执行上数</div>
+    <div class="step" data-st="5">⑤ 校验导出</div>
+  </div>
+
+  <!-- ====== Step 1: Import TB Template ====== -->
+  <div id="s1">
+    <div class="card">
+      <div class="card-title">📋 导入 TB 标准模板</div>
+      <div class="card-hint">上传包含 Detail / Account Grouping 1 / Financial Statement Line 三个 Sheet 的 TB 模板 Excel。系统会自动识别期初数列（倒数第二列）和本期待填列（最后一列）。</div>
+      <div class="gap2 mb2">
+        <label class="btn btn-sm btn-primary" style="cursor:pointer">📤 上传 TB 模板<input type="file" accept=".xlsx,.xls" onchange="loadTBTemplate(this)" class="hidden"></label>
+        <span class="text-sm text-secondary" id="tbInfo">未上传</span>
+      </div>
+      <div id="tbPreviewArea" class="hidden mt2">
+        <div class="card-hint">TB 模板结构预览：</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
+          <div class="card" style="padding:12px">
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px">📄 Detail Sheet</div>
+            <div class="text-sm text-secondary" id="tbDetailSummary">-</div>
+          </div>
+          <div class="card" style="padding:12px">
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px">📄 Account Grouping 1</div>
+            <div class="text-sm text-secondary" id="tbAG1Summary">-</div>
+          </div>
+          <div class="card" style="padding:12px">
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px">📄 Financial Statement Line</div>
+            <div class="text-sm text-secondary" id="tbFSLSummary">-</div>
+          </div>
+        </div>
+        <div class="card-hint">Financial Statement Line 类型分布：</div>
+        <div id="fslTypeSummary" class="gap2 mb2"></div>
+        <div class="card-hint">Detail 数据预览（前10行，绿色=期初数有值可用于反向映射）：</div>
+        <div class="table-wrap" style="max-height:250px" id="tbDetailPreview"></div>
+      </div>
+    </div>
+    <div class="flex-center">
+      <button class="btn btn-primary" onclick="goStep(2)">下一步：导入科目余额表 →</button>
+    </div>
+  </div>
+
+  <!-- ====== Step 2: Import Balance Sheet ====== -->
+  <div id="s2" class="hidden">
+    <div class="card">
+      <div class="card-title">📂 导入客户科目余额表</div>
+      <div class="card-hint">上传科目余额表 Excel，自动识别列头。系统会自动提取「综合本位币」汇总行作为数据源，忽略外币明细行。</div>
+      <div class="gap2 mb2">
+        <label class="btn btn-sm btn-primary" style="cursor:pointer">📤 上传科目余额表<input type="file" accept=".xlsx,.xls" onchange="loadBalanceSheet(this)" class="hidden"></label>
+        <span class="text-sm text-secondary" id="bsInfo">未上传</span>
+      </div>
+      <div id="bsConfig" class="hidden mt2">
+        <div class="card-hint">请确认列映射（系统自动识别，如有误请手动调整）：</div>
+        <div class="flex-center gap2 mb2" style="flex-wrap:wrap">
+          <span class="text-sm">科目编码:</span><select id="bsCodeCol"></select>
+          <span class="text-sm">科目名称:</span><select id="bsNameCol"></select>
+          <span class="text-sm">币别:</span><select id="bsCurrCol"></select>
+          <span class="text-sm">期初借方:</span><select id="bsOpenDrCol"></select>
+          <span class="text-sm">期初贷方:</span><select id="bsOpenCrCol"></select>
+          <span class="text-sm">本期借方:</span><select id="bsDrCol"></select>
+          <span class="text-sm">本期贷方:</span><select id="bsCrCol"></select>
+          <span class="text-sm">本年借方累计:</span><select id="bsYearDrCol"></select>
+          <span class="text-sm">本年贷方累计:</span><select id="bsYearCrCol"></select>
+          <span class="text-sm">期末借方:</span><select id="bsEndDrCol"></select>
+          <span class="text-sm">期末贷方:</span><select id="bsEndCrCol"></select>
+          <button class="btn btn-xs btn-primary" onclick="parseBS()">✅ 解析并提取</button>
+        </div>
+        <div class="card-hint">预览（仅显示综合本位币汇总行）：</div>
+        <div class="table-wrap" style="max-height:280px" id="bsPreview"></div>
+      </div>
+    </div>
+    <div class="flex-center gap2">
+      <button class="btn" onclick="goStep(1)">← 上一步</button>
+      <button class="btn btn-primary" onclick="goStep(3)">下一步：智能匹配 →</button>
+    </div>
+  </div>
+
+  <!-- ====== Step 3: Smart Match ====== -->
+  <div id="s3" class="hidden">
+    <div class="card">
+      <div class="card-title">🧠 智能匹配引擎</div>
+      <div class="card-hint">匹配优先级：① 科目编码精确匹配 → ② 期初金额反向映射（TB期初数 = 科目余额表期初余额） → ③ 名称模糊匹配。匹配结果自动保存，下次复用。</div>
+      <div class="flex-center gap2 mb2">
+        <button class="btn btn-primary" onclick="executeSmartMatch()">🚀 执行智能匹配</button>
+        <span class="text-sm text-secondary" id="matchStatus">等待执行...</span>
+      </div>
+      <div id="matchResult" class="hidden mt2"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📋 匹配结果明细</div>
+      <div class="card-hint">绿色=编码自动匹配 | 蓝色=期初金额反向映射 | 橙色=手动/名称匹配 | 红色=未匹配</div>
+      <div class="table-wrap" style="max-height:400px" id="matchDetailPreview"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">⚠ 未匹配/需人工确认</div>
+      <div id="unmatchedPanel">
+        <p class="text-sm text-secondary">执行匹配后此处显示未匹配的TB行及建议</p>
+      </div>
+    </div>
+    <div class="flex-center gap2">
+      <button class="btn" onclick="goStep(2)">← 上一步</button>
+      <button class="btn btn-primary" onclick="goStep(4)">下一步：执行上数 →</button>
+    </div>
+  </div>
+
+  <!-- ====== Step 4: Execute Fill ====== -->
+  <div id="s4" class="hidden">
+    <div class="card">
+      <div class="card-title">📝 执行自动上数</div>
+      <div class="card-hint">上数规则：资产负债表项目（BalanceSheet）→ 取期末余额（期末借方-贷方）；利润表项目（IncomeStatement）→ 取本年累计发生额（收入类取贷方累计、成本费用类取借方累计）。多个科目对应同一TB行时自动累加。</div>
+      <div class="flex-center gap2 mb2">
+        <button class="btn btn-primary" onclick="executeAutoFill()">🚀 执行自动上数</button>
+        <span class="text-sm text-secondary" id="fillStatus">等待执行...</span>
+      </div>
+      <div id="fillResult" class="hidden mt2"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📋 上数结果预览（Detail Sheet）</div>
+      <div class="table-wrap" style="max-height:400px" id="tbResultPreview"></div>
+    </div>
+    <div class="flex-center gap2">
+      <button class="btn" onclick="goStep(3)">← 上一步</button>
+      <button class="btn btn-primary" onclick="goStep(5)">下一步：校验导出 →</button>
+    </div>
+  </div>
+
+  <!-- ====== Step 5: Verify & Export ====== -->
+  <div id="s5" class="hidden">
+    <div class="card">
+      <div class="card-title">✅ 自动校验</div>
+      <div class="card-hint">校验规则：① 资产负债表借贷平衡 ② 利润表收入费用勾稽 ③ 期初数与上期期末一致性</div>
+      <div class="flex-center gap2 mb2">
+        <button class="btn btn-primary" onclick="runVerify()">🔍 执行校验</button>
+      </div>
+      <div id="verifyResult"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📤 导出结果</div>
+      <div class="gap2">
+        <button class="btn btn-primary" onclick="downloadFilledTB()">📥 下载填好的 TB (.xlsx)</button>
+        <button class="btn" onclick="downloadMappingReport()">📊 下载匹配映射报告 (.xlsx)</button>
+        <button class="btn" onclick="downloadUnmatchedReport()">📋 下载未匹配清单 (.xlsx)</button>
+        <button class="btn" onclick="downloadVerifyReport()">📋 下载校验报告 (.xlsx)</button>
+      </div>
+    </div>
+    <div class="flex-center">
+      <button class="btn" onclick="goStep(4)">← 上一步</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== TOAST ====================
+function toast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.className='toast show'; clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),2500); }
+
+// ==================== NAV ====================
+function goStep(n){
+  ['s1','s2','s3','s4','s5'].forEach((id,i)=>document.getElementById(id).classList.toggle('hidden',i+1!==n));
+  document.querySelectorAll('.step').forEach((s,i)=>{ s.classList.remove('active','done'); if(i+1<n)s.classList.add('done'); if(i+1===n)s.classList.add('active'); });
+}
+
+// ==================== STORAGE ====================
+const STORE_KEY = 'tb_smart_autofill_data';
+function loadStore(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)||'{}'); }catch{ return {}; } }
+function saveStore(v){ localStorage.setItem(STORE_KEY, JSON.stringify(v)); }
+
+// ==================== STATE ====================
+let store = loadStore();
+if(!store.learnedMappings) store.learnedMappings = {}; // {tbDetailNum: {bsCode, bsName, matchType, confidence}}
+
+let state = {
+  // TB Template
+  tbWb: null,
+  tbDetail: [],      // {rowIndex, detailNum, detailName, ag1Num, ag1Name, tbCols[], tbValues[], isEmptyLast, hasFormula, openBal}
+  tbAG1: [],
+  tbFSL: [],
+  tbOpenColIdx: -1,  // index in tbCols for 期初数列 (倒数第二列)
+  tbFillColIdx: -1,  // index in tbCols for 本期待填列 (最后一列)
+
+  // Balance Sheet
+  bsRows: [],        // {code, name, openDr, openCr, dr, cr, yearDr, yearCr, endDr, endCr, curr}
+  bsColMap: {},
+
+  // Match Results
+  matchResults: [],  // {tbDetailNum, tbDetailName, bsCode, bsName, matchType, confidence, openBalMatch}
+  unmatchedTB: [],
+
+  // Fill Results
+  filledDetailRows: [],
+  fillResults: {},
+  verifyResults: {},
+};
+
+function saveLearnedMapping(tbDetailNum, mapping){
+  if(!tbDetailNum) return;
+  store.learnedMappings[tbDetailNum] = mapping;
+  saveStore(store);
+}
+
+// ==================== TB TEMPLATE PARSER ====================
+function loadTBTemplate(input){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload=function(e){
+    state.tbWb = XLSX.read(e.target.result,{type:'array',cellFormula:true,cellStyles:true});
+    const sn = state.tbWb.SheetNames;
+    document.getElementById('tbInfo').textContent = file.name+' ('+sn.length+' Sheets: '+sn.join(', ')+')';
+
+    const detailSheet = state.tbWb.Sheets['Detail'] || state.tbWb.Sheets[sn[0]];
+    if(detailSheet) parseDetailSheet(detailSheet);
+
+    const ag1Sheet = state.tbWb.Sheets['Account Grouping 1'];
+    if(ag1Sheet) parseAG1Sheet(ag1Sheet);
+
+    const fslSheet = state.tbWb.Sheets['Financial Statement Line'];
+    if(fslSheet) parseFSLSheet(fslSheet);
+
+    document.getElementById('tbPreviewArea').classList.remove('hidden');
+    toast('✓ TB模板解析完成');
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseDetailSheet(sheet){
+  const ref = XLSX.utils.decode_range(sheet['!ref']||'A1');
+  const rows = [];
+
+  // Find header row (row with "Detail Num")
+  let headerRow = -1;
+  for(let r=ref.s.r;r<=Math.min(ref.s.r+10,ref.e.r);r++){
+    const cellA = sheet[XLSX.utils.encode_cell({r,c:0})];
+    if(cellA && /Detail Num/i.test(String(cellA.w||cellA.v||''))){ headerRow=r; break; }
+  }
+  if(headerRow<0) headerRow = ref.s.r;
+
+  // Read headers
+  const headers = [];
+  for(let c=ref.s.c;c<=ref.e.c;c++){
+    const cell = sheet[XLSX.utils.encode_cell({r:headerRow,c})];
+    headers.push(cell ? String(cell.w||cell.v||'') : '');
+  }
+
+  // Find TB data columns (Trial Balance Details X)
+  const tbCols = [];
+  headers.forEach((h,i)=>{ if(/Trial Balance Details/i.test(h)) tbCols.push(i); });
+
+  // 期初数列 = 倒数第二列，本期待填列 = 最后一列
+  state.tbOpenColIdx = tbCols.length >= 2 ? tbCols[tbCols.length - 2] : (tbCols.length >= 1 ? tbCols[0] : -1);
+  state.tbFillColIdx = tbCols.length >= 1 ? tbCols[tbCols.length - 1] : -1;
+
+  // Read data rows
+  for(let r=headerRow+1;r<=ref.e.r;r++){
+    const detailNumCell = sheet[XLSX.utils.encode_cell({r,c:0})];
+    const detailCell = sheet[XLSX.utils.encode_cell({r,c:1})];
+    const ag1NumCell = sheet[XLSX.utils.encode_cell({r,c:2})];
+    const ag1Cell = sheet[XLSX.utils.encode_cell({r,c:3})];
+
+    if(!detailNumCell && !detailCell) continue;
+    const detailNum = String(detailNumCell?.w||detailNumCell?.v||'').trim();
+    const detailName = String(detailCell?.w||detailCell?.v||'').trim();
+    if(!detailNum && !detailName) continue;
+
+    const ag1Num = ag1NumCell ? String(ag1NumCell.w||ag1NumCell.v||'').trim() : '';
+    const ag1Name = ag1Cell ? String(ag1Cell.w||ag1Cell.v||'').trim() : '';
+
+    const tbValues = tbCols.map(c=>{
+      const cell = sheet[XLSX.utils.encode_cell({r,c})];
+      return cell ? (cell.v !== undefined ? cell.v : (cell.w||'')) : '';
+    });
+
+    // 期初数（倒数第二列）
+    const openBal = state.tbOpenColIdx >= 0 ? parseNum(tbValues[tbCols.length - 2]) : 0;
+    // 本期待填列（最后一列）是否为空
+    const lastVal = tbValues[tbValues.length-1];
+    const isEmptyLast = lastVal === '' || lastVal === null || lastVal === undefined || lastVal === 0;
+
+    rows.push({
+      rowIndex: r,
+      detailNum, detailName, ag1Num, ag1Name,
+      tbCols, tbValues,
+      openBal,
+      isEmptyLast,
+      hasFormula: false,
+    });
+  }
+  state.tbDetail = rows;
+
+  document.getElementById('tbDetailSummary').textContent = `${rows.length} 行 Detail | ${tbCols.length} 个期间列 | 期初数列=TB${state.tbOpenColIdx>=0?String.fromCharCode(65+state.tbOpenColIdx):'?'} | 本期列=TB${state.tbFillColIdx>=0?String.fromCharCode(65+state.tbFillColIdx):'?'}`;
+
+  // Preview with openBal highlighting
+  document.getElementById('tbDetailPreview').innerHTML = `<table><thead><tr><th>Detail Num</th><th>Detail</th><th>AG1</th><th>期初数(倒数第二列)</th><th>本期(最后一列)</th></tr></thead><tbody>`+
+    rows.slice(0,10).map(d=>`<tr>
+      <td>${htmlEscape(d.detailNum)}</td><td>${htmlEscape(d.detailName)}</td><td>${htmlEscape(d.ag1Name)}</td>
+      <td class="font-mono ${d.openBal!==0?'matched':''}">${fmtNum(d.openBal)}</td>
+      <td class="font-mono ${d.isEmptyLast?'unmatched':'filled'}">${d.isEmptyLast?'[待填]':fmtNum(d.tbValues[d.tbValues.length-1])}</td>
+    </tr>`).join('')+
+    (rows.length>10?`<tr><td colspan="5" class="text-secondary">... 共 ${rows.length} 行</td></tr>`:'')+
+    '</tbody></table>';
+}
+
+function parseAG1Sheet(sheet){
+  const ref = XLSX.utils.decode_range(sheet['!ref']||'A1');
+  const rows = [];
+  for(let r=ref.s.r+1;r<=ref.e.r;r++){
+    const c0 = sheet[XLSX.utils.encode_cell({r,c:0})];
+    const c1 = sheet[XLSX.utils.encode_cell({r,c:1})];
+    const c2 = sheet[XLSX.utils.encode_cell({r,c:2})];
+    const c3 = sheet[XLSX.utils.encode_cell({r,c:3})];
+    if(!c0) continue;
+    rows.push({
+      ag1Num: String(c0.w||c0.v||'').trim(),
+      ag1Name: c1?String(c1.w||c1.v||'').trim():'',
+      fslNum: c2?String(c2.w||c2.v||'').trim():'',
+      fslName: c3?String(c3.w||c3.v||'').trim():'',
+    });
+  }
+  state.tbAG1 = rows;
+  document.getElementById('tbAG1Summary').textContent = `${rows.length} 行 Account Grouping | 映射到 ${new Set(rows.map(r=>r.fslNum)).size} 个 FSL`;
+}
+
+function parseFSLSheet(sheet){
+  const ref = XLSX.utils.decode_range(sheet['!ref']||'A1');
+  const rows = [];
+  for(let r=ref.s.r+1;r<=ref.e.r;r++){
+    const c0 = sheet[XLSX.utils.encode_cell({r,c:0})];
+    const c1 = sheet[XLSX.utils.encode_cell({r,c:1})];
+    const c2 = sheet[XLSX.utils.encode_cell({r,c:2})];
+    const c3 = sheet[XLSX.utils.encode_cell({r,c:3})];
+    const c4 = sheet[XLSX.utils.encode_cell({r,c:4})];
+    if(!c0) continue;
+    rows.push({
+      fslNum: String(c0.w||c0.v||'').trim(),
+      fslName: c1?String(c1.w||c1.v||'').trim():'',
+      subtotal: c2?String(c2.w||c2.v||'').trim():'',
+      category: c3?String(c3.w||c3.v||'').trim():'',
+      fsType: c4?String(c4.w||c4.v||'').trim():'BalanceSheet',
+    });
+  }
+  state.tbFSL = rows;
+
+  const bsCount = rows.filter(r=>/BalanceSheet/i.test(r.fsType)).length;
+  const isCount = rows.filter(r=>/IncomeStatement/i.test(r.fsType)).length;
+  document.getElementById('tbFSLSummary').textContent = `${rows.length} 行 FSL | ${bsCount} 个资产负债表 | ${isCount} 个利润表`;
+
+  document.getElementById('fslTypeSummary').innerHTML = rows.slice(0,15).map(r=>`
+    <span class="badge ${/BalanceSheet/i.test(r.fsType)?'badge-auto':'badge-amount'}">${htmlEscape(r.fslNum)} ${htmlEscape(r.fslName.slice(0,12))}</span>
+  `).join('') + (rows.length>15?`<span class="text-sm text-secondary">+${rows.length-15} more</span>`:'');
+}
+
+// ==================== BALANCE SHEET PARSER ====================
+function loadBalanceSheet(input){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload=function(e){
+    const wb = XLSX.read(e.target.result,{type:'array'});
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet,{header:1});
+    if(rows.length<2){ toast('数据为空'); return; }
+    state._bsRawRows = rows;
+    document.getElementById('bsInfo').textContent = file.name+' ('+(rows.length-1)+' 行)';
+    const nCols = Math.max(...rows.map(r=>Array.isArray(r)?r.length:0));
+    const headerRow = rows[0];
+    const headerTexts = Array.from({length:nCols},(_,i)=>String(Array.isArray(headerRow)?headerRow[i]||'':''));
+
+    // Auto-detect columns
+    const auto = {};
+    headerTexts.forEach((h,i)=>{
+      if(/代码|科目代码|code/i.test(h)) auto.code = i;
+      if(/名称|科目名称|name/i.test(h)) auto.name = i;
+      if(/币别|currency/i.test(h)) auto.curr = i;
+      if(/期初.*借|年初.*借|opening.*dr/i.test(h)) auto.openDr = i;
+      if(/期初.*贷|年初.*贷|opening.*cr/i.test(h)) auto.openCr = i;
+      if(/本期.*借|借方.*发生|debit/i.test(h) && !/累计/i.test(h) && !/期初/i.test(h) && !/期末/i.test(h)) auto.dr = i;
+      if(/本期.*贷|贷方.*发生|credit/i.test(h) && !/累计/i.test(h) && !/期初/i.test(h) && !/期末/i.test(h)) auto.cr = i;
+      if(/本年.*借.*累计|累计.*借/i.test(h)) auto.yearDr = i;
+      if(/本年.*贷.*累计|累计.*贷/i.test(h)) auto.yearCr = i;
+      if(/期末.*借|ending.*dr/i.test(h)) auto.endDr = i;
+      if(/期末.*贷|ending.*cr/i.test(h)) auto.endCr = i;
+    });
+
+    const opts = headerTexts.map((h,i)=>`<option value="${i}" ${h?`title="${htmlEscape(h)}"`:''}>${h?htmlEscape(h.slice(0,18)):'列'+(i+1)}</option>`).join('');
+    ['bsCodeCol','bsNameCol','bsCurrCol','bsOpenDrCol','bsOpenCrCol','bsDrCol','bsCrCol','bsYearDrCol','bsYearCrCol','bsEndDrCol','bsEndCrCol'].forEach(id=>{
+      document.getElementById(id).innerHTML = '<option value="-1">--</option>' + opts;
+    });
+
+    if(auto.code!==undefined) document.getElementById('bsCodeCol').value=auto.code;
+    if(auto.name!==undefined) document.getElementById('bsNameCol').value=auto.name;
+    if(auto.curr!==undefined) document.getElementById('bsCurrCol').value=auto.curr;
+    if(auto.openDr!==undefined) document.getElementById('bsOpenDrCol').value=auto.openDr;
+    if(auto.openCr!==undefined) document.getElementById('bsOpenCrCol').value=auto.openCr;
+    if(auto.dr!==undefined) document.getElementById('bsDrCol').value=auto.dr;
+    if(auto.cr!==undefined) document.getElementById('bsCrCol').value=auto.cr;
+    if(auto.yearDr!==undefined) document.getElementById('bsYearDrCol').value=auto.yearDr;
+    if(auto.yearCr!==undefined) document.getElementById('bsYearCrCol').value=auto.yearCr;
+    if(auto.endDr!==undefined) document.getElementById('bsEndDrCol').value=auto.endDr;
+    if(auto.endCr!==undefined) document.getElementById('bsEndCrCol').value=auto.endCr;
+
+    document.getElementById('bsConfig').classList.remove('hidden');
+    toast('已识别列头，请确认映射');
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseBS(){
+  if(!state._bsRawRows){ toast('请先上传余额表'); return; }
+  const cols = {
+    code: +document.getElementById('bsCodeCol').value,
+    name: +document.getElementById('bsNameCol').value,
+    curr: +document.getElementById('bsCurrCol').value,
+    openDr: +document.getElementById('bsOpenDrCol').value,
+    openCr: +document.getElementById('bsOpenCrCol').value,
+    dr: +document.getElementById('bsDrCol').value,
+    cr: +document.getElementById('bsCrCol').value,
+    yearDr: +document.getElementById('bsYearDrCol').value,
+    yearCr: +document.getElementById('bsYearCrCol').value,
+    endDr: +document.getElementById('bsEndDrCol').value,
+    endCr: +document.getElementById('bsEndCrCol').value,
+  };
+  state.bsColMap = cols;
+
+  // Filter: only 综合本位币 rows, and only rows with valid code
+  const allRows = state._bsRawRows.slice(1).filter(r=>Array.isArray(r));
+  const filtered = [];
+
+  allRows.forEach(r=>{
+    const curr = cols.curr>=0 ? String(r[cols.curr]||'').trim() : '';
+    if(curr && !/综合本位币|本位币|综合/i.test(curr)) return;
+
+    const code = cols.code>=0 ? String(r[cols.code]||'').trim() : '';
+    const name = cols.name>=0 ? String(r[cols.name]||'').trim() : '';
+    if(!code && !name) return;
+
+    filtered.push({
+      code, name,
+      openDr: cols.openDr>=0 ? parseNum(r[cols.openDr]) : 0,
+      openCr: cols.openCr>=0 ? parseNum(r[cols.openCr]) : 0,
+      dr: cols.dr>=0 ? parseNum(r[cols.dr]) : 0,
+      cr: cols.cr>=0 ? parseNum(r[cols.cr]) : 0,
+      yearDr: cols.yearDr>=0 ? parseNum(r[cols.yearDr]) : 0,
+      yearCr: cols.yearCr>=0 ? parseNum(r[cols.yearCr]) : 0,
+      endDr: cols.endDr>=0 ? parseNum(r[cols.endDr]) : 0,
+      endCr: cols.endCr>=0 ? parseNum(r[cols.endCr]) : 0,
+      curr,
+    });
+  });
+
+  // Keep top-level codes only (no dot), or orphan subs
+  const topLevelRows = filtered.filter(r=>!r.code.includes('.') && r.code);
+  const topLevelCodes = new Set(topLevelRows.map(r=>r.code));
+  const subRows = filtered.filter(r=>r.code.includes('.') && r.code);
+  const orphanSubs = subRows.filter(r=>{
+    const topCode = r.code.split('.')[0];
+    return !topLevelCodes.has(topCode);
+  });
+
+  state.bsRows = [...topLevelRows, ...orphanSubs];
+
+  document.getElementById('bsPreview').innerHTML = `<table><thead><tr>
+    <th>科目编码</th><th>科目名称</th><th>期初借方</th><th>期初贷方</th><th>本期借方</th><th>本期贷方</th><th>本年借方累计</th><th>本年贷方累计</th><th>期末借方</th><th>期末贷方</th>
+  </tr></thead><tbody>`+
+    state.bsRows.slice(0,20).map(d=>`<tr>
+      <td>${htmlEscape(d.code)}</td><td>${htmlEscape(d.name)}</td>
+      <td class="font-mono">${fmtNum(d.openDr)}</td><td class="font-mono">${fmtNum(d.openCr)}</td>
+      <td class="font-mono">${fmtNum(d.dr)}</td><td class="font-mono">${fmtNum(d.cr)}</td>
+      <td class="font-mono">${fmtNum(d.yearDr)}</td><td class="font-mono">${fmtNum(d.yearCr)}</td>
+      <td class="font-mono">${fmtNum(d.endDr)}</td><td class="font-mono">${fmtNum(d.endCr)}</td>
+    </tr>`).join('')+
+    (state.bsRows.length>20?`<tr><td colspan="10" class="text-secondary">... 共 ${state.bsRows.length} 条（已过滤综合本位币）</td></tr>`:'')+
+    '</tbody></table>';
+
+  toast(`✓ 已提取 ${state.bsRows.length} 条科目（综合本位币汇总）`);
+}
+
+// ==================== SMART MATCH ENGINE ====================
+function executeSmartMatch(){
+  if(state.bsRows.length===0){ toast('请先导入科目余额表'); return; }
+  if(state.tbDetail.length===0){ toast('请先导入TB模板'); return; }
+
+  const fslByNum = {};
+  state.tbFSL.forEach(f=>{ fslByNum[f.fslNum]=f; });
+  const ag1ByNum = {};
+  state.tbAG1.forEach(a=>{ ag1ByNum[a.ag1Num]=a; });
+
+  const matchResults = [];
+  const unmatchedTB = [];
+  const usedBSCodes = new Set();
+
+  // Phase 1: Code exact match (highest priority)
+  state.tbDetail.forEach(tbd=>{
+    if(!tbd.detailNum) return;
+    // Extract numeric code from detailNum (e.g., "Detail-001-2" -> "001" or try match by full)
+    const bsMatch = state.bsRows.find(bs=>{
+      // Try exact code match first
+      if(bs.code && tbd.detailNum.includes(bs.code)) return true;
+      // Try learned mapping
+      const learned = store.learnedMappings[tbd.detailNum];
+      if(learned && learned.bsCode === bs.code) return true;
+      return false;
+    });
+
+    if(bsMatch && !usedBSCodes.has(bsMatch.code)){
+      usedBSCodes.add(bsMatch.code);
+      matchResults.push({
+        tbDetailNum: tbd.detailNum,
+        tbDetailName: tbd.detailName,
+        tbAG1Num: tbd.ag1Num,
+        tbAG1Name: tbd.ag1Name,
+        bsCode: bsMatch.code,
+        bsName: bsMatch.name,
+        matchType: 'auto-code',
+        confidence: 1.0,
+        openBalMatch: Math.abs(tbd.openBal - (bsMatch.openDr - bsMatch.openCr)) < 0.01,
+        tbRow: tbd,
+        bsRow: bsMatch,
+      });
+      saveLearnedMapping(tbd.detailNum, {bsCode: bsMatch.code, bsName: bsMatch.name, matchType: 'auto-code'});
+    }
+  });
+
+  // Phase 2: Amount reverse mapping (TB openBal = BS openBal)
+  const unmatchedTBRows = state.tbDetail.filter(tbd=>!matchResults.some(m=>m.tbDetailNum===tbd.detailNum));
+  unmatchedTBRows.forEach(tbd=>{
+    if(tbd.openBal === 0) return; // Can't match by amount if openBal is 0
+    const bsOpenBal = tbd.openBal;
+
+    // Find BS row where (openDr - openCr) ≈ TB openBal
+    const bsMatch = state.bsRows.find(bs=>{
+      if(usedBSCodes.has(bs.code)) return false;
+      const bsOpenNet = bs.openDr - bs.openCr;
+      return Math.abs(bsOpenNet - bsOpenBal) < 0.01;
+    });
+
+    if(bsMatch){
+      usedBSCodes.add(bsMatch.code);
+      matchResults.push({
+        tbDetailNum: tbd.detailNum,
+        tbDetailName: tbd.detailName,
+        tbAG1Num: tbd.ag1Num,
+        tbAG1Name: tbd.ag1Name,
+        bsCode: bsMatch.code,
+        bsName: bsMatch.name,
+        matchType: 'amount-reverse',
+        confidence: 0.9,
+        openBalMatch: true,
+        tbRow: tbd,
+        bsRow: bsMatch,
+      });
+      saveLearnedMapping(tbd.detailNum, {bsCode: bsMatch.code, bsName: bsMatch.name, matchType: 'amount-reverse'});
+    }
+  });
+
+  // Phase 3: Name fuzzy match (lowest priority, for remaining)
+  const stillUnmatchedTB = state.tbDetail.filter(tbd=>!matchResults.some(m=>m.tbDetailNum===tbd.detailNum));
+  stillUnmatchedTB.forEach(tbd=>{
+    const tbdNameLower = tbd.detailName.toLowerCase();
+    let bestMatch = null, bestScore = 0.3;
+
+    state.bsRows.forEach(bs=>{
+      if(usedBSCodes.has(bs.code)) return;
+      const score = nameSimilarity(tbdNameLower, bs.name.toLowerCase());
+      if(score > bestScore){
+        bestScore = score;
+        bestMatch = bs;
+      }
+    });
+
+    if(bestMatch){
+      usedBSCodes.add(bestMatch.code);
+      matchResults.push({
+        tbDetailNum: tbd.detailNum,
+        tbDetailName: tbd.detailName,
+        tbAG1Num: tbd.ag1Num,
+        tbAG1Name: tbd.ag1Name,
+        bsCode: bestMatch.code,
+        bsName: bestMatch.name,
+        matchType: 'fuzzy-name',
+        confidence: bestScore,
+        openBalMatch: Math.abs(tbd.openBal - (bestMatch.openDr - bestMatch.openCr)) < 0.01,
+        tbRow: tbd,
+        bsRow: bestMatch,
+      });
+      saveLearnedMapping(tbd.detailNum, {bsCode: bestMatch.code, bsName: bestMatch.name, matchType: 'fuzzy-name'});
+    }
+  });
+
+  // Collect truly unmatched
+  const finalUnmatched = state.tbDetail.filter(tbd=>!matchResults.some(m=>m.tbDetailNum===tbd.detailNum));
+
+  state.matchResults = matchResults;
+  state.unmatchedTB = finalUnmatched;
+
+  // Update UI
+  document.getElementById('matchStatus').textContent = `编码匹配 ${matchResults.filter(m=>m.matchType==='auto-code').length} | 金额映射 ${matchResults.filter(m=>m.matchType==='amount-reverse').length} | 名称匹配 ${matchResults.filter(m=>m.matchType==='fuzzy-name').length} | 未匹配 ${finalUnmatched.length}`;
+  document.getElementById('matchResult').classList.remove('hidden');
+  document.getElementById('matchResult').innerHTML = `
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <span class="badge badge-auto">编码匹配 ${matchResults.filter(m=>m.matchType==='auto-code').length}</span>
+      <span class="badge badge-amount">金额映射 ${matchResults.filter(m=>m.matchType==='amount-reverse').length}</span>
+      <span class="badge badge-manual">名称匹配 ${matchResults.filter(m=>m.matchType==='fuzzy-name').length}</span>
+      <span class="badge badge-none">未匹配 ${finalUnmatched.length}</span>
+    </div>
+  `;
+
+  // Render match detail
+  document.getElementById('matchDetailPreview').innerHTML = `<table><thead><tr>
+    <th>TB Detail</th><th>TB名称</th><th>匹配类型</th><th>BS编码</th><th>BS名称</th><th>期初数一致</th><th>置信度</th>
+  </tr></thead><tbody>`+
+    matchResults.map(m=>`<tr>
+      <td>${htmlEscape(m.tbDetailNum)}</td>
+      <td>${htmlEscape(m.tbDetailName)}</td>
+      <td><span class="badge ${m.matchType==='auto-code'?'badge-auto':m.matchType==='amount-reverse'?'badge-amount':'badge-manual'}">${m.matchType==='auto-code'?'编码':m.matchType==='amount-reverse'?'金额':'名称'}</span></td>
+      <td>${htmlEscape(m.bsCode)}</td>
+      <td>${htmlEscape(m.bsName)}</td>
+      <td class="${m.openBalMatch?'matched':'unmatched'}">${m.openBalMatch?'✅':'⚠'}</td>
+      <td>${(m.confidence*100).toFixed(0)}%</td>
+    </tr>`).join('')+
+    '</tbody></table>';
+
+  // Show unmatched
+  const up = document.getElementById('unmatchedPanel');
+  if(finalUnmatched.length>0){
+    up.innerHTML = finalUnmatched.map(tbd=>`
+      <div class="text-sm mb2" style="padding:8px;background:rgba(252,92,156,0.05);border:1px solid rgba(252,92,156,0.15);border-radius:6px">
+        <span style="color:var(--accent-3)">⚠ ${htmlEscape(tbd.detailNum)} ${htmlEscape(tbd.detailName)}</span>
+        <span class="text-secondary"> — 期初数: ${fmtNum(tbd.openBal)}</span>
+        <div class="mt2 text-xs text-secondary">建议：检查科目余额表是否包含对应科目，或手动建立映射</div>
+      </div>
+    `).join('');
+  } else {
+    up.innerHTML = '<p class="text-sm" style="color:var(--accent-2)">✅ 所有TB行均已匹配</p>';
+  }
+
+  toast(`✓ 匹配完成：编码${matchResults.filter(m=>m.matchType==='auto-code').length} 金额${matchResults.filter(m=>m.matchType==='amount-reverse').length} 名称${matchResults.filter(m=>m.matchType==='fuzzy-name').length} 未匹${finalUnmatched.length}`);
+}
+
+function nameSimilarity(a, b){
+  if(!a||!b) return 0;
+  // Simple containment + char overlap
+  if(a.includes(b) || b.includes(a)) return 0.8;
+  const setA = new Set(a.split(''));
+  const setB = new Set(b.split(''));
+  const intersection = new Set([...setA].filter(x=>setB.has(x)));
+  return intersection.size / Math.max(setA.size, setB.size);
+}
+
+// ==================== AUTO FILL ENGINE ====================
+function executeAutoFill(){
+  if(state.matchResults.length===0){ toast('请先执行智能匹配'); return; }
+  if(state.tbDetail.length===0){ toast('请先导入TB模板'); return; }
+
+  const fslByNum = {};
+  state.tbFSL.forEach(f=>{ fslByNum[f.fslNum]=f; });
+  const ag1ByNum = {};
+  state.tbAG1.forEach(a=>{ ag1ByNum[a.ag1Num]=a; });
+
+  let filled=0, unmatched=[];
+
+  // Clone TB rows for filling
+  const filledRows = JSON.parse(JSON.stringify(state.tbDetail));
+
+  // Group match results by TB Detail (support multiple BS -> one TB)
+  const matchByTB = {};
+  state.matchResults.forEach(m=>{
+    if(!matchByTB[m.tbDetailNum]) matchByTB[m.tbDetailNum] = [];
+    matchByTB[m.tbDetailNum].push(m);
+  });
+
+  Object.entries(matchByTB).forEach(([tbDetailNum, matches])=>{
+    const tbRow = filledRows.find(tbd=>tbd.detailNum===tbDetailNum);
+    if(!tbRow) return;
+
+    // Get FS Type from AG1 -> FSL
+    const ag1 = ag1ByNum[tbRow.ag1Num];
+    const fsl = ag1 ? fslByNum[ag1.fslNum] : null;
+    const fsType = fsl ? fsl.fsType : 'BalanceSheet';
+
+    // Calculate fill value (accumulate all matched BS rows)
+    let fillVal = 0;
+    matches.forEach(m=>{
+      const bs = m.bsRow;
+      if(/BalanceSheet/i.test(fsType)){
+        // 资产负债表: 期末余额 = 期末借方 - 期末贷方
+        fillVal += (bs.endDr - bs.endCr);
+      } else {
+        // 利润表: 本年累计发生额
+        // Determine nature from FSL name or AG1 name
+        const fslName = fsl ? fsl.fslName : '';
+        const isIncome = /收入|Revenue|Income|收益/i.test(fslName);
+        if(isIncome){
+          fillVal += bs.yearCr; // 收入类取贷方累计
+        } else {
+          fillVal += bs.yearDr; // 成本费用类取借方累计
+        }
+      }
+    });
+
+    // Fill the last TB column
+    const lastColIdx = tbRow.tbValues.length - 1;
+    const currentVal = parseNum(tbRow.tbValues[lastColIdx]);
+    tbRow.tbValues[lastColIdx] = currentVal + fillVal;
+    tbRow.filled = true;
+    tbRow.fillSource = matches.map(m=>m.bsCode+' '+m.bsName).join(' + ');
+    tbRow.fillType = /BalanceSheet/i.test(fsType) ? '期末余额' : '本年累计';
+    filled++;
+  });
+
+  // Collect unmatched BS rows
+  const matchedBSCodes = new Set(state.matchResults.map(m=>m.bsCode));
+  state.bsRows.forEach(bs=>{
+    if(!matchedBSCodes.has(bs.code)){
+      unmatched.push({...bs, reason:'未匹配到任何TB Detail行'});
+    }
+  });
+
+  state.filledDetailRows = filledRows;
+  state.fillResults = { filled, unmatched };
+
+  document.getElementById('fillStatus').textContent = `已填 ${filled} 行 | 未匹配BS科目 ${unmatched.length} 个`;
+  document.getElementById('fillResult').classList.remove('hidden');
+  document.getElementById('fillResult').innerHTML = `
+    <div style="color:var(--accent-2)">✅ 上数完成：填入 <b>${filled}</b> 行TB Detail（支持多科目累加）| 未匹配BS科目 <span style="color:var(--accent-3)"><b>${unmatched.length}</b></span> 个</div>
+  `;
+
+  renderTBResultPreview();
+  toast(`✓ 上数完成：${filled}行已填`);
+}
+
+function renderTBResultPreview(){
+  const rows = state.filledDetailRows;
+  if(!rows || rows.length===0){
+    document.getElementById('tbResultPreview').innerHTML='<p class="text-sm text-secondary p-4">暂无数据</p>';
+    return;
+  }
+  const lastIdx = rows[0].tbValues.length - 1;
+  const prevIdx = rows[0].tbValues.length >= 2 ? rows[0].tbValues.length - 2 : -1;
+  let html = '<table><thead><tr><th>Detail Num</th><th>Detail</th><th>AG1</th><th>上期期末</th><th>本期（已填）</th><th>来源</th><th>类型</th></tr></thead><tbody>';
+  rows.forEach(d=>{
+    const lastVal = d.tbValues[lastIdx];
+    const isFilled = d.filled;
+    const prevVal = prevIdx >= 0 ? d.tbValues[prevIdx] : '';
+    html += `<tr>
+      <td>${htmlEscape(d.detailNum)}</td><td>${htmlEscape(d.detailName)}</td><td>${htmlEscape(d.ag1Name)}</td>
+      <td class="font-mono">${fmtNum(prevVal)}</td>
+      <td class="font-mono ${isFilled?'filled':(lastVal!==''&&lastVal!==null&&lastVal!==undefined?'':'skipped')}">${fmtNum(lastVal)}</td>
+      <td class="text-xs">${htmlEscape(d.fillSource||'-')}</td>
+      <td class="text-xs">${htmlEscape(d.fillType||'-')}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('tbResultPreview').innerHTML = html;
+}
+
+// ==================== VERIFY ====================
+function runVerify(){
+  if(!state.filledDetailRows || state.filledDetailRows.length===0){ toast('请先执行上数'); return; }
+
+  const fslByNum = {};
+  state.tbFSL.forEach(f=>{ fslByNum[f.fslNum]=f; });
+  const ag1ByNum = {};
+  state.tbAG1.forEach(a=>{ ag1ByNum[a.ag1Num]=a; });
+
+  const fslSums = {};
+  state.filledDetailRows.forEach(d=>{
+    const ag1 = ag1ByNum[d.ag1Num];
+    if(!ag1) return;
+    const fsl = fslByNum[ag1.fslNum];
+    if(!fsl) return;
+    const lastVal = d.tbValues[d.tbValues.length-1];
+    const num = parseNum(lastVal);
+    if(!fslSums[fsl.fslNum]) fslSums[fsl.fslNum] = { fsl, sum:0, details:[] };
+    fslSums[fsl.fslNum].sum += num;
+    fslSums[fsl.fslNum].details.push({detailNum:d.detailNum, detailName:d.detailName, val:num});
+  });
+
+  let assetsTotal = 0, liabTotal = 0, equityTotal = 0;
+  let incomeTotal = 0, expenseTotal = 0;
+
+  Object.values(fslSums).forEach(({fsl,sum})=>{
+    if(/BalanceSheet/i.test(fsl.fsType)){
+      if(/Assets/i.test(fsl.category)) assetsTotal += sum;
+      if(/Liabilities/i.test(fsl.category)) liabTotal += sum;
+      if(/Equity|权益/i.test(fsl.category)) equityTotal += sum;
+    } else {
+      if(/收入|Revenue|Income/i.test(fsl.fslName)) incomeTotal += sum;
+      if(/成本|费用|Expense|Cost/i.test(fsl.fslName)) expenseTotal += sum;
+    }
+  });
+
+  const bsDiff = Math.abs(assetsTotal - (liabTotal + equityTotal));
+
+  state.verifyResults = { assetsTotal, liabTotal, equityTotal, bsDiff, incomeTotal, expenseTotal, fslSums };
+
+  document.getElementById('verifyResult').innerHTML = `
+    <div class="card" style="padding:16px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:12px">资产负债表校验</div>
+      <table style="width:100%;max-width:500px;font-size:13px">
+        <tr><td>资产合计</td><td class="font-mono" style="text-align:right">${fmtNum(assetsTotal)}</td></tr>
+        <tr><td>负债合计</td><td class="font-mono" style="text-align:right">${fmtNum(liabTotal)}</td></tr>
+        <tr><td>权益合计</td><td class="font-mono" style="text-align:right">${fmtNum(equityTotal)}</td></tr>
+        <tr><td>负债+权益</td><td class="font-mono" style="text-align:right">${fmtNum(liabTotal+equityTotal)}</td></tr>
+        <tr style="font-weight:700;${bsDiff>0.01?'color:var(--accent-3)':'color:var(--accent-2)'}">
+          <td>差额</td><td class="font-mono" style="text-align:right">${fmtNum(bsDiff)}</td></tr>
+      </table>
+      <div class="mt2 text-sm" style="color:${bsDiff>0.01?'var(--accent-3)':'var(--accent-2)'}">
+        ${bsDiff>0.01?'❌ 资产负债表不平衡！':'✅ 资产负债表平衡'}
+      </div>
+    </div>
+    <div class="card" style="padding:16px;margin-top:12px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:12px">利润表校验（简化）</div>
+      <table style="width:100%;max-width:500px;font-size:13px">
+        <tr><td>收入合计</td><td class="font-mono" style="text-align:right">${fmtNum(incomeTotal)}</td></tr>
+        <tr><td>成本费用合计</td><td class="font-mono" style="text-align:right">${fmtNum(expenseTotal)}</td></tr>
+      </table>
+    </div>
+  `;
+  toast('校验完成');
+}
+
+// ==================== EXPORT ====================
+function downloadFilledTB(){
+  if(!state.tbWb || !state.filledDetailRows){ toast('无数据可导出'); return; }
+
+  const wb = JSON.parse(JSON.stringify(state.tbWb));
+  const detailSheet = wb.Sheets['Detail'] || wb.Sheets[wb.SheetNames[0]];
+
+  state.filledDetailRows.forEach(d=>{
+    if(!d.filled) return;
+    const lastColIdx = d.tbCols[d.tbCols.length-1];
+    const addr = XLSX.utils.encode_cell({r:d.rowIndex, c:lastColIdx});
+    const val = d.tbValues[d.tbValues.length-1];
+    if(!detailSheet[addr]) detailSheet[addr] = {};
+    detailSheet[addr].v = val;
+    detailSheet[addr].t = 'n';
+    detailSheet[addr].w = fmtNum(val);
+    delete detailSheet[addr].f;
+  });
+
+  XLSX.writeFile(wb, `TB_智能上数结果_${new Date().toISOString().slice(0,10)}.xlsx`, {cellFormula:true});
+  toast('✓ 已下载填好的TB');
+}
+
+function downloadMappingReport(){
+  if(state.matchResults.length===0){ toast('无匹配数据'); return; }
+  const rows=[['TB Detail编码','TB Detail名称','TB AG1编码','BS科目编码','BS科目名称','匹配类型','置信度','期初数一致']];
+  state.matchResults.forEach(m=>rows.push([
+    m.tbDetailNum, m.tbDetailName, m.tbAG1Num,
+    m.bsCode, m.bsName, m.matchType, m.confidence, m.openBalMatch?'是':'否'
+  ]));
+  const ws=XLSX.utils.aoa_to_sheet(rows); const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'匹配映射报告'); XLSX.writeFile(wb,`TB智能匹配映射报告_${new Date().toISOString().slice(0,10)}.xlsx`);
+  toast('✓ 已下载');
+}
+
+function downloadUnmatchedReport(){
+  const u = state.fillResults.unmatched||[];
+  const tu = state.unmatchedTB||[];
+  if(u.length===0 && tu.length===0){ toast('无未匹配数据'); return; }
+  const rows=[['类型','编码','名称','原因/期初数']];
+  tu.forEach(t=>rows.push(['TB Detail', t.detailNum, t.detailName, '未匹配到BS科目，期初数='+fmtNum(t.openBal)]));
+  u.forEach(r=>rows.push(['BS科目', r.code, r.name, r.reason]));
+  const ws=XLSX.utils.aoa_to_sheet(rows); const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'未匹配清单'); XLSX.writeFile(wb,'TB未匹配清单.xlsx');
+  toast('✓ 已下载');
+}
+
+function downloadVerifyReport(){
+  const v=state.verifyResults;
+  if(!v || !v.fslSums){ toast('无校验数据'); return; }
+  const rows=[['FSL编码','FSL名称','报表类型','Category','合计金额','明细构成']];
+  Object.values(v.fslSums).forEach(({fsl,sum,details})=>{
+    rows.push([fsl.fslNum,fsl.fslName,fsl.fsType,fsl.category,fmtNum(sum),details.map(d=>d.detailName+'='+fmtNum(d.val)).join('; ')]);
+  });
+  rows.push([]); rows.push(['校验项目','金额']);
+  rows.push(['资产合计',fmtNum(v.assetsTotal)]);
+  rows.push(['负债合计',fmtNum(v.liabTotal)]);
+  rows.push(['权益合计',fmtNum(v.equityTotal)]);
+  rows.push(['负债+权益',fmtNum(v.liabTotal+v.equityTotal)]);
+  rows.push(['资产负债表差额',fmtNum(v.bsDiff)]);
+  const ws=XLSX.utils.aoa_to_sheet(rows); const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'校验报告'); XLSX.writeFile(wb,'TB校验报告.xlsx');
+  toast('✓ 已下载');
+}
+
+// ==================== HELPERS ====================
+function parseNum(v){
+  if(v===undefined||v===null||v==='') return 0;
+  if(typeof v==='number') return v;
+  return parseFloat(String(v).replace(/[,\s]/g,''))||0;
+}
+function fmtNum(n){
+  if(n===undefined||n===null||n==='') return '-';
+  if(typeof n==='string') return n;
+  return n.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function htmlEscape(s){ const d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; }
+</script>
+
+<script>
+(function() {
+  if (sessionStorage.getItem('tb-smart-autofill.html_unlocked')) return;
+  var gate = document.getElementById('pwdGate');
+  var input = document.getElementById('pwdInput');
+  var btn = document.getElementById('pwdBtn');
+  var err = document.getElementById('pwdError');
+  gate.style.display = 'flex';
+
+  async function check() {
+    var pwd = input.value;
+    var buf = new TextEncoder().encode(pwd);
+    var hash = await crypto.subtle.digest('SHA-256', buf);
+    var hex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+    if (hex === '5f6f2138aac618ff50a0751b76144e91468d5139ee38db42b0947ba123e37aaf') {
+      sessionStorage.setItem('tb-smart-autofill.html_unlocked', '1');
+      gate.style.display = 'none';
+    } else {
+      err.style.display = 'block';
+      input.value = '';
+      input.focus();
+    }
+  }
+
+  btn.onclick = check;
+  input.onkeydown = function(e) { if (e.key === 'Enter') check(); };
+})();
+</script>
+</body>
+</html>

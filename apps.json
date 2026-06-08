@@ -26,6 +26,19 @@
     "download": ""
   },
   {
+    "id": "tb-smart-autofill",
+    "name": "TB 智能上数器",
+    "shortDesc": "编码匹配·期初金额反向映射·自动上数·多科目累加·资产负债表期末/利润表本年累计",
+    "fullDesc": "纯浏览器端 TB 智能上数器。核心特性：① 三层智能匹配引擎——科目编码精确匹配 → 期初金额反向映射（TB期初数=科目余额表期初余额自动建立对应） → 名称模糊匹配兜底；② 自动识别TB模板三层结构（Detail→Account Grouping 1→Financial Statement Line），自动区分BalanceSheet/IncomeStatement；③ 科目余额表智能提取「综合本位币」汇总行，忽略外币明细；④ 资产负债表项目自动取期末余额（期末借方-贷方），利润表项目自动取本年累计发生额（收入类取贷方累计、成本费用类取借方累计）；⑤ 多科目自动累加到同一TB行；⑥ 匹配结果自动记忆到localStorage，下次复用。导出填好的TB（保留公式）、匹配映射报告、未匹配清单、校验报告。",
+    "category": "data",
+    "status": "wip",
+    "version": "v1.0.0",
+    "icon": "🧠",
+    "onlineTool": true,
+    "github": "https://github.com/Bgu253518/my-app-hub",
+    "download": ""
+  },
+  {
     "id": "tb-autofill-v2",
     "name": "TB 自动上数器 v2",
     "shortDesc": "标准科目编码映射·三层TB结构·资产负债表期末余额/利润表本年累计·智能上数",
