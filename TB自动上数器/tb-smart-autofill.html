@@ -183,7 +183,7 @@ select option { background:#1a1a2e; color:#e8e8f0; }
   <div id="s1">
     <div class="card">
       <div class="card-title">📋 导入 TB 标准模板</div>
-      <div class="card-hint">上传包含 Detail / Account Grouping 1 / Financial Statement Line 三个 Sheet 的 TB 模板 Excel。系统会自动识别期初数列（倒数第二列）和本期待填列（最后一列）。</div>
+      <div class="card-hint">上传包含 Detail / Account Grouping 1 / Financial Statement Line 三个 Sheet 的 TB 模板 Excel。系统会自动识别所有 Trial Balance Details 期间列，然后由你手动选择「期初数列」（用于反向映射匹配）和「本期待填列」（上数目标）。</div>
       <div class="gap2 mb2">
         <label class="btn btn-sm btn-primary" style="cursor:pointer">📤 上传 TB 模板<input type="file" accept=".xlsx,.xls" onchange="loadTBTemplate(this)" class="hidden"></label>
         <span class="text-sm text-secondary" id="tbInfo">未上传</span>
@@ -206,6 +206,23 @@ select option { background:#1a1a2e; color:#e8e8f0; }
         </div>
         <div class="card-hint">Financial Statement Line 类型分布：</div>
         <div id="fslTypeSummary" class="gap2 mb2"></div>
+
+        <!-- TB Column Configuration -->
+        <div id="tbColConfig" class="hidden">
+          <div class="card" style="border:1px solid rgba(124,92,252,0.2);background:rgba(124,92,252,0.05)">
+            <div class="card-title">⚙️ 期间列配置（请手动选择）</div>
+            <div class="card-hint">检测到多个 Trial Balance Details 期间列，请选择用于反向映射匹配的「期初数列」和需要填入数据的「本期待填列」。</div>
+            <div class="flex-center gap2 mb2" style="flex-wrap:wrap">
+              <span class="text-sm">期初数列（用于反向映射匹配）：</span>
+              <select id="tbOpenColSel" style="min-width:180px"></select>
+              <span class="text-sm">本期待填列（上数目标）：</span>
+              <select id="tbFillColSel" style="min-width:180px"></select>
+              <button class="btn btn-xs btn-primary" onclick="applyTBColConfig()">✅ 应用配置</button>
+            </div>
+            <div id="tbColConfigStatus" class="text-sm" style="color:var(--accent-warn)">请先选择期间列配置</div>
+          </div>
+        </div>
+
         <div class="card-hint">Detail 数据预览（前10行，绿色=期初数有值可用于反向映射）：</div>
         <div class="table-wrap" style="max-height:250px" id="tbDetailPreview"></div>
       </div>
@@ -333,6 +350,11 @@ function toast(msg){ const el=document.getElementById('toast'); el.textContent=m
 
 // ==================== NAV ====================
 function goStep(n){
+  // Validation before moving from step 1 to step 2
+  if(n===2 && state.tbDetail.length>0 && (state.tbOpenColIdx<0 || state.tbFillColIdx<0)){
+    toast('请先配置期初数列和本期待填列（Step 1）');
+    return;
+  }
   ['s1','s2','s3','s4','s5'].forEach((id,i)=>document.getElementById(id).classList.toggle('hidden',i+1!==n));
   document.querySelectorAll('.step').forEach((s,i)=>{ s.classList.remove('active','done'); if(i+1<n)s.classList.add('done'); if(i+1===n)s.classList.add('active'); });
 }
@@ -422,11 +444,28 @@ function parseDetailSheet(sheet){
   const tbCols = [];
   headers.forEach((h,i)=>{ if(/Trial Balance Details/i.test(h)) tbCols.push(i); });
 
-  // 期初数列 = 倒数第二列，本期待填列 = 最后一列
-  state.tbOpenColIdx = tbCols.length >= 2 ? tbCols[tbCols.length - 2] : (tbCols.length >= 1 ? tbCols[0] : -1);
-  state.tbFillColIdx = tbCols.length >= 1 ? tbCols[tbCols.length - 1] : -1;
+  // Save tbCols for column selection
+  state._tbCols = tbCols;
+  state._tbHeaders = headers;
 
-  // Read data rows
+  // Don't auto-set open/fill columns - let user choose
+  state.tbOpenColIdx = -1;
+  state.tbFillColIdx = -1;
+
+  // Build column selector options
+  const colOpts = tbCols.map((cidx,i)=>{
+    const colLetter = String.fromCharCode(65+cidx);
+    const headerText = headers[cidx] || `Trial Balance Details ${i+1}`;
+    return `<option value="${i}">${colLetter}列 - ${htmlEscape(headerText)}</option>`;
+  }).join('');
+  document.getElementById('tbOpenColSel').innerHTML = '<option value="">-- 选择期初数列 --</option>' + colOpts;
+  document.getElementById('tbFillColSel').innerHTML = '<option value="">-- 选择本期待填列 --</option>' + colOpts;
+
+  // Show config panel
+  document.getElementById('tbColConfig').classList.remove('hidden');
+  document.getElementById('tbColConfigStatus').textContent = `检测到 ${tbCols.length} 个期间列，请选择期初数列和本期待填列后点击「应用配置」`;
+
+  // Read data rows (raw values, will compute openBal/isEmptyLast after user selects columns)
   for(let r=headerRow+1;r<=ref.e.r;r++){
     const detailNumCell = sheet[XLSX.utils.encode_cell({r,c:0})];
     const detailCell = sheet[XLSX.utils.encode_cell({r,c:1})];
@@ -446,34 +485,85 @@ function parseDetailSheet(sheet){
       return cell ? (cell.v !== undefined ? cell.v : (cell.w||'')) : '';
     });
 
-    // 期初数（倒数第二列）
-    const openBal = state.tbOpenColIdx >= 0 ? parseNum(tbValues[tbCols.length - 2]) : 0;
-    // 本期待填列（最后一列）是否为空
-    const lastVal = tbValues[tbValues.length-1];
-    const isEmptyLast = lastVal === '' || lastVal === null || lastVal === undefined || lastVal === 0;
-
     rows.push({
       rowIndex: r,
       detailNum, detailName, ag1Num, ag1Name,
       tbCols, tbValues,
-      openBal,
-      isEmptyLast,
+      openBal: 0,      // will be set by applyTBColConfig
+      isEmptyLast: true, // will be set by applyTBColConfig
       hasFormula: false,
     });
   }
   state.tbDetail = rows;
 
-  document.getElementById('tbDetailSummary').textContent = `${rows.length} 行 Detail | ${tbCols.length} 个期间列 | 期初数列=TB${state.tbOpenColIdx>=0?String.fromCharCode(65+state.tbOpenColIdx):'?'} | 本期列=TB${state.tbFillColIdx>=0?String.fromCharCode(65+state.tbFillColIdx):'?'}`;
+  document.getElementById('tbDetailSummary').textContent = `${rows.length} 行 Detail | ${tbCols.length} 个期间列 | 等待配置...`;
 
-  // Preview with openBal highlighting
-  document.getElementById('tbDetailPreview').innerHTML = `<table><thead><tr><th>Detail Num</th><th>Detail</th><th>AG1</th><th>期初数(倒数第二列)</th><th>本期(最后一列)</th></tr></thead><tbody>`+
-    rows.slice(0,10).map(d=>`<tr>
-      <td>${htmlEscape(d.detailNum)}</td><td>${htmlEscape(d.detailName)}</td><td>${htmlEscape(d.ag1Name)}</td>
-      <td class="font-mono ${d.openBal!==0?'matched':''}">${fmtNum(d.openBal)}</td>
-      <td class="font-mono ${d.isEmptyLast?'unmatched':'filled'}">${d.isEmptyLast?'[待填]':fmtNum(d.tbValues[d.tbValues.length-1])}</td>
-    </tr>`).join('')+
-    (rows.length>10?`<tr><td colspan="5" class="text-secondary">... 共 ${rows.length} 行</td></tr>`:'')+
-    '</tbody></table>';
+  // Preview (before config applied)
+  renderTBDetailPreview();
+}
+
+function applyTBColConfig(){
+  const openColSel = document.getElementById('tbOpenColSel');
+  const fillColSel = document.getElementById('tbFillColSel');
+  const openIdx = openColSel.value;
+  const fillIdx = fillColSel.value;
+
+  if(openIdx === '' || fillIdx === ''){
+    toast('请选择期初数列和本期待填列');
+    return;
+  }
+
+  const tbCols = state._tbCols;
+  state.tbOpenColIdx = tbCols[+openIdx];
+  state.tbFillColIdx = tbCols[+fillIdx];
+
+  // Recompute openBal and isEmptyLast for all rows
+  state.tbDetail.forEach(d=>{
+    d.openBal = parseNum(d.tbValues[+openIdx]);
+    const lastVal = d.tbValues[+fillIdx];
+    d.isEmptyLast = lastVal === '' || lastVal === null || lastVal === undefined || lastVal === 0;
+  });
+
+  document.getElementById('tbDetailSummary').textContent = `${state.tbDetail.length} 行 Detail | ${tbCols.length} 个期间列 | 期初数列=${String.fromCharCode(65+state.tbOpenColIdx)} | 本期列=${String.fromCharCode(65+state.tbFillColIdx)}`;
+  document.getElementById('tbColConfigStatus').innerHTML = `<span style="color:var(--accent-2)">✅ 已配置：期初数列=${String.fromCharCode(65+state.tbOpenColIdx)}，本期待填列=${String.fromCharCode(65+state.tbFillColIdx)}</span>`;
+
+  renderTBDetailPreview();
+  toast('✓ 期间列配置已应用');
+}
+
+function renderTBDetailPreview(){
+  const rows = state.tbDetail;
+  if(!rows || rows.length===0){
+    document.getElementById('tbDetailPreview').innerHTML='<p class="text-sm text-secondary p-4">暂无数据</p>';
+    return;
+  }
+  const openIdx = state._tbCols ? state._tbCols.findIndex(c=>c===state.tbOpenColIdx) : -1;
+  const fillIdx = state._tbCols ? state._tbCols.findIndex(c=>c===state.tbFillColIdx) : -1;
+  const hasConfig = state.tbOpenColIdx >= 0 && state.tbFillColIdx >= 0;
+
+  let html = `<table><thead><tr><th>Detail Num</th><th>Detail</th><th>AG1</th>`;
+  if(hasConfig){
+    html += `<th>期初数(${String.fromCharCode(65+state.tbOpenColIdx)})</th><th>本期(${String.fromCharCode(65+state.tbFillColIdx)})</th>`;
+  } else {
+    html += `<th>期间列预览</th>`;
+  }
+  html += `</tr></thead><tbody>`;
+
+  rows.slice(0,10).forEach(d=>{
+    html += `<tr>
+      <td>${htmlEscape(d.detailNum)}</td><td>${htmlEscape(d.detailName)}</td><td>${htmlEscape(d.ag1Name)}</td>`;
+    if(hasConfig){
+      html += `<td class="font-mono ${d.openBal!==0?'matched':''}">${fmtNum(d.openBal)}</td>
+               <td class="font-mono ${d.isEmptyLast?'unmatched':'filled'}">${d.isEmptyLast?'[待填]':fmtNum(d.tbValues[fillIdx])}</td>`;
+    } else {
+      html += `<td class="text-secondary">${d.tbValues.map((v,i)=>`T${i+1}:${fmtNum(v)}`).join(', ')}</td>`;
+    }
+    html += `</tr>`;
+  });
+
+  if(rows.length>10) html += `<tr><td colspan="${hasConfig?5:4}" class="text-secondary">... 共 ${rows.length} 行</td></tr>`;
+  html += '</tbody></table>';
+  document.getElementById('tbDetailPreview').innerHTML = html;
 }
 
 function parseAG1Sheet(sheet){
@@ -653,6 +743,7 @@ function parseBS(){
 function executeSmartMatch(){
   if(state.bsRows.length===0){ toast('请先导入科目余额表'); return; }
   if(state.tbDetail.length===0){ toast('请先导入TB模板'); return; }
+  if(state.tbOpenColIdx < 0){ toast('请先配置期初数列（Step 1）'); return; }
 
   const fslByNum = {};
   state.tbFSL.forEach(f=>{ fslByNum[f.fslNum]=f; });
@@ -825,6 +916,7 @@ function nameSimilarity(a, b){
 function executeAutoFill(){
   if(state.matchResults.length===0){ toast('请先执行智能匹配'); return; }
   if(state.tbDetail.length===0){ toast('请先导入TB模板'); return; }
+  if(state.tbFillColIdx < 0){ toast('请先配置本期待填列（Step 1）'); return; }
 
   const fslByNum = {};
   state.tbFSL.forEach(f=>{ fslByNum[f.fslNum]=f; });
@@ -872,10 +964,11 @@ function executeAutoFill(){
       }
     });
 
-    // Fill the last TB column
-    const lastColIdx = tbRow.tbValues.length - 1;
-    const currentVal = parseNum(tbRow.tbValues[lastColIdx]);
-    tbRow.tbValues[lastColIdx] = currentVal + fillVal;
+    // Fill the target TB column (user-selected fill column)
+    const fillColArrayIdx = tbRow.tbCols.findIndex(c=>c===state.tbFillColIdx);
+    if(fillColArrayIdx < 0){ return; } // Should not happen
+    const currentVal = parseNum(tbRow.tbValues[fillColArrayIdx]);
+    tbRow.tbValues[fillColArrayIdx] = currentVal + fillVal;
     tbRow.filled = true;
     tbRow.fillSource = matches.map(m=>m.bsCode+' '+m.bsName).join(' + ');
     tbRow.fillType = /BalanceSheet/i.test(fsType) ? '期末余额' : '本年累计';
@@ -909,17 +1002,23 @@ function renderTBResultPreview(){
     document.getElementById('tbResultPreview').innerHTML='<p class="text-sm text-secondary p-4">暂无数据</p>';
     return;
   }
-  const lastIdx = rows[0].tbValues.length - 1;
-  const prevIdx = rows[0].tbValues.length >= 2 ? rows[0].tbValues.length - 2 : -1;
-  let html = '<table><thead><tr><th>Detail Num</th><th>Detail</th><th>AG1</th><th>上期期末</th><th>本期（已填）</th><th>来源</th><th>类型</th></tr></thead><tbody>';
+  // Find array index of user-selected fill column
+  const fillArrayIdx = rows[0].tbCols.findIndex(c=>c===state.tbFillColIdx);
+  const openArrayIdx = rows[0].tbCols.findIndex(c=>c===state.tbOpenColIdx);
+  if(fillArrayIdx < 0){
+    document.getElementById('tbResultPreview').innerHTML='<p class="text-sm text-secondary p-4">错误：未找到本期待填列配置</p>';
+    return;
+  }
+  let html = '<table><thead><tr><th>Detail Num</th><th>Detail</th><th>AG1</th>';
+  if(openArrayIdx >= 0) html += '<th>期初数</th>';
+  html += '<th>本期（已填）</th><th>来源</th><th>类型</th></tr></thead><tbody>';
   rows.forEach(d=>{
-    const lastVal = d.tbValues[lastIdx];
+    const lastVal = d.tbValues[fillArrayIdx];
     const isFilled = d.filled;
-    const prevVal = prevIdx >= 0 ? d.tbValues[prevIdx] : '';
     html += `<tr>
-      <td>${htmlEscape(d.detailNum)}</td><td>${htmlEscape(d.detailName)}</td><td>${htmlEscape(d.ag1Name)}</td>
-      <td class="font-mono">${fmtNum(prevVal)}</td>
-      <td class="font-mono ${isFilled?'filled':(lastVal!==''&&lastVal!==null&&lastVal!==undefined?'':'skipped')}">${fmtNum(lastVal)}</td>
+      <td>${htmlEscape(d.detailNum)}</td><td>${htmlEscape(d.detailName)}</td><td>${htmlEscape(d.ag1Name)}</td>`;
+    if(openArrayIdx >= 0) html += `<td class="font-mono">${fmtNum(d.tbValues[openArrayIdx])}</td>`;
+    html += `<td class="font-mono ${isFilled?'filled':(lastVal!==''&&lastVal!==null&&lastVal!==undefined?'':'skipped')}">${fmtNum(lastVal)}</td>
       <td class="text-xs">${htmlEscape(d.fillSource||'-')}</td>
       <td class="text-xs">${htmlEscape(d.fillType||'-')}</td>
     </tr>`;
@@ -943,7 +1042,9 @@ function runVerify(){
     if(!ag1) return;
     const fsl = fslByNum[ag1.fslNum];
     if(!fsl) return;
-    const lastVal = d.tbValues[d.tbValues.length-1];
+    const fillArrayIdx = d.tbCols.findIndex(c=>c===state.tbFillColIdx);
+    if(fillArrayIdx < 0) return;
+    const lastVal = d.tbValues[fillArrayIdx];
     const num = parseNum(lastVal);
     if(!fslSums[fsl.fslNum]) fslSums[fsl.fslNum] = { fsl, sum:0, details:[] };
     fslSums[fsl.fslNum].sum += num;
@@ -997,15 +1098,17 @@ function runVerify(){
 // ==================== EXPORT ====================
 function downloadFilledTB(){
   if(!state.tbWb || !state.filledDetailRows){ toast('无数据可导出'); return; }
+  if(state.tbFillColIdx < 0){ toast('请先配置本期待填列'); return; }
 
   const wb = JSON.parse(JSON.stringify(state.tbWb));
   const detailSheet = wb.Sheets['Detail'] || wb.Sheets[wb.SheetNames[0]];
 
   state.filledDetailRows.forEach(d=>{
     if(!d.filled) return;
-    const lastColIdx = d.tbCols[d.tbCols.length-1];
-    const addr = XLSX.utils.encode_cell({r:d.rowIndex, c:lastColIdx});
-    const val = d.tbValues[d.tbValues.length-1];
+    const addr = XLSX.utils.encode_cell({r:d.rowIndex, c:state.tbFillColIdx});
+    const fillArrayIdx = d.tbCols.findIndex(c=>c===state.tbFillColIdx);
+    if(fillArrayIdx < 0) return;
+    const val = d.tbValues[fillArrayIdx];
     if(!detailSheet[addr]) detailSheet[addr] = {};
     detailSheet[addr].v = val;
     detailSheet[addr].t = 'n';
