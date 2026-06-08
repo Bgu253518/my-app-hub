@@ -107,40 +107,6 @@ select option { background:#1a1a2e; color:#e8e8f0; }
 
 @media (max-width:768px) { .main { padding:12px; } .steps { flex-wrap:wrap; } .step { flex:auto; } }
 
-/* Password Gate */
-.pwd-gate {
-  position: fixed; inset: 0; z-index: 99999;
-  background: linear-gradient(160deg, #0a0a14 0%, #12122a 50%, #0d0d24 100%);
-  display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 24px;
-}
-.pwd-gate::before {
-  content: ''; position: absolute; inset: 0;
-  background: radial-gradient(ellipse at center, rgba(124,92,252,0.1) 0%, transparent 60%);
-  pointer-events: none;
-}
-.gate-icon { font-size: 64px; animation: pulse 2s ease-in-out infinite; position: relative; }
-@keyframes pulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } }
-.gate-box {
-  position: relative; background: rgba(22,22,44,0.6); border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 16px; padding: 40px 36px; width: 380px; max-width: 90vw;
-  backdrop-filter: blur(20px); display: flex; flex-direction: column; gap: 16px;
-}
-.gate-box h2 { text-align: center; font-size: 20px; font-weight: 700; }
-.gate-box .hint { text-align: center; font-size: 13px; color: #9999b0; }
-.gate-box input {
-  width: 100%; padding: 12px 16px; border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 8px; background: rgba(0,0,0,0.3); color: #e8e8f0;
-  font-size: 15px; outline: none; box-sizing: border-box;
-}
-.gate-box input:focus { border-color: #7c5cfc; box-shadow: 0 0 0 3px rgba(124,92,252,0.15); }
-.gate-box .btn {
-  padding: 12px; border: none; border-radius: 8px;
-  background: #7c5cfc; color: #fff; font-size: 15px; font-weight: 600;
-  cursor: pointer; transition: 0.2s;
-}
-.gate-box .btn:hover { background: #9578ff; }
-.gate-box .error { color: #fc5c9c; font-size: 13px; text-align: center; display: none; }
-
 /* Match status badge */
 .badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:600; }
 .badge-auto { background:rgba(92,252,160,0.15); color:#5cfca0; border:1px solid rgba(92,252,160,0.2); }
@@ -150,18 +116,6 @@ select option { background:#1a1a2e; color:#e8e8f0; }
 </style>
 </head>
 <body>
-
-<!-- Password Gate -->
-<div class="pwd-gate" id="pwdGate">
-  <div class="gate-icon">🔐</div>
-  <div class="gate-box">
-    <h2>TB 智能上数器</h2>
-    <p class="hint">请输入访问密码以使用本工具</p>
-    <input type="password" id="pwdInput" placeholder="请输入密码..." autofocus>
-    <button class="btn" id="pwdBtn">验 证</button>
-    <p class="error" id="pwdError">密码错误，请重试</p>
-  </div>
-</div>
 
 <div class="header">
   <span class="brand">📊 TB 智能上数器 <span style="font-size:12px;color:var(--text-secondary);font-weight:400">— 编码匹配 · 期初金额反向映射 · 自动上数</span></span>
@@ -1176,33 +1130,5 @@ function fmtNum(n){
 function htmlEscape(s){ const d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; }
 </script>
 
-<script>
-(function() {
-  if (sessionStorage.getItem('tb-smart-autofill.html_unlocked')) return;
-  var gate = document.getElementById('pwdGate');
-  var input = document.getElementById('pwdInput');
-  var btn = document.getElementById('pwdBtn');
-  var err = document.getElementById('pwdError');
-  gate.style.display = 'flex';
-
-  async function check() {
-    var pwd = input.value;
-    var buf = new TextEncoder().encode(pwd);
-    var hash = await crypto.subtle.digest('SHA-256', buf);
-    var hex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
-    if (hex === '5f6f2138aac618ff50a0751b76144e91468d5139ee38db42b0947ba123e37aaf') {
-      sessionStorage.setItem('tb-smart-autofill.html_unlocked', '1');
-      gate.style.display = 'none';
-    } else {
-      err.style.display = 'block';
-      input.value = '';
-      input.focus();
-    }
-  }
-
-  btn.onclick = check;
-  input.onkeydown = function(e) { if (e.key === 'Enter') check(); };
-})();
-</script>
 </body>
 </html>
