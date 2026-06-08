@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TB 自动上数器 v2 — 顾力菡·应用工坊</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<style>
+:root {
+  --bg-deep: #0a0a14; --bg-card: rgba(22,22,44,0.6); --glass-border: rgba(255,255,255,0.08);
+  --text-primary: #e8e8f0; --text-secondary: #9999b0;
+  --accent-1: #7c5cfc; --accent-2: #5cfca0; --accent-3: #fc5c9c; --accent-warn: #f5a623;
+  --radius: 14px; --radius-sm: 8px;
+}
+body {
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background: linear-gradient(160deg,#0a0a14 0%,#12122a 30%,#16163a 60%,#0d0d24 100%);
+  color: var(--text-primary); min-height:100vh; line-height:1.6;
+}
+body::before {
+  content:''; position:fixed; inset:0;
+  background: radial-gradient(ellipse at 20% 20%, rgba(124,92,252,0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 60%, rgba(252,92,156,0.04) 0%, transparent 50%);
+  pointer-events:none; z-index:0;
+}
+::-webkit-scrollbar { width:5px; } ::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(124,92,252,0.25); border-radius:3px; }
+
+.header {
+  position:sticky; top:0; z-index:50; background:rgba(10,10,20,0.85); backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--glass-border); padding:0 20px; height:56px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.header .brand { font-size:16px; font-weight:700; }
+.header a { color:var(--text-secondary); text-decoration:none; font-size:13px; }
+.header a:hover { color:var(--text-primary); }
+.main { position:relative; z-index:1; max-width:1500px; margin:0 auto; padding:20px; }
+
+.card {
+  background:var(--bg-card); border:1px solid var(--glass-border);
+  border-radius:var(--radius); padding:20px; margin-bottom:16px; backdrop-filter:blur(10px);
+}
+.card-title { font-size:15px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.card-hint { font-size:12px; color:var(--text-secondary); margin-bottom:12px; }
+
+.btn {
+  display:inline-flex; align-items:center; gap:4px; padding:7px 14px; border-radius:6px;
+  font-size:12px; font-weight:600; cursor:pointer; border:1px solid var(--glass-border);
+  background:rgba(255,255,255,0.05); color:var(--text-primary); transition:all 0.2s; white-space:nowrap;
+}
+.btn:hover { background:rgba(255,255,255,0.1); }
+.btn-primary { background:linear-gradient(135deg,#7c5cfc,#5ccafc); border:none; color:#fff; }
+.btn-primary:hover { opacity:0.9; transform:translateY(-1px); box-shadow:0 4px 16px rgba(124,92,252,0.3); }
+.btn-primary:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+.btn-danger { border-color:rgba(252,92,156,0.3); color:var(--accent-3); }
+.btn-success { border-color:rgba(92,252,160,0.3); color:var(--accent-2); }
+.btn-warn { border-color:rgba(245,166,35,0.3); color:var(--accent-warn); }
+.btn-xs { padding:3px 8px; font-size:10px; }
+.btn-sm { padding:5px 10px; font-size:11px; }
+
+input,select,textarea {
+  background:rgba(255,255,255,0.05); border:1px solid var(--glass-border);
+  border-radius:6px; padding:7px 10px; color:var(--text-primary); font-size:12px; outline:none;
+}
+input:focus,select:focus,textarea:focus { border-color:var(--accent-1); }
+select option { background:#1a1a2e; color:#e8e8f0; }
+
+.steps { display:flex; gap:0; margin-bottom:20px; }
+.step {
+  flex:1; text-align:center; padding:10px 8px; cursor:pointer;
+  background:rgba(255,255,255,0.03); border:1px solid var(--glass-border);
+  font-size:12px; color:var(--text-secondary); transition:all 0.2s;
+}
+.step:first-child { border-radius:var(--radius) 0 0 var(--radius); }
+.step:last-child { border-radius:0 var(--radius) var(--radius) 0; }
+.step.active { background:rgba(124,92,252,0.15); border-color:var(--accent-1); color:#fff; font-weight:600; }
+.step.done { background:rgba(92,252,160,0.08); border-color:rgba(92,252,160,0.3); color:var(--accent-2); }
+
+.table-wrap { max-height:450px; overflow:auto; border:1px solid var(--glass-border); border-radius:var(--radius-sm); }
+.table-wrap table { border-collapse:collapse; font-size:12px; width:max-content; min-width:100%; }
+.table-wrap th, .table-wrap td { border:1px solid rgba(255,255,255,0.1); padding:5px 8px; white-space:nowrap; }
+.table-wrap th { background:rgba(124,92,252,0.15); font-weight:600; position:sticky; top:0; z-index:1; text-align:center; }
+.table-wrap td { background:rgba(0,0,0,0.2); }
+.table-wrap td.filled { background:rgba(92,252,160,0.12) !important; }
+.table-wrap td.skipped { background:rgba(255,255,255,0.03); color:var(--text-secondary); }
+.table-wrap td.unmatched { background:rgba(252,92,156,0.1) !important; }
+.table-wrap td.formula { background:rgba(124,92,252,0.08) !important; color:var(--accent-1); font-style:italic; }
+.table-wrap td.warn { background:rgba(245,166,35,0.1) !important; color:var(--accent-warn); }
+
+.toast {
+  position:fixed; bottom:20px; right:20px; z-index:100;
+  background:rgba(22,22,44,0.95); border:1px solid var(--glass-border);
+  padding:10px 18px; border-radius:var(--radius-sm); font-size:12px;
+  backdrop-filter:blur(12px); transform:translateY(100px); opacity:0; transition:all 0.3s;
+}
+.toast.show { transform:translateY(0); opacity:1; }
+
+.hidden { display:none !important; }
+.flex-center { display:flex; align-items:center; gap:8px; }
+.gap2 { display:flex; gap:8px; flex-wrap:wrap; }
+.mt2 { margin-top:8px; } .mt3 { margin-top:12px; } .mb2 { margin-bottom:8px; }
+.text-sm { font-size:12px; } .text-xs { font-size:10px; }
+.text-secondary { color:var(--text-secondary); }
+.font-mono { font-family:monospace; }
+
+@media (max-width:768px) { .main { padding:12px; } .steps { flex-wrap:wrap; } .step { flex:auto; } }
+
+/* Password Gate */
+.pwd-gate {
+  position: fixed; inset: 0; z-index: 99999;
+  background: linear-gradient(160deg, #0a0a14 0%, #12122a 50%, #0d0d24 100%);
+  display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 24px;
+}
+.pwd-gate::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center, rgba(124,92,252,0.1) 0%, transparent 60%);
+  pointer-events: none;
+}
+.gate-icon { font-size: 64px; animation: pulse 2s ease-in-out infinite; position: relative; }
+@keyframes pulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } }
+.gate-box {
+  position: relative; background: rgba(22,22,44,0.6); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px; padding: 40px 36px; width: 380px; max-width: 90vw;
+  backdrop-filter: blur(20px); display: flex; flex-direction: column; gap: 16px;
+}
+.gate-box h2 { text-align: center; font-size: 20px; font-weight: 700; }
+.gate-box .hint { text-align: center; font-size: 13px; color: #9999b0; }
+.gate-box input {
+  width: 100%; padding: 12px 16px; border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px; background: rgba(0,0,0,0.3); color: #e8e8f0;
+  font-size: 15px; outline: none; box-sizing: border-box;
+}
+.gate-box input:focus { border-color: #7c5cfc; box-shadow: 0 0 0 3px rgba(124,92,252,0.15); }
+.gate-box .btn {
+  padding: 12px; border: none; border-radius: 8px;
+  background: #7c5cfc; color: #fff; font-size: 15px; font-weight: 600;
+  cursor: pointer; transition: 0.2s;
+}
+.gate-box .btn:hover { background: #9578ff; }
+.gate-box .error { color: #fc5c9c; font-size: 13px; text-align: center; display: none; }
+
+/* Mapping editor */
+.mapping-row { display:flex; gap:6px; align-items:center; margin-bottom:6px; flex-wrap:wrap; }
+.mapping-row input, .mapping-row select { padding:5px 8px; font-size:11px; }
+.mapping-row .code-input { width:90px; }
+.mapping-row .name-input { width:140px; }
+.mapping-row .nature-select { width:70px; }
+
+/* Badge */
+.badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:600; }
+.badge-bs { background:rgba(92,202,252,0.15); color:#5ccafc; border:1px solid rgba(92,202,252,0.2); }
+.badge-is { background:rgba(252,92,156,0.15); color:#fc5c9c; border:1px solid rgba(252,92,156,0.2); }
+.badge-ok { background:rgba(92,252,160,0.15); color:#5cfca0; border:1px solid rgba(92,252,160,0.2); }
+</style>
+</head>
+<body>
+
+<!-- Password Gate -->
+<div class="pwd-gate" id="pwdGate">
+  <div class="gate-icon">🔐</div>
+  <div class="gate-box">
+    <h2>TB 自动上数器 v2</h2>
+    <p class="hint">请输入访问密码以使用本工具</p>
+    <input type="password" id="pwdInput" placeholder="请输入密码..." autofocus>
+    <button class="btn" id="pwdBtn">验 证</button>
+    <p class="error" id="pwdError">密码错误，请重试</p>
+  </div>
+</div>
+
+<div class="header">
+  <span class="brand">📊 TB 自动上数器 v2 <span style="font-size:12px;color:var(--text-secondary);font-weight:400">— 标准科目编码映射 · 三层TB结构 · 智能上数</span></span>
+  <a href="../index.html">← 返回应用工坊</a>
+</div>
+
+<div class="main">
+
+  <!-- Steps -->
+  <div class="steps">
+    <div class="step active" data-st="1">① 标准科目映射</div>
+    <div class="step" data-st="2">② 导入数据源</div>
+    <div class="step" data-st="3">③ 导入TB模板</div>
+    <div class="step" data-st="4">④ 自动上数</div>
+    <div class="step" data-st="5">⑤ 校验导出</div>
+  </div>
+
+  <!-- ====== Step 1: Standard Subject Mapping ====== -->
+  <div id="s1">
+    <div class="card">
+      <div class="card-title">🏗️ 标准科目编码映射表（企业会计准则）</div>
+      <div class="card-hint">维护标准科目编码与TB模板 Account Grouping / Detail 的对应关系。支持导入/导出，数据存于 localStorage。首次使用请检查映射表是否完整。</div>
+      <div class="flex-center gap2 mb2" style="flex-wrap:wrap">
+        <span class="text-sm">当前方案:</span>
+        <select id="schemeSel" onchange="switchScheme()" style="min-width:150px"><option value="__new__">+ 新建方案</option></select>
+        <button class="btn btn-xs btn-primary" onclick="newScheme()">➕ 新建</button>
+        <button class="btn btn-xs" onclick="addMappingRow()">➕ 添加行</button>
+        <button class="btn btn-xs" onclick="resetToDefaultMapping()">🔄 重置为默认</button>
+        <label class="btn btn-xs" style="cursor:pointer">📥 导入<input type="file" accept=".xlsx,.xls,.csv" onchange="importMapping(this)" class="hidden"></label>
+        <button class="btn btn-xs" onclick="exportMapping()">📤 导出</button>
+      </div>
+      <div class="table-wrap" id="mappingTableWrap" style="max-height:350px">
+        <table>
+          <thead><tr><th>标准科目编码</th><th>标准科目名称</th><th>对应TB Detail编码</th><th>对应TB AG1编码</th><th>科目性质</th><th>借贷方向</th><th>报表类型</th><th>操作</th></tr></thead>
+          <tbody id="mappingBody"><tr><td colspan="8" class="text-secondary">请选择或新建映射方案</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="flex-center">
+      <button class="btn btn-primary" onclick="goStep(2)">下一步：导入数据源 →</button>
+    </div>
+  </div>
+
+  <!-- ====== Step 2: Import Data Source (科目余额表) ====== -->
+  <div id="s2" class="hidden">
+    <div class="card">
+      <div class="card-title">📂 导入客户科目余额表</div>
+      <div class="card-hint">上传科目余额表 Excel，自动识别列头。系统会自动提取「综合本位币」汇总行作为数据源，忽略外币明细行。</div>
+      <div class="gap2 mb2">
+        <label class="btn btn-sm btn-primary" style="cursor:pointer">📤 上传科目余额表<input type="file" accept=".xlsx,.xls" onchange="loadBalanceSheet(this)" class="hidden"></label>
+        <span class="text-sm text-secondary" id="bsInfo">未上传</span>
+      </div>
+      <div id="bsConfig" class="hidden mt2">
+        <div class="card-hint">请确认列映射（系统自动识别，如有误请手动调整）：</div>
+        <div class="flex-center gap2 mb2" style="flex-wrap:wrap">
+          <span class="text-sm">科目编码:</span><select id="bsCodeCol"></select>
+          <span class="text-sm">科目名称:</span><select id="bsNameCol"></select>
+          <span class="text-sm">币别:</span><select id="bsCurrCol"></select>
+          <span class="text-sm">期初借方:</span><select id="bsOpenDrCol"></select>
+          <span class="text-sm">期初贷方:</span><select id="bsOpenCrCol"></select>
+          <span class="text-sm">本期借方:</span><select id="bsDrCol"></select>
+          <span class="text-sm">本期贷方:</span><select id="bsCrCol"></select>
+          <span class="text-sm">本年借方累计:</span><select id="bsYearDrCol"></select>
+          <span class="text-sm">本年贷方累计:</span><select id="bsYearCrCol"></select>
+          <span class="text-sm">期末借方:</span><select id="bsEndDrCol"></select>
+          <span class="text-sm">期末贷方:</span><select id="bsEndCrCol"></select>
+          <button class="btn btn-xs btn-primary" onclick="parseBS()">✅ 解析并提取</button>
+        </div>
+        <div class="card-hint">预览（仅显示综合本位币汇总行）：</div>
+        <div class="table-wrap" style="max-height:280px" id="bsPreview"></div>
+      </div>
+    </div>
+    <div class="flex-center gap2">
+      <button class="btn" onclick="goStep(1)">← 上一步</button>
+      <button class="btn btn-primary" onclick="goStep(3)">下一步：导入TB模板 →</button>
+    </div>
+  </div>
+
+  <!-- ====== Step 3: Import TB Template ====== -->
+  <div id="s3" class="hidden">
+    <div class="card">
+      <div class="card-title">📋 导入 TB 标准模板</div>
+      <div class="card-hint">上传包含 Detail / Account Grouping 1 / Financial Statement Line 三个 Sheet 的 TB 模板 Excel。</div>
+      <div class="gap2 mb2">
+        <label class="btn btn-sm btn-primary" style="cursor:pointer">📤 上传 TB 模板<input type="file" accept=".xlsx,.xls" onchange="loadTBTemplate(this)" class="hidden"></label>
+        <span class="text-sm text-secondary" id="tbInfo">未上传</span>
+      </div>
+      <div id="tbPreviewArea" class="hidden mt2">
+        <div class="card-hint">TB 模板结构预览：</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
+          <div class="card" style="padding:12px">
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px">📄 Detail Sheet</div>
+            <div class="text-sm text-secondary" id="tbDetailSummary">-</div>
+          </div>
+          <div class="card" style="padding:12px">
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px">📄 Account Grouping 1</div>
+            <div class="text-sm text-secondary" id="tbAG1Summary">-</div>
+          </div>
+          <div class="card" style="padding:12px">
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px">📄 Financial Statement Line</div>
+            <div class="text-sm text-secondary" id="tbFSLSummary">-</div>
+          </div>
+        </div>
+        <div class="card-hint">Financial Statement Line 类型分布：</div>
+        <div id="fslTypeSummary" class="gap2 mb2"></div>
+        <div class="card-hint">Detail 数据预览（前10行）：</div>
+        <div class="table-wrap" style="max-height:250px" id="tbDetailPreview"></div>
+      </div>
+    </div>
+    <div class="flex-center gap2">
+      <button class="btn" onclick="goStep(2)">← 上一步</button>
+      <button class="btn btn-primary" onclick="goStep(4)">下一步：自动上数 →</button>
+    </div>
+  </div>
+
+  <!-- ====== Step 4: Auto Fill ====== -->
+  <div id="s4" class="hidden">
+    <div class="card">
+      <div class="card-title">🚀 执行自动上数</div>
+      <div class="card-hint">上数规则：资产负债表项目（BalanceSheet）→ 取期末余额；利润表项目（IncomeStatement）→ 取本年累计发生额。系统根据标准科目编码映射自动匹配。</div>
+      <div class="flex-center gap2 mb2">
+        <button class="btn btn-primary" onclick="executeAutoFill()">🚀 执行自动上数</button>
+        <span class="text-sm text-secondary" id="fillStatus">等待执行...</span>
+      </div>
+      <div id="fillResult" class="hidden mt2"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">⚠ 未匹配/异常科目</div>
+      <div id="unmatchedPanel">
+        <p class="text-sm text-secondary">执行上数后此处显示未匹配的客户科目及处理建议</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📋 上数结果预览（Detail Sheet）</div>
+      <div class="table-wrap" style="max-height:400px" id="tbResultPreview"></div>
+    </div>
+    <div class="flex-center gap2">
+      <button class="btn" onclick="goStep(3)">← 上一步</button>
+      <button class="btn btn-primary" onclick="goStep(5)">下一步：校验导出 →</button>
+    </div>
+  </div>
+
+  <!-- ====== Step 5: Verify & Export ====== -->
+  <div id="s5" class="hidden">
+    <div class="card">
+      <div class="card-title">✅ 自动校验</div>
+      <div class="card-hint">校验规则：① 资产负债表借贷平衡 ② 利润表收入费用勾稽 ③ 期初数与上期期末一致性</div>
+      <div class="flex-center gap2 mb2">
+        <button class="btn btn-primary" onclick="runVerify()">🔍 执行校验</button>
+      </div>
+      <div id="verifyResult"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📤 导出结果</div>
+      <div class="gap2">
+        <button class="btn btn-primary" onclick="downloadFilledTB()">📥 下载填好的 TB (.xlsx)</button>
+        <button class="btn" onclick="downloadMappingReport()">📊 下载映射报告 (.xlsx)</button>
+        <button class="btn" onclick="downloadUnmatchedReport()">📋 下载未匹配清单 (.xlsx)</button>
+        <button class="btn" onclick="downloadVerifyReport()">📋 下载校验报告 (.xlsx)</button>
+      </div>
+    </div>
+    <div class="flex-center">
+      <button class="btn" onclick="goStep(4)">← 上一步</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== TOAST ====================
+function toast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.className='toast show'; clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),2500); }
+
+// ==================== NAV ====================
+function goStep(n){
+  ['s1','s2','s3','s4','s5'].forEach((id,i)=>document.getElementById(id).classList.toggle('hidden',i+1!==n));
+  document.querySelectorAll('.step').forEach((s,i)=>{ s.classList.remove('active','done'); if(i+1<n)s.classList.add('done'); if(i+1===n)s.classList.add('active'); });
+}
+
+// ==================== STORAGE ====================
+const STORE_KEY = 'tb_autofill_v2_data';
+function loadStore(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)||'{}'); }catch{ return {}; } }
+function saveStore(v){ localStorage.setItem(STORE_KEY, JSON.stringify(v)); }
+
+// ==================== DEFAULT STANDARD SUBJECT MAPPING (CAS) ====================
+const DEFAULT_STD_MAPPING = [
+  // 资产类
+  {stdCode:'1001',stdName:'库存现金',tbDetailCode:'Detail-001-1',tbAG1Code:'AG1-001-1',nature:'资产',direction:'借',fsType:'BalanceSheet'},
+  {stdCode:'1002',stdName:'银行存款',tbDetailCode:'Detail-001-2',tbAG1Code:'AG1-001-2',nature:'资产',direction:'借',fsType:'BalanceSheet'},
+  {stdCode:'1012',stdName:'其他货币资金',tbDetailCode:'Detail-001-3',tbAG1Code:'AG1-001-2',nature:'资产',direction:'借',fsType:'BalanceSheet'},
+  {stdCode:'1021',stdName:'结算备付金',tbDetailCode:'Detail-001-4',tbAG1Code:'AG1-001-2',nature:'资产',direction:'借',fsType:'BalanceSheet'},
+  {stdCode:'1122',stdName:'应收账款',tbDetailCode:'Detail-002-1',tbAG1Code:'AG1-002-1',nature:'资产',direction:'借',fsType:'BalanceSheet'},
+  {stdCode:'1123',stdName:'预付账款',tbDetailCode:'Detail-003-1',tbAG1Code:'AG1-003-1',nature:'资产',direction:'借',fsType:'BalanceSheet'},
+  {stdCode:'1221',stdName:'其他应收款',tbDetailCode:'Detail-004-1',tbAG1Code:'AG1-004',nature:'资产',direction:'借',fsType:'BalanceSheet'},
+  {stdCode:'1403',stdName:'原材料',tbDetailCode:'Detail-005-1',tbAG1Code:'AG1-005-1',nature:'资产',direction:'借',fsType:'BalanceSheet'},
+  {stdCode:'1405',stdName:'库存商品',tbDetailCode:'Detail-005-2',tbAG1Code:'AG1-005-2',nature:'资产',direction:'借',fsType:'BalanceSheet'},
+  {stdCode:'1408',stdName:'委托加工物资',tbDetailCode:'Detail-005-3',tbAG1Code:'AG1-005-3',nature:'资产',direction:'借',fsType:'BalanceSheet'},
+  {stdCode:'1471',stdName:'存货跌价准备',tbDetailCode:'Detail-005-4',tbAG1Code:'AG1-005-4',nature:'资产',direction:'贷',fsType:'BalanceSheet'},
+  {stdCode:'1411',stdName:'周转材料',tbDetailCode:'',tbAG1Code:'AG1-005-1',nature:'资产',direction:'借',fsType:'BalanceSheet'},
+  {stdCode:'1461',stdName:'融资租赁资产',tbDetailCode:'',tbAG1Code:'AG1-005-2',nature:'资产',direction:'借',fsType:'BalanceSheet'},
+  // 其他流动资产
+  {stdCode:'',stdName:'其他流动资产',tbDetailCode:'Detail-006-1',tbAG1Code:'AG1-006-1',nature:'资产',direction:'借',fsType:'BalanceSheet'},
+  // 固定资产
+  {stdCode:'1601',stdName:'固定资产',tbDetailCode:'Detail-007-1',tbAG1Code:'AG1-007-1',nature:'资产',direction:'借',fsType:'BalanceSheet'},
+  {stdCode:'1602',stdName:'累计折旧',tbDetailCode:'Detail-007-4',tbAG1Code:'AG1-007-4',nature:'资产',direction:'贷',fsType:'BalanceSheet'},
+  {stdCode:'1603',stdName:'固定资产减值准备',tbDetailCode:'',tbAG1Code:'AG1-007-4',nature:'资产',direction:'贷',fsType:'BalanceSheet'},
+  {stdCode:'1604',stdName:'在建工程',tbDetailCode:'',tbAG1Code:'AG1-007-2',nature:'资产',direction:'借',fsType:'BalanceSheet'},
+  {stdCode:'1605',stdName:'工程物资',tbDetailCode:'',tbAG1Code:'AG1-007-3',nature:'资产',direction:'借',fsType:'BalanceSheet'},
+  // 在建工程/使用权资产/无形资产/长期待摊/递延所得税
+  {stdCode:'',stdName:'在建工程',tbDetailCode:'Detail-008-1',tbAG1Code:'AG1-008-1',nature:'资产',direction:'借',fsType:'BalanceSheet'},
+  {stdCode:'',stdName:'使用权资产',tbDetailCode:'Detail-009-1',tbAG1Code:'AG1-009-1',nature:'资产',direction:'借',fsType:'BalanceSheet'},
+  {stdCode:'',stdName:'使用权资产-累计折旧',tbDetailCode:'Detail-009-2',tbAG1Code:'AG1-009-2',nature:'资产',direction:'贷',fsType:'BalanceSheet'},
+  {stdCode:'1701',stdName:'无形资产',tbDetailCode:'Detail-010-1',tbAG1Code:'AG1-010-1',nature:'资产',direction:'借',fsType:'BalanceSheet'},
+  {stdCode:'1702',stdName:'累计摊销',tbDetailCode:'',tbAG1Code:'AG1-010-1',nature:'资产',direction:'贷',fsType:'BalanceSheet'},
+  {stdCode:'1801',stdName:'长期待摊费用',tbDetailCode:'Detail-011-1',tbAG1Code:'AG1-011',nature:'资产',direction:'借',fsType:'BalanceSheet'},
+  {stdCode:'1811',stdName:'递延所得税资产',tbDetailCode:'Detail-012-1',tbAG1Code:'AG1-012-1',nature:'资产',direction:'借',fsType:'BalanceSheet'},
+  // 负债类
+  {stdCode:'2202',stdName:'应付账款',tbDetailCode:'Detail-013-1',tbAG1Code:'AG1-013-1',nature:'负债',direction:'贷',fsType:'BalanceSheet'},
+  {stdCode:'2231',stdName:'应付利息',tbDetailCode:'Detail-014-1',tbAG1Code:'AG1-014-1',nature:'负债',direction:'贷',fsType:'BalanceSheet'},
+  {stdCode:'2241',stdName:'其他应付款',tbDetailCode:'Detail-014-2',tbAG1Code:'AG1-014-2',nature:'负债',direction:'贷',fsType:'BalanceSheet'},
+  {stdCode:'2203',stdName:'预收账款',tbDetailCode:'Detail-015-1',tbAG1Code:'AG1-015-1',nature:'负债',direction:'贷',fsType:'BalanceSheet'},
+  {stdCode:'2201',stdName:'应付票据',tbDetailCode:'',tbAG1Code:'AG1-013-1',nature:'负债',direction:'贷',fsType:'BalanceSheet'},
+  {stdCode:'',stdName:'合同负债',tbDetailCode:'Detail-016-1',tbAG1Code:'AG1-016',nature:'负债',direction:'贷',fsType:'BalanceSheet'},
+  {stdCode:'2211',stdName:'应付职工薪酬',tbDetailCode:'Detail-017-1',tbAG1Code:'AG1-017-1',nature:'负债',direction:'贷',fsType:'BalanceSheet'},
+  {stdCode:'2001',stdName:'短期借款',tbDetailCode:'Detail-018-1',tbAG1Code:'AG1-018-1',nature:'负债',direction:'贷',fsType:'BalanceSheet'},
+  {stdCode:'2501',stdName:'长期借款',tbDetailCode:'',tbAG1Code:'AG1-018-1',nature:'负债',direction:'贷',fsType:'BalanceSheet'},
+  {stdCode:'2221',stdName:'应交税费',tbDetailCode:'Detail-019-1',tbAG1Code:'AG1-019-1',nature:'负债',direction:'贷',fsType:'BalanceSheet'},
+  {stdCode:'2701',stdName:'长期应付款',tbDetailCode:'',tbAG1Code:'AG1-020-1',nature:'负债',direction:'贷',fsType:'BalanceSheet'},
+  {stdCode:'2801',stdName:'预计负债',tbDetailCode:'',tbAG1Code:'AG1-021-1',nature:'负债',direction:'贷',fsType:'BalanceSheet'},
+  {stdCode:'2901',stdName:'递延所得税负债',tbDetailCode:'',tbAG1Code:'AG1-022-1',nature:'负债',direction:'贷',fsType:'BalanceSheet'},
+  // 权益类
+  {stdCode:'4001',stdName:'实收资本',tbDetailCode:'Detail-023-1',tbAG1Code:'AG1-023-1',nature:'权益',direction:'贷',fsType:'BalanceSheet'},
+  {stdCode:'4002',stdName:'资本公积',tbDetailCode:'Detail-024-1',tbAG1Code:'AG1-024-1',nature:'权益',direction:'贷',fsType:'BalanceSheet'},
+  {stdCode:'4101',stdName:'盈余公积',tbDetailCode:'Detail-025-1',tbAG1Code:'AG1-025-1',nature:'权益',direction:'贷',fsType:'BalanceSheet'},
+  {stdCode:'4103',stdName:'本年利润',tbDetailCode:'Detail-026-1',tbAG1Code:'AG1-026-1',nature:'权益',direction:'贷',fsType:'BalanceSheet'},
+  {stdCode:'4104',stdName:'利润分配',tbDetailCode:'Detail-027-1',tbAG1Code:'AG1-027-1',nature:'权益',direction:'贷',fsType:'BalanceSheet'},
+  {stdCode:'',stdName:'库存股',tbDetailCode:'Detail-028-1',tbAG1Code:'AG1-028-1',nature:'权益',direction:'借',fsType:'BalanceSheet'},
+  {stdCode:'',stdName:'其他综合收益',tbDetailCode:'Detail-029-1',tbAG1Code:'AG1-029-1',nature:'权益',direction:'贷',fsType:'BalanceSheet'},
+  {stdCode:'',stdName:'专项储备',tbDetailCode:'Detail-030-1',tbAG1Code:'AG1-030-1',nature:'权益',direction:'贷',fsType:'BalanceSheet'},
+  // 收入类 (利润表)
+  {stdCode:'6001',stdName:'主营业务收入',tbDetailCode:'Detail-031-1',tbAG1Code:'AG1-031-1',nature:'收入',direction:'贷',fsType:'IncomeStatement'},
+  {stdCode:'6051',stdName:'其他业务收入',tbDetailCode:'Detail-032-1',tbAG1Code:'AG1-032-1',nature:'收入',direction:'贷',fsType:'IncomeStatement'},
+  {stdCode:'6111',stdName:'投资收益',tbDetailCode:'Detail-033-1',tbAG1Code:'AG1-033-1',nature:'收入',direction:'贷',fsType:'IncomeStatement'},
+  {stdCode:'6301',stdName:'营业外收入',tbDetailCode:'Detail-034-1',tbAG1Code:'AG1-034-1',nature:'收入',direction:'贷',fsType:'IncomeStatement'},
+  // 成本费用类 (利润表)
+  {stdCode:'6401',stdName:'主营业务成本',tbDetailCode:'Detail-035-1',tbAG1Code:'AG1-035-1',nature:'成本',direction:'借',fsType:'IncomeStatement'},
+  {stdCode:'6402',stdName:'其他业务成本',tbDetailCode:'Detail-036-1',tbAG1Code:'AG1-036-1',nature:'成本',direction:'借',fsType:'IncomeStatement'},
+  {stdCode:'6403',stdName:'税金及附加',tbDetailCode:'Detail-037-1',tbAG1Code:'AG1-037-1',nature:'费用',direction:'借',fsType:'IncomeStatement'},
+  {stdCode:'6601',stdName:'销售费用',tbDetailCode:'Detail-038-1',tbAG1Code:'AG1-038-1',nature:'费用',direction:'借',fsType:'IncomeStatement'},
+  {stdCode:'6602',stdName:'管理费用',tbDetailCode:'Detail-039-1',tbAG1Code:'AG1-039-1',nature:'费用',direction:'借',fsType:'IncomeStatement'},
+  {stdCode:'6603',stdName:'财务费用',tbDetailCode:'Detail-040-1',tbAG1Code:'AG1-040-1',nature:'费用',direction:'借',fsType:'IncomeStatement'},
+  {stdCode:'6701',stdName:'资产减值损失',tbDetailCode:'Detail-041-1',tbAG1Code:'AG1-041-1',nature:'费用',direction:'借',fsType:'IncomeStatement'},
+  {stdCode:'6711',stdName:'营业外支出',tbDetailCode:'Detail-042-1',tbAG1Code:'AG1-042-1',nature:'费用',direction:'借',fsType:'IncomeStatement'},
+  {stdCode:'6801',stdName:'所得税费用',tbDetailCode:'Detail-043-1',tbAG1Code:'AG1-043-1',nature:'费用',direction:'借',fsType:'IncomeStatement'},
+  {stdCode:'6604',stdName:'研发费用',tbDetailCode:'',tbAG1Code:'AG1-039-1',nature:'费用',direction:'借',fsType:'IncomeStatement'},
+];
+
+// ==================== STATE ====================
+let store = loadStore();
+if(!store.schemes) store.schemes = {};
+let state = {
+  currentScheme: '',
+  mappings: [],           // {stdCode, stdName, tbDetailCode, tbAG1Code, nature, direction, fsType}
+  bsRows: [],            // parsed balance sheet rows (综合本位币 only)
+  bsRawRows: [],         // all raw rows for reference
+  bsColMap: {},          // column mapping
+  tbWb: null,            // TB workbook
+  tbDetail: [],          // parsed Detail sheet rows
+  tbAG1: [],             // parsed Account Grouping 1 rows
+  tbFSL: [],             // parsed Financial Statement Line rows
+  tbDetailHeaderRow: 0,  // header row index in Detail sheet
+  tbDataStartRow: 6,     // data starts after metadata rows
+  fillResults: { filled:0, skipped:0, unmatched:[], formulaSkipped:0, multiMatch:0 },
+  verifyResults: {},
+  filledDetailRows: [],  // rows after filling
+};
+
+function saveCurrentMappings(){
+  if(!state.currentScheme) return;
+  store.schemes[state.currentScheme] = { mappings: state.mappings };
+  saveStore(store);
+}
+
+// ==================== SCHEME MANAGEMENT ====================
+function refreshSchemeList(){
+  const sel = document.getElementById('schemeSel');
+  const names = Object.keys(store.schemes).sort();
+  sel.innerHTML = names.map(n=>`<option value="${htmlEscape(n)}">${htmlEscape(n)}</option>`).join('');
+  if(names.length===0) sel.innerHTML = '<option value="__new__">+ 新建方案</option>';
+  else sel.innerHTML = '<option value="">选择方案...</option>' + sel.innerHTML + '<option value="__new__">+ 新建方案</option>';
+}
+
+function switchScheme(){
+  const name = document.getElementById('schemeSel').value;
+  if(name==='__new__'){ newScheme(); return; }
+  if(!name){ state.currentScheme=''; state.mappings=[]; renderMapping(); return; }
+  state.currentScheme = name;
+  const s = store.schemes[name] || { mappings:[] };
+  state.mappings = s.mappings || [];
+  renderMapping();
+  toast('已切换方案：'+name);
+}
+
+function newScheme(){
+  const name = prompt('请输入方案名称（如：客户名称）：');
+  if(!name||!name.trim()) return;
+  const sn = name.trim();
+  if(store.schemes[sn]){ toast('方案已存在'); return; }
+  store.schemes[sn] = { mappings: [] };
+  saveStore(store);
+  state.currentScheme = sn;
+  state.mappings = [];
+  refreshSchemeList();
+  document.getElementById('schemeSel').value = sn;
+  renderMapping();
+  toast('✓ 方案已创建：'+sn);
+}
+
+function resetToDefaultMapping(){
+  if(!confirm('确定重置为默认企业会计准则映射？当前修改将丢失。')) return;
+  state.mappings = JSON.parse(JSON.stringify(DEFAULT_STD_MAPPING));
+  saveCurrentMappings();
+  renderMapping();
+  toast('✓ 已重置为默认映射（'+state.mappings.length+'条）');
+}
+
+// ==================== MAPPING EDITOR ====================
+function renderMapping(){
+  const tbody = document.getElementById('mappingBody');
+  if(state.mappings.length===0){
+    tbody.innerHTML='<tr><td colspan="8" class="text-secondary">暂无映射行，点击「重置为默认」或「添加行」</td></tr>';
+    return;
+  }
+  tbody.innerHTML = state.mappings.map((m,i)=>`
+    <tr>
+      <td><input value="${htmlEscape(m.stdCode||'')}" data-mi="${i}" data-f="stdCode" style="width:80px;font-size:11px"></td>
+      <td><input value="${htmlEscape(m.stdName||'')}" data-mi="${i}" data-f="stdName" style="width:130px;font-size:11px"></td>
+      <td><input value="${htmlEscape(m.tbDetailCode||'')}" data-mi="${i}" data-f="tbDetailCode" style="width:100px;font-size:11px"></td>
+      <td><input value="${htmlEscape(m.tbAG1Code||'')}" data-mi="${i}" data-f="tbAG1Code" style="width:100px;font-size:11px"></td>
+      <td><select data-mi="${i}" data-f="nature" style="width:60px;font-size:11px">
+        ${['资产','负债','权益','收入','成本','费用'].map(n=>`<option value="${n}" ${m.nature===n?'selected':''}>${n}</option>`).join('')}
+      </select></td>
+      <td><select data-mi="${i}" data-f="direction" style="width:50px;font-size:11px">
+        <option value="借" ${m.direction==='借'?'selected':''}>借</option>
+        <option value="贷" ${m.direction==='贷'?'selected':''}>贷</option>
+      </select></td>
+      <td><select data-mi="${i}" data-f="fsType" style="width:90px;font-size:11px">
+        <option value="BalanceSheet" ${m.fsType==='BalanceSheet'?'selected':''}>BalanceSheet</option>
+        <option value="IncomeStatement" ${m.fsType==='IncomeStatement'?'selected':''}>IncomeStatement</option>
+      </select></td>
+      <td><button class="btn btn-xs btn-danger" onclick="delMapping(${i})">🗑</button></td>
+    </tr>
+  `).join('');
+  tbody.querySelectorAll('input,select').forEach(el=>{
+    el.addEventListener('change',function(){
+      const i=+this.dataset.mi, f=this.dataset.f;
+      if(state.mappings[i]){ state.mappings[i][f]=this.value; saveCurrentMappings(); }
+    });
+  });
+}
+
+function addMappingRow(){
+  state.mappings.push({stdCode:'',stdName:'',tbDetailCode:'',tbAG1Code:'',nature:'资产',direction:'借',fsType:'BalanceSheet'});
+  saveCurrentMappings(); renderMapping(); toast('已添加行');
+}
+
+function delMapping(i){ state.mappings.splice(i,1); saveCurrentMappings(); renderMapping(); toast('已删除'); }
+
+function importMapping(input){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload=function(e){
+    const wb = XLSX.read(e.target.result,{type:'array'});
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1});
+    if(rows.length<2){ toast('数据为空'); return; }
+    const h=rows[0];
+    const map={标准科目编码:'stdCode',标准科目名称:'stdName',对应TBDetail编码:'tbDetailCode',对应TBAG1编码:'tbAG1Code',科目性质:'nature',借贷方向:'direction',报表类型:'fsType'};
+    const hi={}; h.forEach((c,i)=>{ if(map[c]) hi[map[c]]=i; });
+    let added=0;
+    for(let i=1;i<rows.length;i++){
+      const r=rows[i]; if(!Array.isArray(r)) continue;
+      const m={stdCode:'',stdName:'',tbDetailCode:'',tbAG1Code:'',nature:'资产',direction:'借',fsType:'BalanceSheet'};
+      Object.entries(hi).forEach(([k,idx])=>{ m[k]=String(r[idx]||'').trim(); });
+      if(m.stdCode||m.tbDetailCode||m.tbAG1Code){ state.mappings.push(m); added++; }
+    }
+    saveCurrentMappings(); renderMapping(); toast(`✓ 已导入 ${added} 条映射`);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function exportMapping(){
+  if(state.mappings.length===0){ toast('无映射数据'); return; }
+  const rows=[['标准科目编码','标准科目名称','对应TBDetail编码','对应TBAG1编码','科目性质','借贷方向','报表类型']];
+  state.mappings.forEach(m=>rows.push([m.stdCode,m.stdName,m.tbDetailCode,m.tbAG1Code,m.nature,m.direction,m.fsType]));
+  const ws=XLSX.utils.aoa_to_sheet(rows); const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'标准科目映射'); XLSX.writeFile(wb,`TB标准科目映射_${state.currentScheme||'默认'}.xlsx`);
+  toast('✓ 已导出');
+}
+
+// ==================== BALANCE SHEET PARSER ====================
+function loadBalanceSheet(input){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload=function(e){
+    const wb = XLSX.read(e.target.result,{type:'array'});
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet,{header:1});
+    if(rows.length<2){ toast('数据为空'); return; }
+    state.bsRawRows = rows;
+    document.getElementById('bsInfo').textContent = file.name+' ('+(rows.length-1)+' 行)';
+    const nCols = Math.max(...rows.map(r=>Array.isArray(r)?r.length:0));
+    const headerRow = rows[0];
+    const headerTexts = Array.from({length:nCols},(_,i)=>String(Array.isArray(headerRow)?headerRow[i]||'':''));
+
+    // Auto-detect columns
+    const auto = {};
+    headerTexts.forEach((h,i)=>{
+      if(/科目编码|科目代码|code/i.test(h)) auto.code = i;
+      if(/科目名称|name/i.test(h)) auto.name = i;
+      if(/币别|currency/i.test(h)) auto.curr = i;
+      if(/期初.*借|年初.*借|opening.*dr/i.test(h)) auto.openDr = i;
+      if(/期初.*贷|年初.*贷|opening.*cr/i.test(h)) auto.openCr = i;
+      if(/本期.*借|借方.*发生|debit/i.test(h) && !/累计/i.test(h) && !/期初/i.test(h) && !/期末/i.test(h)) auto.dr = i;
+      if(/本期.*贷|贷方.*发生|credit/i.test(h) && !/累计/i.test(h) && !/期初/i.test(h) && !/期末/i.test(h)) auto.cr = i;
+      if(/本年.*借.*累计|累计.*借/i.test(h)) auto.yearDr = i;
+      if(/本年.*贷.*累计|累计.*贷/i.test(h)) auto.yearCr = i;
+      if(/期末.*借|ending.*dr/i.test(h)) auto.endDr = i;
+      if(/期末.*贷|ending.*cr/i.test(h)) auto.endCr = i;
+    });
+
+    const opts = headerTexts.map((h,i)=>`<option value="${i}" ${h?`title="${htmlEscape(h)}"`:''}>${h?htmlEscape(h.slice(0,18)):'列'+(i+1)}</option>`).join('');
+    ['bsCodeCol','bsNameCol','bsCurrCol','bsOpenDrCol','bsOpenCrCol','bsDrCol','bsCrCol','bsYearDrCol','bsYearCrCol','bsEndDrCol','bsEndCrCol'].forEach(id=>{
+      document.getElementById(id).innerHTML = '<option value="-1">--</option>' + opts;
+    });
+
+    // Set auto-detected values
+    if(auto.code!==undefined) document.getElementById('bsCodeCol').value=auto.code;
+    if(auto.name!==undefined) document.getElementById('bsNameCol').value=auto.name;
+    if(auto.curr!==undefined) document.getElementById('bsCurrCol').value=auto.curr;
+    if(auto.openDr!==undefined) document.getElementById('bsOpenDrCol').value=auto.openDr;
+    if(auto.openCr!==undefined) document.getElementById('bsOpenCrCol').value=auto.openCr;
+    if(auto.dr!==undefined) document.getElementById('bsDrCol').value=auto.dr;
+    if(auto.cr!==undefined) document.getElementById('bsCrCol').value=auto.cr;
+    if(auto.yearDr!==undefined) document.getElementById('bsYearDrCol').value=auto.yearDr;
+    if(auto.yearCr!==undefined) document.getElementById('bsYearCrCol').value=auto.yearCr;
+    if(auto.endDr!==undefined) document.getElementById('bsEndDrCol').value=auto.endDr;
+    if(auto.endCr!==undefined) document.getElementById('bsEndCrCol').value=auto.endCr;
+
+    document.getElementById('bsConfig').classList.remove('hidden');
+    toast('已识别列头，请确认映射');
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseBS(){
+  const cols = {
+    code: +document.getElementById('bsCodeCol').value,
+    name: +document.getElementById('bsNameCol').value,
+    curr: +document.getElementById('bsCurrCol').value,
+    openDr: +document.getElementById('bsOpenDrCol').value,
+    openCr: +document.getElementById('bsOpenCrCol').value,
+    dr: +document.getElementById('bsDrCol').value,
+    cr: +document.getElementById('bsCrCol').value,
+    yearDr: +document.getElementById('bsYearDrCol').value,
+    yearCr: +document.getElementById('bsYearCrCol').value,
+    endDr: +document.getElementById('bsEndDrCol').value,
+    endCr: +document.getElementById('bsEndCrCol').value,
+  };
+  state.bsColMap = cols;
+
+  // Filter: only 综合本位币 rows, and only rows with valid code (一级科目或明细科目)
+  const allRows = state.bsRawRows.slice(1).filter(r=>Array.isArray(r));
+  const filtered = [];
+
+  allRows.forEach(r=>{
+    const curr = cols.curr>=0 ? String(r[cols.curr]||'').trim() : '';
+    // Only keep 综合本位币 rows (skip 人民币/美元/港币 etc. detail rows)
+    if(curr && !/综合本位币|本位币|综合/i.test(curr)) return;
+
+    const code = cols.code>=0 ? String(r[cols.code]||'').trim() : '';
+    const name = cols.name>=0 ? String(r[cols.name]||'').trim() : '';
+    if(!code && !name) return;
+
+    // Skip sub-subjects if parent exists with same code prefix? No, keep all for now
+    filtered.push({
+      code, name,
+      openDr: cols.openDr>=0 ? parseNum(r[cols.openDr]) : 0,
+      openCr: cols.openCr>=0 ? parseNum(r[cols.openCr]) : 0,
+      dr: cols.dr>=0 ? parseNum(r[cols.dr]) : 0,
+      cr: cols.cr>=0 ? parseNum(r[cols.cr]) : 0,
+      yearDr: cols.yearDr>=0 ? parseNum(r[cols.yearDr]) : 0,
+      yearCr: cols.yearCr>=0 ? parseNum(r[cols.yearCr]) : 0,
+      endDr: cols.endDr>=0 ? parseNum(r[cols.endDr]) : 0,
+      endCr: cols.endCr>=0 ? parseNum(r[cols.endCr]) : 0,
+      curr,
+    });
+  });
+
+  // Aggregate by top-level code (e.g., 1002 aggregates 1002.02, 1002.02.01 etc.)
+  // Actually, in 科目余额表, the top-level row (1002) already has the total in 综合本位币
+  // So we just keep rows where code has no dot (top-level) OR where code has dot but no parent exists
+  const topLevelRows = filtered.filter(r=>!r.code.includes('.') && r.code);
+  const subRows = filtered.filter(r=>r.code.includes('.') && r.code);
+
+  // For top-level codes, use them directly. For sub-codes without top-level parent, also keep.
+  const topLevelCodes = new Set(topLevelRows.map(r=>r.code));
+  const orphanSubs = subRows.filter(r=>{
+    const topCode = r.code.split('.')[0];
+    return !topLevelCodes.has(topCode);
+  });
+
+  state.bsRows = [...topLevelRows, ...orphanSubs];
+
+  // Preview
+  document.getElementById('bsPreview').innerHTML = `<table><thead><tr>
+    <th>科目编码</th><th>科目名称</th><th>期初借方</th><th>期初贷方</th><th>本期借方</th><th>本期贷方</th><th>本年借方累计</th><th>本年贷方累计</th><th>期末借方</th><th>期末贷方</th>
+  </tr></thead><tbody>`+
+    state.bsRows.slice(0,20).map(d=>`<tr>
+      <td>${htmlEscape(d.code)}</td><td>${htmlEscape(d.name)}</td>
+      <td class="font-mono">${fmtNum(d.openDr)}</td><td class="font-mono">${fmtNum(d.openCr)}</td>
+      <td class="font-mono">${fmtNum(d.dr)}</td><td class="font-mono">${fmtNum(d.cr)}</td>
+      <td class="font-mono">${fmtNum(d.yearDr)}</td><td class="font-mono">${fmtNum(d.yearCr)}</td>
+      <td class="font-mono">${fmtNum(d.endDr)}</td><td class="font-mono">${fmtNum(d.endCr)}</td>
+    </tr>`).join('')+
+    (state.bsRows.length>20?`<tr><td colspan="10" class="text-secondary">... 共 ${state.bsRows.length} 条（已过滤综合本位币）</td></tr>`:'')+
+    '</tbody></table>';
+
+  toast(`✓ 已提取 ${state.bsRows.length} 条科目（综合本位币汇总）`);
+}
+
+// ==================== TB TEMPLATE PARSER ====================
+function loadTBTemplate(input){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload=function(e){
+    state.tbWb = XLSX.read(e.target.result,{type:'array',cellFormula:true,cellStyles:true});
+    const sn = state.tbWb.SheetNames;
+    document.getElementById('tbInfo').textContent = file.name+' ('+sn.length+' Sheets: '+sn.join(', ')+')';
+
+    // Parse Detail sheet
+    const detailSheet = state.tbWb.Sheets['Detail'] || state.tbWb.Sheets[sn[0]];
+    if(detailSheet) parseDetailSheet(detailSheet);
+
+    // Parse Account Grouping 1
+    const ag1Sheet = state.tbWb.Sheets['Account Grouping 1'];
+    if(ag1Sheet) parseAG1Sheet(ag1Sheet);
+
+    // Parse Financial Statement Line
+    const fslSheet = state.tbWb.Sheets['Financial Statement Line'];
+    if(fslSheet) parseFSLSheet(fslSheet);
+
+    document.getElementById('tbPreviewArea').classList.remove('hidden');
+    toast('✓ TB模板解析完成');
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseDetailSheet(sheet){
+  const ref = XLSX.utils.decode_range(sheet['!ref']||'A1');
+  const rows = [];
+  // Find header row (row with "Detail Num")
+  let headerRow = -1;
+  for(let r=ref.s.r;r<=Math.min(ref.s.r+10,ref.e.r);r++){
+    const cellA = sheet[XLSX.utils.encode_cell({r,c:0})];
+    if(cellA && /Detail Num/i.test(String(cellA.w||cellA.v||''))){ headerRow=r; break; }
+  }
+  if(headerRow<0) headerRow = ref.s.r;
+  state.tbDetailHeaderRow = headerRow;
+
+  // Read headers
+  const headers = [];
+  for(let c=ref.s.c;c<=ref.e.c;c++){
+    const cell = sheet[XLSX.utils.encode_cell({r:headerRow,c})];
+    headers.push(cell ? String(cell.w||cell.v||'') : '');
+  }
+
+  // Find data columns (Trial Balance Details X)
+  const tbCols = [];
+  headers.forEach((h,i)=>{ if(/Trial Balance Details/i.test(h)) tbCols.push(i); });
+
+  // Read data rows (skip metadata rows)
+  for(let r=headerRow+1;r<=ref.e.r;r++){
+    const detailNumCell = sheet[XLSX.utils.encode_cell({r,c:0})];
+    const detailCell = sheet[XLSX.utils.encode_cell({r,c:1})];
+    const ag1NumCell = sheet[XLSX.utils.encode_cell({r,c:2})];
+    const ag1Cell = sheet[XLSX.utils.encode_cell({r,c:3})];
+
+    if(!detailNumCell && !detailCell) continue;
+    const detailNum = String(detailNumCell?.w||detailNumCell?.v||'').trim();
+    const detailName = String(detailCell?.w||detailCell?.v||'').trim();
+    if(!detailNum && !detailName) continue;
+
+    const ag1Num = ag1NumCell ? String(ag1NumCell.w||ag1NumCell.v||'').trim() : '';
+    const ag1Name = ag1Cell ? String(ag1Cell.w||ag1Cell.v||'').trim() : '';
+
+    const tbValues = tbCols.map(c=>{
+      const cell = sheet[XLSX.utils.encode_cell({r,c})];
+      return cell ? (cell.v !== undefined ? cell.v : (cell.w||'')) : '';
+    });
+
+    // Check if last column is empty (current period to fill)
+    const lastVal = tbValues[tbValues.length-1];
+    const isEmpty = lastVal === '' || lastVal === null || lastVal === undefined;
+
+    rows.push({
+      rowIndex: r,
+      detailNum, detailName, ag1Num, ag1Name,
+      tbCols, tbValues,
+      isEmptyLast: isEmpty,
+      hasFormula: false,
+    });
+  }
+  state.tbDetail = rows;
+
+  document.getElementById('tbDetailSummary').textContent = `${rows.length} 行 Detail | ${tbCols.length} 个期间列 | 最后期间待填`;
+  document.getElementById('tbDetailPreview').innerHTML = `<table><thead><tr><th>Detail Num</th><th>Detail</th><th>AG1 Num</th><th>AG1</th><th>期初数</th><th>...期间...</th><th>本期（待填）</th></tr></thead><tbody>`+
+    rows.slice(0,10).map(d=>`<tr>
+      <td>${htmlEscape(d.detailNum)}</td><td>${htmlEscape(d.detailName)}</td>
+      <td>${htmlEscape(d.ag1Num)}</td><td>${htmlEscape(d.ag1Name)}</td>
+      <td class="font-mono">${fmtNum(d.tbValues[0])}</td>
+      <td class="text-secondary">...${d.tbValues.length-2}个期间...</td>
+      <td class="font-mono ${d.isEmptyLast?'unmatched':'filled'}">${d.isEmptyLast?'[待填]':fmtNum(d.tbValues[d.tbValues.length-1])}</td>
+    </tr>`).join('')+
+    (rows.length>10?`<tr><td colspan="7" class="text-secondary">... 共 ${rows.length} 行</td></tr>`:'')+
+    '</tbody></table>';
+}
+
+function parseAG1Sheet(sheet){
+  const ref = XLSX.utils.decode_range(sheet['!ref']||'A1');
+  const rows = [];
+  for(let r=ref.s.r+1;r<=ref.e.r;r++){
+    const c0 = sheet[XLSX.utils.encode_cell({r,c:0})];
+    const c1 = sheet[XLSX.utils.encode_cell({r,c:1})];
+    const c2 = sheet[XLSX.utils.encode_cell({r,c:2})];
+    const c3 = sheet[XLSX.utils.encode_cell({r,c:3})];
+    if(!c0) continue;
+    rows.push({
+      ag1Num: String(c0.w||c0.v||'').trim(),
+      ag1Name: c1?String(c1.w||c1.v||'').trim():'',
+      fslNum: c2?String(c2.w||c2.v||'').trim():'',
+      fslName: c3?String(c3.w||c3.v||'').trim():'',
+    });
+  }
+  state.tbAG1 = rows;
+  document.getElementById('tbAG1Summary').textContent = `${rows.length} 行 Account Grouping | 映射到 ${new Set(rows.map(r=>r.fslNum)).size} 个 FSL`;
+}
+
+function parseFSLSheet(sheet){
+  const ref = XLSX.utils.decode_range(sheet['!ref']||'A1');
+  const rows = [];
+  for(let r=ref.s.r+1;r<=ref.e.r;r++){
+    const c0 = sheet[XLSX.utils.encode_cell({r,c:0})];
+    const c1 = sheet[XLSX.utils.encode_cell({r,c:1})];
+    const c2 = sheet[XLSX.utils.encode_cell({r,c:2})];
+    const c3 = sheet[XLSX.utils.encode_cell({r,c:3})];
+    const c4 = sheet[XLSX.utils.encode_cell({r,c:4})];
+    if(!c0) continue;
+    rows.push({
+      fslNum: String(c0.w||c0.v||'').trim(),
+      fslName: c1?String(c1.w||c1.v||'').trim():'',
+      subtotal: c2?String(c2.w||c2.v||'').trim():'',
+      category: c3?String(c3.w||c3.v||'').trim():'',
+      fsType: c4?String(c4.w||c4.v||'').trim():'BalanceSheet',
+    });
+  }
+  state.tbFSL = rows;
+
+  const bsCount = rows.filter(r=>/BalanceSheet/i.test(r.fsType)).length;
+  const isCount = rows.filter(r=>/IncomeStatement/i.test(r.fsType)).length;
+  document.getElementById('tbFSLSummary').textContent = `${rows.length} 行 FSL | ${bsCount} 个资产负债表 | ${isCount} 个利润表`;
+
+  document.getElementById('fslTypeSummary').innerHTML = rows.slice(0,15).map(r=>`
+    <span class="badge ${/BalanceSheet/i.test(r.fsType)?'badge-bs':'badge-is'}">${htmlEscape(r.fslNum)} ${htmlEscape(r.fslName.slice(0,12))}</span>
+  `).join('') + (rows.length>15?`<span class="text-sm text-secondary">+${rows.length-15} more</span>`:'');
+}
+
+// ==================== AUTO FILL ENGINE ====================
+function executeAutoFill(){
+  if(state.bsRows.length===0){ toast('请先导入科目余额表'); return; }
+  if(state.tbDetail.length===0){ toast('请先导入TB模板'); return; }
+  if(state.mappings.length===0){ toast('请先配置标准科目映射'); return; }
+
+  let filled=0, skipped=0, unmatched=[], multiMatch=0;
+
+  // Build lookup indexes
+  const fslByNum = {};
+  state.tbFSL.forEach(f=>{ fslByNum[f.fslNum]=f; });
+
+  const ag1ByNum = {};
+  state.tbAG1.forEach(a=>{ ag1ByNum[a.ag1Num]=a; });
+
+  // Build mapping indexes
+  const mapByStdCode = {};
+  const mapByAG1Code = {};
+  const mapByDetailCode = {};
+  state.mappings.forEach(m=>{
+    if(m.stdCode) mapByStdCode[m.stdCode] = m;
+    if(m.tbAG1Code) {
+      if(!mapByAG1Code[m.tbAG1Code]) mapByAG1Code[m.tbAG1Code] = [];
+      mapByAG1Code[m.tbAG1Code].push(m);
+    }
+    if(m.tbDetailCode) {
+      if(!mapByDetailCode[m.tbDetailCode]) mapByDetailCode[m.tbDetailCode] = [];
+      mapByDetailCode[m.tbDetailCode].push(m);
+    }
+  });
+
+  // For each BS row, find matching TB Detail and fill
+  const filledRows = JSON.parse(JSON.stringify(state.tbDetail));
+
+  state.bsRows.forEach(bs=>{
+    // Try match by standard code
+    const map = mapByStdCode[bs.code];
+    if(!map){
+      unmatched.push({...bs, reason:'标准科目映射表未找到该科目编码'});
+      return;
+    }
+
+    // Find TB Detail row
+    let tbIdx = -1;
+    if(map.tbDetailCode){
+      tbIdx = filledRows.findIndex(tbd=>tbd.detailNum===map.tbDetailCode);
+    }
+    if(tbIdx<0 && map.tbAG1Code){
+      // Find by AG1 code
+      tbIdx = filledRows.findIndex(tbd=>tbd.ag1Num===map.tbAG1Code);
+    }
+    if(tbIdx<0){
+      unmatched.push({...bs, reason:`TB模板中未找到对应 Detail(${map.tbDetailCode}) 或 AG1(${map.tbAG1Code})`});
+      return;
+    }
+
+    const tbRow = filledRows[tbIdx];
+    const ag1 = ag1ByNum[tbRow.ag1Num];
+    const fsl = ag1 ? fslByNum[ag1.fslNum] : null;
+    const fsType = fsl ? fsl.fsType : (map.fsType || 'BalanceSheet');
+
+    // Determine fill value based on FS Type
+    let fillVal = 0;
+    if(/BalanceSheet/i.test(fsType)){
+      // 资产负债表: 期末余额 = 期末借方 - 期末贷方
+      fillVal = bs.endDr - bs.endCr;
+    } else {
+      // 利润表: 本年累计发生额
+      // 收入类取贷方累计，成本费用类取借方累计
+      if(map.nature==='收入'){
+        fillVal = bs.yearCr;
+      } else if(map.nature==='成本' || map.nature==='费用'){
+        fillVal = bs.yearDr;
+      } else {
+        // Default: net amount
+        fillVal = bs.yearDr - bs.yearCr;
+      }
+    }
+
+    // Direction adjustment: if BS direction differs from mapping, adjust sign
+    // This is simplified - in practice, the 科目余额表 already has correct signs in 综合本位币
+
+    // Fill the last TB column (current period)
+    const lastColIdx = tbRow.tbValues.length - 1;
+    if(tbRow.isEmptyLast || tbRow.tbValues[lastColIdx]==='' || tbRow.tbValues[lastColIdx]===null || tbRow.tbValues[lastColIdx]===undefined){
+      tbRow.tbValues[lastColIdx] = fillVal;
+      tbRow.filled = true;
+      tbRow.fillSource = bs.code + ' ' + bs.name;
+      tbRow.fillType = /BalanceSheet/i.test(fsType) ? '期末余额' : '本年累计';
+      filled++;
+    } else {
+      skipped++;
+    }
+  });
+
+  state.filledDetailRows = filledRows;
+  state.fillResults = { filled, skipped, unmatched, multiMatch };
+
+  document.getElementById('fillStatus').textContent = `填入 ${filled} | 跳过 ${skipped} | 未匹配 ${unmatched.length}`;
+  document.getElementById('fillResult').classList.remove('hidden');
+  document.getElementById('fillResult').innerHTML = `
+    <div style="color:var(--accent-2)">✅ 上数完成：填入 <b>${filled}</b> 条 | 跳过 <b>${skipped}</b> 条（已有数据）| 未匹配 <span style="color:var(--accent-3)"><b>${unmatched.length}</b></span> 条</div>
+  `;
+
+  // Show unmatched
+  const up = document.getElementById('unmatchedPanel');
+  if(unmatched.length>0){
+    up.innerHTML = unmatched.map(u=>`
+      <div class="text-sm mb2" style="padding:8px;background:rgba(252,92,156,0.05);border:1px solid rgba(252,92,156,0.15);border-radius:6px">
+        <span style="color:var(--accent-3)">⚠ ${htmlEscape(u.code)} ${htmlEscape(u.name)}</span> — ${u.reason}
+        <div class="mt2 text-xs text-secondary">期末借方:${fmtNum(u.endDr)} 期末贷方:${fmtNum(u.endCr)} 本年借方累计:${fmtNum(u.yearDr)} 本年贷方累计:${fmtNum(u.yearCr)}</div>
+      </div>
+    `).join('');
+  } else {
+    up.innerHTML = '<p class="text-sm" style="color:var(--accent-2)">✅ 所有科目均已匹配</p>';
+  }
+
+  // Render result preview
+  renderTBResultPreview();
+  toast(`✓ 上数完成：${filled}填,${skipped}跳,${unmatched.length}未匹`);
+}
+
+function renderTBResultPreview(){
+  const rows = state.filledDetailRows;
+  if(!rows || rows.length===0){
+    document.getElementById('tbResultPreview').innerHTML='<p class="text-sm text-secondary p-4">暂无数据</p>';
+    return;
+  }
+  const lastIdx = rows[0].tbValues.length - 1;
+  let html = '<table><thead><tr><th>Detail Num</th><th>Detail</th><th>AG1</th><th>上期期末</th><th>本期（已填）</th><th>来源</th><th>类型</th></tr></thead><tbody>';
+  rows.forEach(d=>{
+    const lastVal = d.tbValues[lastIdx];
+    const isFilled = d.filled;
+    const prevVal = d.tbValues.length>1 ? d.tbValues[d.tbValues.length-2] : '';
+    html += `<tr>
+      <td>${htmlEscape(d.detailNum)}</td><td>${htmlEscape(d.detailName)}</td><td>${htmlEscape(d.ag1Name)}</td>
+      <td class="font-mono">${fmtNum(prevVal)}</td>
+      <td class="font-mono ${isFilled?'filled':(lastVal!==''&&lastVal!==null&&lastVal!==undefined?'':'skipped')}">${fmtNum(lastVal)}</td>
+      <td class="text-xs">${htmlEscape(d.fillSource||'-')}</td>
+      <td class="text-xs">${htmlEscape(d.fillType||'-')}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('tbResultPreview').innerHTML = html;
+}
+
+// ==================== VERIFY ====================
+function runVerify(){
+  if(!state.filledDetailRows || state.filledDetailRows.length===0){ toast('请先执行上数'); return; }
+
+  const fslByNum = {};
+  state.tbFSL.forEach(f=>{ fslByNum[f.fslNum]=f; });
+  const ag1ByNum = {};
+  state.tbAG1.forEach(a=>{ ag1ByNum[a.ag1Num]=a; });
+
+  // Group by FSL and sum
+  const fslSums = {};
+  state.filledDetailRows.forEach(d=>{
+    const ag1 = ag1ByNum[d.ag1Num];
+    if(!ag1) return;
+    const fsl = fslByNum[ag1.fslNum];
+    if(!fsl) return;
+    const lastVal = d.tbValues[d.tbValues.length-1];
+    const num = parseNum(lastVal);
+    if(!fslSums[fsl.fslNum]) fslSums[fsl.fslNum] = { fsl, sum:0, details:[] };
+    fslSums[fsl.fslNum].sum += num;
+    fslSums[fsl.fslNum].details.push({detailNum:d.detailNum, detailName:d.detailName, val:num});
+  });
+
+  // BalanceSheet check: Assets = Liabilities + Equity
+  let assetsTotal = 0, liabTotal = 0, equityTotal = 0;
+  let incomeTotal = 0, expenseTotal = 0;
+
+  Object.values(fslSums).forEach(({fsl,sum})=>{
+    if(/BalanceSheet/i.test(fsl.fsType)){
+      if(/Assets/i.test(fsl.category)) assetsTotal += sum;
+      if(/Liabilities/i.test(fsl.category)) liabTotal += sum;
+      if(/Equity|权益/i.test(fsl.category)) equityTotal += sum;
+    } else {
+      if(/收入|Revenue|Income/i.test(fsl.fslName)) incomeTotal += sum;
+      if(/成本|费用|Expense|Cost/i.test(fsl.fslName)) expenseTotal += sum;
+    }
+  });
+
+  const bsDiff = Math.abs(assetsTotal - (liabTotal + equityTotal));
+  const isDiff = Math.abs(incomeTotal - expenseTotal); // Simplified
+
+  state.verifyResults = { assetsTotal, liabTotal, equityTotal, bsDiff, incomeTotal, expenseTotal, isDiff, fslSums };
+
+  document.getElementById('verifyResult').innerHTML = `
+    <div class="card" style="padding:16px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:12px">资产负债表校验</div>
+      <table style="width:100%;max-width:500px;font-size:13px">
+        <tr><td>资产合计</td><td class="font-mono" style="text-align:right">${fmtNum(assetsTotal)}</td></tr>
+        <tr><td>负债合计</td><td class="font-mono" style="text-align:right">${fmtNum(liabTotal)}</td></tr>
+        <tr><td>权益合计</td><td class="font-mono" style="text-align:right">${fmtNum(equityTotal)}</td></tr>
+        <tr><td>负债+权益</td><td class="font-mono" style="text-align:right">${fmtNum(liabTotal+equityTotal)}</td></tr>
+        <tr style="font-weight:700;${bsDiff>0.01?'color:var(--accent-3)':'color:var(--accent-2)'}">
+          <td>差额</td><td class="font-mono" style="text-align:right">${fmtNum(bsDiff)}</td></tr>
+      </table>
+      <div class="mt2 text-sm" style="color:${bsDiff>0.01?'var(--accent-3)':'var(--accent-2)'}">
+        ${bsDiff>0.01?'❌ 资产负债表不平衡！':'✅ 资产负债表平衡'}
+      </div>
+    </div>
+    <div class="card" style="padding:16px;margin-top:12px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:12px">利润表校验（简化）</div>
+      <table style="width:100%;max-width:500px;font-size:13px">
+        <tr><td>收入合计</td><td class="font-mono" style="text-align:right">${fmtNum(incomeTotal)}</td></tr>
+        <tr><td>成本费用合计</td><td class="font-mono" style="text-align:right">${fmtNum(expenseTotal)}</td></tr>
+      </table>
+    </div>
+  `;
+  toast('校验完成');
+}
+
+// ==================== EXPORT ====================
+function downloadFilledTB(){
+  if(!state.tbWb || !state.filledDetailRows){ toast('无数据可导出'); return; }
+
+  // Clone workbook
+  const wb = XLSX.read(XLSX.write(state.tbWb,{type:'array',bookType:'xlsx',cellFormula:true}),{type:'array',cellFormula:true});
+  const detailSheet = wb.Sheets['Detail'] || wb.Sheets[wb.SheetNames[0]];
+
+  state.filledDetailRows.forEach(d=>{
+    if(!d.filled) return;
+    const lastColIdx = d.tbCols[d.tbCols.length-1];
+    const addr = XLSX.utils.encode_cell({r:d.rowIndex, c:lastColIdx});
+    const val = d.tbValues[d.tbValues.length-1];
+    if(!detailSheet[addr]) detailSheet[addr] = {};
+    detailSheet[addr].v = val;
+    detailSheet[addr].t = 'n';
+    detailSheet[addr].w = fmtNum(val);
+    delete detailSheet[addr].f;
+  });
+
+  XLSX.writeFile(wb, `TB_上数结果_${state.currentScheme||'未命名'}_${new Date().toISOString().slice(0,10)}.xlsx`, {cellFormula:true});
+  toast('✓ 已下载填好的TB');
+}
+
+function downloadMappingReport(){
+  if(state.mappings.length===0){ toast('无映射数据'); return; }
+  const rows=[['标准科目编码','标准科目名称','TB Detail编码','TB AG1编码','科目性质','借贷方向','报表类型']];
+  state.mappings.forEach(m=>rows.push([m.stdCode,m.stdName,m.tbDetailCode,m.tbAG1Code,m.nature,m.direction,m.fsType]));
+  const ws=XLSX.utils.aoa_to_sheet(rows); const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'映射报告'); XLSX.writeFile(wb,`TB映射报告_${state.currentScheme||'未命名'}.xlsx`);
+  toast('✓ 已下载');
+}
+
+function downloadUnmatchedReport(){
+  const u = state.fillResults.unmatched||[];
+  if(u.length===0){ toast('无未匹配科目'); return; }
+  const rows=[['科目编码','科目名称','期末借方','期末贷方','本年借方累计','本年贷方累计','未匹配原因']];
+  u.forEach(r=>rows.push([r.code,r.name,fmtNum(r.endDr),fmtNum(r.endCr),fmtNum(r.yearDr),fmtNum(r.yearCr),r.reason]));
+  const ws=XLSX.utils.aoa_to_sheet(rows); const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'未匹配清单'); XLSX.writeFile(wb,'TB未匹配清单.xlsx');
+  toast('✓ 已下载');
+}
+
+function downloadVerifyReport(){
+  const v=state.verifyResults;
+  if(!v || !v.fslSums){ toast('无校验数据'); return; }
+  const rows=[['FSL编码','FSL名称','报表类型','Category','合计金额','明细构成']];
+  Object.values(v.fslSums).forEach(({fsl,sum,details})=>{
+    rows.push([fsl.fslNum,fsl.fslName,fsl.fsType,fsl.category,fmtNum(sum),details.map(d=>d.detailName+'='+fmtNum(d.val)).join('; ')]);
+  });
+  rows.push([]); rows.push(['校验项目','金额']);
+  rows.push(['资产合计',fmtNum(v.assetsTotal)]);
+  rows.push(['负债合计',fmtNum(v.liabTotal)]);
+  rows.push(['权益合计',fmtNum(v.equityTotal)]);
+  rows.push(['负债+权益',fmtNum(v.liabTotal+v.equityTotal)]);
+  rows.push(['资产负债表差额',fmtNum(v.bsDiff)]);
+  const ws=XLSX.utils.aoa_to_sheet(rows); const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'校验报告'); XLSX.writeFile(wb,'TB校验报告.xlsx');
+  toast('✓ 已下载');
+}
+
+// ==================== HELPERS ====================
+function parseNum(v){
+  if(v===undefined||v===null||v==='') return 0;
+  if(typeof v==='number') return v;
+  return parseFloat(String(v).replace(/[,\s]/g,''))||0;
+}
+function fmtNum(n){
+  if(n===undefined||n===null||n==='') return '-';
+  if(typeof n==='string') return n;
+  return n.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function htmlEscape(s){ const d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; }
+
+// ==================== INIT ====================
+refreshSchemeList();
+if(Object.keys(store.schemes).length===0){
+  // Create default scheme
+  store.schemes['默认-企业会计准则'] = { mappings: JSON.parse(JSON.stringify(DEFAULT_STD_MAPPING)) };
+  saveStore(store);
+  refreshSchemeList();
+}
+if(Object.keys(store.schemes).length>0){
+  const first = Object.keys(store.schemes).sort()[0];
+  state.currentScheme = first;
+  document.getElementById('schemeSel').value = first;
+  state.mappings = store.schemes[first].mappings || [];
+  renderMapping();
+}
+</script>
+
+<script>
+(function() {
+  if (sessionStorage.getItem('tb-autofill-v2.html_unlocked')) return;
+  var gate = document.getElementById('pwdGate');
+  var input = document.getElementById('pwdInput');
+  var btn = document.getElementById('pwdBtn');
+  var err = document.getElementById('pwdError');
+  gate.style.display = 'flex';
+
+  async function check() {
+    var pwd = input.value;
+    var buf = new TextEncoder().encode(pwd);
+    var hash = await crypto.subtle.digest('SHA-256', buf);
+    var hex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+    if (hex === '5f6f2138aac618ff50a0751b76144e91468d5139ee38db42b0947ba123e37aaf') {
+      sessionStorage.setItem('tb-autofill-v2.html_unlocked', '1');
+      gate.style.display = 'none';
+    } else {
+      err.style.display = 'block';
+      input.value = '';
+      input.focus();
+    }
+  }
+
+  btn.onclick = check;
+  input.onkeydown = function(e) { if (e.key === 'Enter') check(); };
+})();
+</script>
+</body>
+</html>

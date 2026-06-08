@@ -1,4 +1,4 @@
-﻿[
+[
   {
     "id": "help",
     "name": "使用说明与操作指引",
@@ -21,6 +21,19 @@
     "status": "done",
     "version": "v1.0.0",
     "icon": "🎯",
+    "onlineTool": true,
+    "github": "https://github.com/Bgu253518/my-app-hub",
+    "download": ""
+  },
+  {
+    "id": "tb-autofill-v2",
+    "name": "TB 自动上数器 v2",
+    "shortDesc": "标准科目编码映射·三层TB结构·资产负债表期末余额/利润表本年累计·智能上数",
+    "fullDesc": "纯浏览器端 TB 自动上数器第二代。核心升级：① 预置企业会计准则标准科目编码映射表（1001库存现金→Detail-001-1/AG1-001-1等），支持自定义编辑与导入导出；② 解析标准TB模板三层结构（Detail→Account Grouping 1→Financial Statement Line），自动识别BalanceSheet/IncomeStatement类型；③ 科目余额表智能提取「综合本位币」汇总行，自动忽略外币明细；④ 资产负债表项目自动取期末余额（期末借方-贷方），利润表项目自动取本年累计发生额（收入类取贷方累计、成本费用类取借方累计）；⑤ 支持多科目汇总到一个报表项目，自动处理借贷方向；⑥ 导出完整填好的TB（保留公式）、映射报告、未匹配清单、校验报告。",
+    "category": "data",
+    "status": "wip",
+    "version": "v2.0.0",
+    "icon": "📊",
     "onlineTool": true,
     "github": "https://github.com/Bgu253518/my-app-hub",
     "download": ""
@@ -217,6 +230,20 @@
     "version": "v1.0.0",
     "icon": "🗜️",
     "onlineTool": true,
+    "github": "",
+    "download": ""
+  },
+  {
+    "id": "video-analyzer",
+    "name": "虾人动画 · 视频拆解工具",
+    "shortDesc": "投喂视频→自动抽帧+Whisper语音识别→输出结构化素材→投喂AI拆模板卡",
+    "fullDesc": "虾人动画量产流水线的第一步工具。拖拽视频文件，自动用FFmpeg按秒数间隔抽取关键帧，用OpenAI Whisper提取配音台词文本和时间轴，输出视频元数据报告。所有素材存储在本地output文件夹，可直接投喂Claude进行模板卡拆解。需本地运行Python服务器（server.py），浏览器访问localhost:8765使用。依赖：FFmpeg + Whisper。",
+    "category": "other",
+    "status": "done",
+    "version": "v1.0.0",
+    "icon": "🎬",
+    "onlineTool": false,
+    "localTool": true,
     "github": "",
     "download": ""
   }
