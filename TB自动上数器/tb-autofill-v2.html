@@ -927,25 +927,24 @@ function executeAutoFill(){
     // This is simplified - in practice, the 科目余额表 already has correct signs in 综合本位币
 
     // Fill the last TB column (current period)
+    // Support multiple subjects mapping to same TB row (accumulate)
     const lastColIdx = tbRow.tbValues.length - 1;
-    if(tbRow.isEmptyLast || tbRow.tbValues[lastColIdx]==='' || tbRow.tbValues[lastColIdx]===null || tbRow.tbValues[lastColIdx]===undefined){
-      tbRow.tbValues[lastColIdx] = fillVal;
-      tbRow.filled = true;
-      tbRow.fillSource = bs.code + ' ' + bs.name;
-      tbRow.fillType = /BalanceSheet/i.test(fsType) ? '期末余额' : '本年累计';
-      filled++;
-    } else {
-      skipped++;
-    }
+    const currentVal = parseNum(tbRow.tbValues[lastColIdx]);
+    const newVal = currentVal + fillVal;
+    tbRow.tbValues[lastColIdx] = newVal;
+    tbRow.filled = true;
+    tbRow.fillSource = (tbRow.fillSource ? tbRow.fillSource + ' + ' : '') + bs.code + ' ' + bs.name;
+    tbRow.fillType = /BalanceSheet/i.test(fsType) ? '期末余额' : '本年累计';
+    filled++;
   });
 
   state.filledDetailRows = filledRows;
-  state.fillResults = { filled, skipped, unmatched, multiMatch };
+  state.fillResults = { filled, skipped:0, unmatched, multiMatch };
 
-  document.getElementById('fillStatus').textContent = `填入 ${filled} | 跳过 ${skipped} | 未匹配 ${unmatched.length}`;
+  document.getElementById('fillStatus').textContent = `填入 ${filled} | 未匹配 ${unmatched.length}`;
   document.getElementById('fillResult').classList.remove('hidden');
   document.getElementById('fillResult').innerHTML = `
-    <div style="color:var(--accent-2)">✅ 上数完成：填入 <b>${filled}</b> 条 | 跳过 <b>${skipped}</b> 条（已有数据）| 未匹配 <span style="color:var(--accent-3)"><b>${unmatched.length}</b></span> 条</div>
+    <div style="color:var(--accent-2)">✅ 上数完成：填入 <b>${filled}</b> 条（支持多科目累加）| 未匹配 <span style="color:var(--accent-3)"><b>${unmatched.length}</b></span> 条</div>
   `;
 
   // Show unmatched
@@ -963,7 +962,7 @@ function executeAutoFill(){
 
   // Render result preview
   renderTBResultPreview();
-  toast(`✓ 上数完成：${filled}填,${skipped}跳,${unmatched.length}未匹`);
+  toast(`✓ 上数完成：${filled}填,${unmatched.length}未匹`);
 }
 
 function renderTBResultPreview(){
@@ -1063,8 +1062,8 @@ function runVerify(){
 function downloadFilledTB(){
   if(!state.tbWb || !state.filledDetailRows){ toast('无数据可导出'); return; }
 
-  // Clone workbook
-  const wb = XLSX.read(XLSX.write(state.tbWb,{type:'array',bookType:'xlsx',cellFormula:true}),{type:'array',cellFormula:true});
+  // Deep clone workbook using JSON round-trip (SheetJS objects are plain objects)
+  const wb = JSON.parse(JSON.stringify(state.tbWb));
   const detailSheet = wb.Sheets['Detail'] || wb.Sheets[wb.SheetNames[0]];
 
   state.filledDetailRows.forEach(d=>{
