@@ -716,6 +716,15 @@ function executeSmartMatch(){
     return { tbOpen, bsOpen, diff: tbOpen - bsOpen, isMatch: Math.abs(tbOpen - bsOpen) < 0.01 };
   }
 
+  // Helper: check if TB row is PL (IncomeStatement) - skip openBal check
+  function isPLRow(tbd){
+    const ag1 = ag1ByNum[tbd.ag1Num];
+    if(!ag1) return false;
+    const fsl = fslByNum[ag1.fslNum];
+    if(!fsl) return false;
+    return /IncomeStatement/i.test(fsl.fsType);
+  }
+
   // Helper: try match a TB row to a BS row
   function tryMatch(tbd, phase){
     if(usedTBDetailNums.has(tbd.detailNum)) return null;
@@ -763,6 +772,7 @@ function executeSmartMatch(){
       usedBSCodes.add(bsMatch.code);
       usedTBDetailNums.add(tbd.detailNum);
       const diffInfo = computeDiff(tbd, bsMatch);
+      const isPL = isPLRow(tbd);
       return {
         tbDetailNum: tbd.detailNum,
         tbDetailName: tbd.detailName,
@@ -772,8 +782,9 @@ function executeSmartMatch(){
         bsName: bsMatch.name,
         matchType: phase,
         confidence: phase==='name-exact'?1.0:phase==='name-fuzzy'?0.85:phase==='code'?0.9:0.8,
-        openBalMatch: diffInfo.isMatch,
-        openBalDiff: diffInfo.diff,
+        isPL: isPL,
+        openBalMatch: isPL ? true : diffInfo.isMatch,  // PL科目跳过期初校验
+        openBalDiff: isPL ? 0 : diffInfo.diff,
         tbOpenBal: diffInfo.tbOpen,
         bsOpenBal: diffInfo.bsOpen,
         tbRow: tbd,
@@ -791,10 +802,15 @@ function executeSmartMatch(){
     });
   });
 
-  // Phase 5: 期初差异自动修正
-  // 对名称/编码匹配成功但期初不一致的，用期初金额反向搜索修正
+  // Phase 5: 期初差异自动修正（仅对BS科目，PL科目跳过）
   const correctedResults = [];
   matchResults.forEach(m=>{
+    if(m.isPL){
+      // PL科目（利润表）跳过期初校验，直接保留
+      correctedResults.push(m);
+      return;
+    }
+
     if(m.openBalMatch){
       // 期初一致，无需修正
       correctedResults.push(m);
@@ -842,6 +858,7 @@ function executeSmartMatch(){
         originalBSCode: m.bsCode,
         originalBSName: m.bsName,
         confidence: 0.95,
+        isPL: false,
         openBalMatch: diffInfo.isMatch,
         openBalDiff: diffInfo.diff,
         tbOpenBal: diffInfo.tbOpen,
@@ -897,19 +914,21 @@ function executeSmartMatch(){
     correctedResults.map(m=>{
       const diffStr = fmtNum(Math.abs(m.openBalDiff));
       const isCorrected = m.matchType === 'corrected-amount';
+      const isPL = m.isPL;
       const statusClass = m.openBalMatch ? 'matched' : isCorrected ? 'warn' : 'warn';
-      const statusText = m.openBalMatch ? '🟢一致' : 
+      const statusText = isPL ? `🟢PL-跳过` :
+        m.openBalMatch ? '🟢一致' : 
         isCorrected ? `🟡修正(原${m.originalMatchType==='name-exact'?'名称精确':m.originalMatchType==='name-fuzzy'?'名称模糊':'编码'}→金额)` : 
         `🟡差异 ${m.openBalDiff>0?'+':''}${diffStr}`;
       return `<tr class="${statusClass}">
         <td>${htmlEscape(m.tbDetailNum)}</td>
         <td>${htmlEscape(m.tbDetailName)}</td>
-        <td><span class="badge ${m.matchType==='name-exact'||m.matchType==='code'?'badge-auto':m.matchType==='corrected-amount'?'badge-warn':'badge-amount'}">${m.matchType==='name-exact'?'名称精确':m.matchType==='name-fuzzy'?'名称模糊':m.matchType==='code'?'编码':m.matchType==='amount'?'金额':'修正'}</span></td>
+        <td><span class="badge ${m.matchType==='name-exact'||m.matchType==='code'?'badge-auto':m.matchType==='corrected-amount'?'badge-warn':'badge-amount'}">${m.matchType==='name-exact'?'名称精确':m.matchType==='name-fuzzy'?'名称模糊':m.matchType==='code'?'编码':m.matchType==='amount'?'金额':'修正'}</span>${isPL?'<span class="badge badge-auto" style="margin-left:4px">PL</span>':''}</td>
         <td>${htmlEscape(m.bsCode)}${isCorrected?`<br><span class="text-xs text-secondary">(原:${htmlEscape(m.originalBSCode)})</span>`:''}</td>
         <td>${htmlEscape(m.bsName)}${isCorrected?`<br><span class="text-xs text-secondary">(原:${htmlEscape(m.originalBSName)})</span>`:''}</td>
         <td class="font-mono">${fmtNum(m.tbOpenBal)}</td>
         <td class="font-mono">${fmtNum(m.bsOpenBal)}</td>
-        <td class="font-mono ${m.openBalMatch?'':'warn'}">${m.openBalMatch?'0.00':(m.openBalDiff>0?'+':'')+diffStr}</td>
+        <td class="font-mono ${m.openBalMatch?'':'warn'}">${isPL?'N/A':(m.openBalMatch?'0.00':(m.openBalDiff>0?'+':'')+diffStr)}</td>
         <td>${statusText}</td>
       </tr>`;
     }).join('')+
@@ -1006,12 +1025,25 @@ function executeAutoFill(){
     tbRow.fillSource = matches.map(m=>m.bsCode+' '+m.bsName).join(' + ');
     tbRow.fillType = /BalanceSheet/i.test(fsType) ? '期末余额' : '本年累计';
 
-    // Determine status and remark based on openBal match and correction
+    // Determine status and remark based on openBal match, correction, and PL type
     const firstMatch = matches[0];
+    const isPL = firstMatch.isPL;
     const isOpenBalMatch = matches.every(m=>m.openBalMatch);
     const isCorrected = firstMatch.matchType === 'corrected-amount';
 
-    if(isOpenBalMatch){
+    if(isPL){
+      // PL科目（利润表）- 按名称匹配，跳过期初校验
+      tbRow.status = 'matched';
+      const matchTypeStr = firstMatch.matchType==='name-exact'?'名称精确':firstMatch.matchType==='name-fuzzy'?'名称模糊':firstMatch.matchType==='code'?'编码':firstMatch.matchType==='corrected-amount'?'修正':'金额';
+      if(isCorrected){
+        const origType = firstMatch.originalMatchType==='name-exact'?'名称精确':firstMatch.originalMatchType==='name-fuzzy'?'名称模糊':'编码';
+        tbRow.remark = `PL科目-按名称匹配 [修正:${origType}(${firstMatch.originalBSName})→金额匹配(${firstMatch.bsName}), 不进行期初校验]`;
+      } else {
+        tbRow.remark = `PL科目-按名称匹配 [${matchTypeStr}, 不进行期初校验]`;
+      }
+      filled++;
+    }
+    else if(isOpenBalMatch){
       tbRow.status = 'matched';
       if(isCorrected){
         const origType = firstMatch.originalMatchType==='name-exact'?'名称精确':firstMatch.originalMatchType==='name-fuzzy'?'名称模糊':'编码';
