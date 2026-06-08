@@ -693,7 +693,7 @@ function parseBS(){
   toast(`✓ 已提取 ${state.bsRows.length} 条科目（综合本位币汇总）`);
 }
 
-// ==================== SMART MATCH ENGINE ====================
+// ==================== SMART MATCH ENGINE (名称优先 + 期初一致性) ====================
 function executeSmartMatch(){
   if(state.bsRows.length===0){ toast('请先导入科目余额表'); return; }
   if(state.tbDetail.length===0){ toast('请先导入TB模板'); return; }
@@ -705,155 +705,176 @@ function executeSmartMatch(){
   state.tbAG1.forEach(a=>{ ag1ByNum[a.ag1Num]=a; });
 
   const matchResults = [];
-  const unmatchedTB = [];
   const usedBSCodes = new Set();
+  const usedTBDetailNums = new Set();
 
-  // Phase 1: Code exact match (highest priority)
-  state.tbDetail.forEach(tbd=>{
-    if(!tbd.detailNum) return;
-    // Extract numeric code from detailNum (e.g., "Detail-001-2" -> "001" or try match by full)
-    const bsMatch = state.bsRows.find(bs=>{
-      // Try exact code match first
-      if(bs.code && tbd.detailNum.includes(bs.code)) return true;
-      // Try learned mapping
-      const learned = store.learnedMappings[tbd.detailNum];
-      if(learned && learned.bsCode === bs.code) return true;
-      return false;
-    });
+  // Helper: compute openBal diff
+  function computeDiff(tbd, bs){
+    const tbOpen = tbd.openBal || 0;
+    const bsOpen = (bs.openDr || 0) - (bs.openCr || 0);
+    return { tbOpen, bsOpen, diff: tbOpen - bsOpen, isMatch: Math.abs(tbOpen - bsOpen) < 0.01 };
+  }
 
-    if(bsMatch && !usedBSCodes.has(bsMatch.code)){
-      usedBSCodes.add(bsMatch.code);
-      matchResults.push({
-        tbDetailNum: tbd.detailNum,
-        tbDetailName: tbd.detailName,
-        tbAG1Num: tbd.ag1Num,
-        tbAG1Name: tbd.ag1Name,
-        bsCode: bsMatch.code,
-        bsName: bsMatch.name,
-        matchType: 'auto-code',
-        confidence: 1.0,
-        openBalMatch: Math.abs(tbd.openBal - (bsMatch.openDr - bsMatch.openCr)) < 0.01,
-        tbRow: tbd,
-        bsRow: bsMatch,
+  // Helper: try match a TB row to a BS row
+  function tryMatch(tbd, phase){
+    // Skip if already matched
+    if(usedTBDetailNums.has(tbd.detailNum)) return null;
+
+    let bsMatch = null;
+
+    if(phase === 'name-exact'){
+      // Phase 1: 名称精确匹配（去除空格、统一大小写）
+      const tbdNameClean = tbd.detailName.replace(/\s+/g,'').toLowerCase();
+      bsMatch = state.bsRows.find(bs=>{
+        if(usedBSCodes.has(bs.code)) return false;
+        const bsNameClean = bs.name.replace(/\s+/g,'').toLowerCase();
+        return tbdNameClean === bsNameClean || tbdNameClean.includes(bsNameClean) || bsNameClean.includes(tbdNameClean);
       });
-      saveLearnedMapping(tbd.detailNum, {bsCode: bsMatch.code, bsName: bsMatch.name, matchType: 'auto-code'});
     }
-  });
-
-  // Phase 2: Amount reverse mapping (TB openBal = BS openBal)
-  const unmatchedTBRows = state.tbDetail.filter(tbd=>!matchResults.some(m=>m.tbDetailNum===tbd.detailNum));
-  unmatchedTBRows.forEach(tbd=>{
-    if(tbd.openBal === 0) return; // Can't match by amount if openBal is 0
-    const bsOpenBal = tbd.openBal;
-
-    // Find BS row where (openDr - openCr) ≈ TB openBal
-    const bsMatch = state.bsRows.find(bs=>{
-      if(usedBSCodes.has(bs.code)) return false;
-      const bsOpenNet = bs.openDr - bs.openCr;
-      return Math.abs(bsOpenNet - bsOpenBal) < 0.01;
-    });
+    else if(phase === 'name-fuzzy'){
+      // Phase 2: 名称模糊匹配
+      const tbdNameClean = tbd.detailName.replace(/\s+/g,'').toLowerCase();
+      let bestScore = 0.4, bestMatch = null;
+      state.bsRows.forEach(bs=>{
+        if(usedBSCodes.has(bs.code)) return;
+        const bsNameClean = bs.name.replace(/\s+/g,'').toLowerCase();
+        const score = nameSimilarity(tbdNameClean, bsNameClean);
+        if(score > bestScore){ bestScore = score; bestMatch = bs; }
+      });
+      if(bestMatch) bsMatch = bestMatch;
+    }
+    else if(phase === 'code'){
+      // Phase 3: 编码匹配
+      bsMatch = state.bsRows.find(bs=>{
+        if(usedBSCodes.has(bs.code)) return false;
+        if(bs.code && tbd.detailNum.includes(bs.code)) return true;
+        const learned = store.learnedMappings[tbd.detailNum];
+        if(learned && learned.bsCode === bs.code) return true;
+        return false;
+      });
+    }
+    else if(phase === 'amount'){
+      // Phase 4: 期初金额反向映射
+      if(tbd.openBal === 0) return null;
+      bsMatch = state.bsRows.find(bs=>{
+        if(usedBSCodes.has(bs.code)) return false;
+        const bsOpenNet = (bs.openDr || 0) - (bs.openCr || 0);
+        return Math.abs(bsOpenNet - tbd.openBal) < 0.01;
+      });
+    }
 
     if(bsMatch){
       usedBSCodes.add(bsMatch.code);
-      matchResults.push({
+      usedTBDetailNums.add(tbd.detailNum);
+      const diffInfo = computeDiff(tbd, bsMatch);
+      return {
         tbDetailNum: tbd.detailNum,
         tbDetailName: tbd.detailName,
         tbAG1Num: tbd.ag1Num,
         tbAG1Name: tbd.ag1Name,
         bsCode: bsMatch.code,
         bsName: bsMatch.name,
-        matchType: 'amount-reverse',
-        confidence: 0.9,
-        openBalMatch: true,
+        matchType: phase,
+        confidence: phase==='name-exact'?1.0:phase==='name-fuzzy'?0.85:phase==='code'?0.9:0.8,
+        openBalMatch: diffInfo.isMatch,
+        openBalDiff: diffInfo.diff,
+        tbOpenBal: diffInfo.tbOpen,
+        bsOpenBal: diffInfo.bsOpen,
         tbRow: tbd,
         bsRow: bsMatch,
-      });
-      saveLearnedMapping(tbd.detailNum, {bsCode: bsMatch.code, bsName: bsMatch.name, matchType: 'amount-reverse'});
+      };
     }
-  });
+    return null;
+  }
 
-  // Phase 3: Name fuzzy match (lowest priority, for remaining)
-  const stillUnmatchedTB = state.tbDetail.filter(tbd=>!matchResults.some(m=>m.tbDetailNum===tbd.detailNum));
-  stillUnmatchedTB.forEach(tbd=>{
-    const tbdNameLower = tbd.detailName.toLowerCase();
-    let bestMatch = null, bestScore = 0.3;
-
-    state.bsRows.forEach(bs=>{
-      if(usedBSCodes.has(bs.code)) return;
-      const score = nameSimilarity(tbdNameLower, bs.name.toLowerCase());
-      if(score > bestScore){
-        bestScore = score;
-        bestMatch = bs;
-      }
+  // Execute phases in order
+  ['name-exact', 'name-fuzzy', 'code', 'amount'].forEach(phase=>{
+    state.tbDetail.forEach(tbd=>{
+      const m = tryMatch(tbd, phase);
+      if(m) matchResults.push(m);
     });
-
-    if(bestMatch){
-      usedBSCodes.add(bestMatch.code);
-      matchResults.push({
-        tbDetailNum: tbd.detailNum,
-        tbDetailName: tbd.detailName,
-        tbAG1Num: tbd.ag1Num,
-        tbAG1Name: tbd.ag1Name,
-        bsCode: bestMatch.code,
-        bsName: bestMatch.name,
-        matchType: 'fuzzy-name',
-        confidence: bestScore,
-        openBalMatch: Math.abs(tbd.openBal - (bestMatch.openDr - bestMatch.openCr)) < 0.01,
-        tbRow: tbd,
-        bsRow: bestMatch,
-      });
-      saveLearnedMapping(tbd.detailNum, {bsCode: bestMatch.code, bsName: bestMatch.name, matchType: 'fuzzy-name'});
-    }
   });
 
-  // Collect truly unmatched
-  const finalUnmatched = state.tbDetail.filter(tbd=>!matchResults.some(m=>m.tbDetailNum===tbd.detailNum));
+  // Collect unmatched TB rows
+  const unmatchedTB = state.tbDetail.filter(tbd=>!usedTBDetailNums.has(tbd.detailNum));
+
+  // Collect unmatched BS rows (will become new rows)
+  const unmatchedBS = state.bsRows.filter(bs=>!usedBSCodes.has(bs.code));
 
   state.matchResults = matchResults;
-  state.unmatchedTB = finalUnmatched;
+  state.unmatchedTB = unmatchedTB;
+  state.unmatchedBS = unmatchedBS;
 
   // Update UI
-  document.getElementById('matchStatus').textContent = `编码匹配 ${matchResults.filter(m=>m.matchType==='auto-code').length} | 金额映射 ${matchResults.filter(m=>m.matchType==='amount-reverse').length} | 名称匹配 ${matchResults.filter(m=>m.matchType==='fuzzy-name').length} | 未匹配 ${finalUnmatched.length}`;
+  const nameExact = matchResults.filter(m=>m.matchType==='name-exact').length;
+  const nameFuzzy = matchResults.filter(m=>m.matchType==='name-fuzzy').length;
+  const codeMatch = matchResults.filter(m=>m.matchType==='code').length;
+  const amountMatch = matchResults.filter(m=>m.matchType==='amount').length;
+  const openBalMatched = matchResults.filter(m=>m.openBalMatch).length;
+  const openBalDiffed = matchResults.filter(m=>!m.openBalMatch).length;
+
+  document.getElementById('matchStatus').textContent = 
+    `名称精确${nameExact} | 名称模糊${nameFuzzy} | 编码${codeMatch} | 金额${amountMatch} | 期初一致${openBalMatched} | 期初差异${openBalDiffed} | 未匹配TB${unmatchedTB.length} | 新增BS${unmatchedBS.length}`;
   document.getElementById('matchResult').classList.remove('hidden');
   document.getElementById('matchResult').innerHTML = `
-    <div style="display:flex;gap:12px;flex-wrap:wrap">
-      <span class="badge badge-auto">编码匹配 ${matchResults.filter(m=>m.matchType==='auto-code').length}</span>
-      <span class="badge badge-amount">金额映射 ${matchResults.filter(m=>m.matchType==='amount-reverse').length}</span>
-      <span class="badge badge-manual">名称匹配 ${matchResults.filter(m=>m.matchType==='fuzzy-name').length}</span>
-      <span class="badge badge-none">未匹配 ${finalUnmatched.length}</span>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <span class="badge badge-auto">名称精确 ${nameExact}</span>
+      <span class="badge badge-amount">名称模糊 ${nameFuzzy}</span>
+      <span class="badge badge-auto">编码 ${codeMatch}</span>
+      <span class="badge badge-amount">金额映射 ${amountMatch}</span>
+      <span class="badge badge-auto">🟢期初一致 ${openBalMatched}</span>
+      <span class="badge badge-manual">🟡期初差异 ${openBalDiffed}</span>
+      <span class="badge badge-none">🔴未匹配TB ${unmatchedTB.length}</span>
+      <span class="badge badge-auto">🟢新增科目 ${unmatchedBS.length}</span>
     </div>
   `;
 
-  // Render match detail
+  // Render match detail with openBal diff
   document.getElementById('matchDetailPreview').innerHTML = `<table><thead><tr>
-    <th>TB Detail</th><th>TB名称</th><th>匹配类型</th><th>BS编码</th><th>BS名称</th><th>期初数一致</th><th>置信度</th>
+    <th>TB Detail</th><th>TB名称</th><th>匹配方式</th><th>BS编码</th><th>BS名称</th><th>TB期初</th><th>BS期初</th><th>差异</th><th>状态</th>
   </tr></thead><tbody>`+
-    matchResults.map(m=>`<tr>
-      <td>${htmlEscape(m.tbDetailNum)}</td>
-      <td>${htmlEscape(m.tbDetailName)}</td>
-      <td><span class="badge ${m.matchType==='auto-code'?'badge-auto':m.matchType==='amount-reverse'?'badge-amount':'badge-manual'}">${m.matchType==='auto-code'?'编码':m.matchType==='amount-reverse'?'金额':'名称'}</span></td>
-      <td>${htmlEscape(m.bsCode)}</td>
-      <td>${htmlEscape(m.bsName)}</td>
-      <td class="${m.openBalMatch?'matched':'unmatched'}">${m.openBalMatch?'✅':'⚠'}</td>
-      <td>${(m.confidence*100).toFixed(0)}%</td>
-    </tr>`).join('')+
+    matchResults.map(m=>{
+      const diffStr = fmtNum(Math.abs(m.openBalDiff));
+      const statusClass = m.openBalMatch ? 'matched' : 'warn';
+      const statusText = m.openBalMatch ? '🟢一致' : `🟡差异 ${m.openBalDiff>0?'+':''}${diffStr}`;
+      return `<tr class="${statusClass}">
+        <td>${htmlEscape(m.tbDetailNum)}</td>
+        <td>${htmlEscape(m.tbDetailName)}</td>
+        <td><span class="badge ${m.matchType==='name-exact'||m.matchType==='code'?'badge-auto':'badge-amount'}">${m.matchType==='name-exact'?'名称精确':m.matchType==='name-fuzzy'?'名称模糊':m.matchType==='code'?'编码':'金额'}</span></td>
+        <td>${htmlEscape(m.bsCode)}</td>
+        <td>${htmlEscape(m.bsName)}</td>
+        <td class="font-mono">${fmtNum(m.tbOpenBal)}</td>
+        <td class="font-mono">${fmtNum(m.bsOpenBal)}</td>
+        <td class="font-mono ${m.openBalMatch?'':'warn'}">${m.openBalMatch?'0.00':(m.openBalDiff>0?'+':'')+diffStr}</td>
+        <td>${statusText}</td>
+      </tr>`;
+    }).join('')+
     '</tbody></table>';
 
-  // Show unmatched
+  // Show unmatched TB
   const up = document.getElementById('unmatchedPanel');
-  if(finalUnmatched.length>0){
-    up.innerHTML = finalUnmatched.map(tbd=>`
-      <div class="text-sm mb2" style="padding:8px;background:rgba(252,92,156,0.05);border:1px solid rgba(252,92,156,0.15);border-radius:6px">
-        <span style="color:var(--accent-3)">⚠ ${htmlEscape(tbd.detailNum)} ${htmlEscape(tbd.detailName)}</span>
-        <span class="text-secondary"> — 期初数: ${fmtNum(tbd.openBal)}</span>
-        <div class="mt2 text-xs text-secondary">建议：检查科目余额表是否包含对应科目，或手动建立映射</div>
-      </div>
-    `).join('');
-  } else {
-    up.innerHTML = '<p class="text-sm" style="color:var(--accent-2)">✅ 所有TB行均已匹配</p>';
+  let unmatchedHtml = '';
+  if(unmatchedTB.length>0){
+    unmatchedHtml += `<div class="mb2"><div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--accent-3)">🔴 TB中有但科目余额表无（${unmatchedTB.length}个）</div>`+
+      unmatchedTB.map(tbd=>`
+        <div class="text-sm mb2" style="padding:8px;background:rgba(252,92,156,0.05);border:1px solid rgba(252,92,156,0.15);border-radius:6px">
+          <span style="color:var(--accent-3)">${htmlEscape(tbd.detailNum)} ${htmlEscape(tbd.detailName)}</span>
+          <span class="text-secondary"> — 期初数: ${fmtNum(tbd.openBal)}</span>
+        </div>
+      `).join('') + '</div>';
   }
+  if(unmatchedBS.length>0){
+    unmatchedHtml += `<div><div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--accent-2)">🟢 科目余额表有但TB无（将自动新增，${unmatchedBS.length}个）</div>`+
+      unmatchedBS.map(bs=>`
+        <div class="text-sm mb2" style="padding:8px;background:rgba(92,252,160,0.05);border:1px solid rgba(92,252,160,0.15);border-radius:6px">
+          <span style="color:var(--accent-2)">${htmlEscape(bs.code)} ${htmlEscape(bs.name)}</span>
+          <span class="text-secondary"> — 期初: ${fmtNum(bs.openDr-bs.openCr)} | 期末: ${fmtNum(bs.endDr-bs.endCr)}</span>
+        </div>
+      `).join('') + '</div>';
+  }
+  up.innerHTML = unmatchedHtml || '<p class="text-sm" style="color:var(--accent-2)">✅ 所有行均已匹配，无新增科目</p>';
 
-  toast(`✓ 匹配完成：编码${matchResults.filter(m=>m.matchType==='auto-code').length} 金额${matchResults.filter(m=>m.matchType==='amount-reverse').length} 名称${matchResults.filter(m=>m.matchType==='fuzzy-name').length} 未匹${finalUnmatched.length}`);
+  toast(`✓ 匹配完成：名称${nameExact+nameFuzzy} 编码${codeMatch} 金额${amountMatch} | 期初一致${openBalMatched} 差异${openBalDiffed} | 未匹配${unmatchedTB.length} | 新增${unmatchedBS.length}`);
 }
 
 function nameSimilarity(a, b){
@@ -866,7 +887,7 @@ function nameSimilarity(a, b){
   return intersection.size / Math.max(setA.size, setB.size);
 }
 
-// ==================== AUTO FILL ENGINE ====================
+// ==================== AUTO FILL ENGINE (上数+备注+颜色+新增行) ====================
 function executeAutoFill(){
   if(state.matchResults.length===0){ toast('请先执行智能匹配'); return; }
   if(state.tbDetail.length===0){ toast('请先导入TB模板'); return; }
@@ -877,77 +898,143 @@ function executeAutoFill(){
   const ag1ByNum = {};
   state.tbAG1.forEach(a=>{ ag1ByNum[a.ag1Num]=a; });
 
-  let filled=0, unmatched=[];
-
   // Clone TB rows for filling
   const filledRows = JSON.parse(JSON.stringify(state.tbDetail));
 
-  // Group match results by TB Detail (support multiple BS -> one TB)
+  // Group match results by TB Detail
   const matchByTB = {};
   state.matchResults.forEach(m=>{
     if(!matchByTB[m.tbDetailNum]) matchByTB[m.tbDetailNum] = [];
     matchByTB[m.tbDetailNum].push(m);
   });
 
+  let filled=0, diffCount=0, unmatchedCount=0;
+
+  // Process matched TB rows
   Object.entries(matchByTB).forEach(([tbDetailNum, matches])=>{
     const tbRow = filledRows.find(tbd=>tbd.detailNum===tbDetailNum);
     if(!tbRow) return;
 
-    // Get FS Type from AG1 -> FSL
+    // Get FS Type
     const ag1 = ag1ByNum[tbRow.ag1Num];
     const fsl = ag1 ? fslByNum[ag1.fslNum] : null;
     const fsType = fsl ? fsl.fsType : 'BalanceSheet';
 
-    // Calculate fill value (accumulate all matched BS rows)
+    // Calculate fill value
     let fillVal = 0;
     matches.forEach(m=>{
       const bs = m.bsRow;
       if(/BalanceSheet/i.test(fsType)){
-        // 资产负债表: 期末余额 = 期末借方 - 期末贷方
         fillVal += (bs.endDr - bs.endCr);
       } else {
-        // 利润表: 本年累计发生额
-        // Determine nature from FSL name or AG1 name
         const fslName = fsl ? fsl.fslName : '';
         const isIncome = /收入|Revenue|Income|收益/i.test(fslName);
-        if(isIncome){
-          fillVal += bs.yearCr; // 收入类取贷方累计
-        } else {
-          fillVal += bs.yearDr; // 成本费用类取借方累计
-        }
+        fillVal += isIncome ? bs.yearCr : bs.yearDr;
       }
     });
 
-    // Fill the target TB column (user-selected fill column)
+    // Fill the target column
     const fillColArrayIdx = tbRow.tbCols.findIndex(c=>c===state.tbFillColIdx);
-    if(fillColArrayIdx < 0){ return; } // Should not happen
+    if(fillColArrayIdx < 0) return;
     const currentVal = parseNum(tbRow.tbValues[fillColArrayIdx]);
     tbRow.tbValues[fillColArrayIdx] = currentVal + fillVal;
     tbRow.filled = true;
     tbRow.fillSource = matches.map(m=>m.bsCode+' '+m.bsName).join(' + ');
     tbRow.fillType = /BalanceSheet/i.test(fsType) ? '期末余额' : '本年累计';
-    filled++;
-  });
 
-  // Collect unmatched BS rows
-  const matchedBSCodes = new Set(state.matchResults.map(m=>m.bsCode));
-  state.bsRows.forEach(bs=>{
-    if(!matchedBSCodes.has(bs.code)){
-      unmatched.push({...bs, reason:'未匹配到任何TB Detail行'});
+    // Determine status and remark based on openBal match
+    const firstMatch = matches[0];
+    const isOpenBalMatch = matches.every(m=>m.openBalMatch);
+    if(isOpenBalMatch){
+      tbRow.status = 'matched';
+      tbRow.remark = `自动匹配-期初一致 [${firstMatch.matchType==='name-exact'?'名称精确':firstMatch.matchType==='name-fuzzy'?'名称模糊':firstMatch.matchType==='code'?'编码':'金额'}]`;
+      filled++;
+    } else {
+      tbRow.status = 'diff';
+      const diffs = matches.map(m=>{
+        const d = m.openBalDiff;
+        return `${m.bsCode}:${d>0?'+':''}${fmtNum(d)}`;
+      }).join(', ');
+      tbRow.remark = `自动匹配-期初差异 [差异:${diffs}]`;
+      diffCount++;
     }
   });
 
-  state.filledDetailRows = filledRows;
-  state.fillResults = { filled, unmatched };
+  // Process unmatched TB rows (red)
+  state.unmatchedTB.forEach(tbd=>{
+    const row = filledRows.find(r=>r.detailNum===tbd.detailNum);
+    if(row){
+      row.status = 'unmatched';
+      row.remark = '未匹配/已清理';
+      unmatchedCount++;
+    }
+  });
 
-  document.getElementById('fillStatus').textContent = `已填 ${filled} 行 | 未匹配BS科目 ${unmatched.length} 个`;
+  // Create new rows for unmatched BS subjects (green)
+  const newRows = [];
+  if(state.unmatchedBS && state.unmatchedBS.length>0){
+    let nextRowIdx = Math.max(...filledRows.map(r=>r.rowIndex)) + 1;
+    state.unmatchedBS.forEach(bs=>{
+      // Infer AG1 and FSL from BS subject name
+      const inferredAG1 = inferAG1FromBSName(bs.name, state.tbAG1);
+      const newRow = {
+        rowIndex: nextRowIdx++,
+        detailNum: `NEW-${bs.code}`,
+        detailName: bs.name,
+        ag1Num: inferredAG1 ? inferredAG1.ag1Num : '',
+        ag1Name: inferredAG1 ? inferredAG1.ag1Name : '',
+        tbCols: filledRows[0] ? [...filledRows[0].tbCols] : [],
+        tbValues: filledRows[0] ? new Array(filledRows[0].tbValues.length).fill('') : [],
+        openBal: (bs.openDr || 0) - (bs.openCr || 0),
+        isEmptyLast: true,
+        hasFormula: false,
+        filled: true,
+        fillSource: bs.code + ' ' + bs.name,
+        fillType: '期末余额',
+        status: 'new',
+        remark: '新增科目-自动添加',
+        isNewRow: true,
+        bsRow: bs,
+      };
+      // Fill the target column with BS end balance
+      const fillColArrayIdx = newRow.tbCols.findIndex(c=>c===state.tbFillColIdx);
+      if(fillColArrayIdx >= 0){
+        newRow.tbValues[fillColArrayIdx] = (bs.endDr || 0) - (bs.endCr || 0);
+      }
+      newRows.push(newRow);
+    });
+  }
+
+  state.filledDetailRows = [...filledRows, ...newRows];
+  state.fillResults = { filled, diffCount, unmatchedCount, newCount: newRows.length };
+
+  document.getElementById('fillStatus').textContent = 
+    `🟢期初一致${filled} | 🟡期初差异${diffCount} | 🔴未匹配${unmatchedCount} | 🟢新增${newRows.length}`;
   document.getElementById('fillResult').classList.remove('hidden');
   document.getElementById('fillResult').innerHTML = `
-    <div style="color:var(--accent-2)">✅ 上数完成：填入 <b>${filled}</b> 行TB Detail（支持多科目累加）| 未匹配BS科目 <span style="color:var(--accent-3)"><b>${unmatched.length}</b></span> 个</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <span class="badge badge-auto">🟢期初一致 ${filled}</span>
+      <span class="badge badge-manual">🟡期初差异 ${diffCount}</span>
+      <span class="badge badge-none">🔴未匹配 ${unmatchedCount}</span>
+      <span class="badge badge-auto">🟢新增科目 ${newRows.length}</span>
+    </div>
   `;
 
   renderTBResultPreview();
-  toast(`✓ 上数完成：${filled}行已填`);
+  toast(`✓ 上数完成：一致${filled} 差异${diffCount} 未匹配${unmatchedCount} 新增${newRows.length}`);
+}
+
+// Infer AG1 from BS subject name by matching against existing AG1 names
+function inferAG1FromBSName(bsName, ag1List){
+  if(!bsName || !ag1List || ag1List.length===0) return null;
+  const bsNameClean = bsName.replace(/\s+/g,'').toLowerCase();
+  let bestMatch = null, bestScore = 0.5;
+  ag1List.forEach(ag1=>{
+    const ag1NameClean = ag1.ag1Name.replace(/\s+/g,'').toLowerCase();
+    const score = nameSimilarity(bsNameClean, ag1NameClean);
+    if(score > bestScore){ bestScore = score; bestMatch = ag1; }
+  });
+  return bestMatch;
 }
 
 function renderTBResultPreview(){
@@ -956,25 +1043,34 @@ function renderTBResultPreview(){
     document.getElementById('tbResultPreview').innerHTML='<p class="text-sm text-secondary p-4">暂无数据</p>';
     return;
   }
-  // Find array index of user-selected fill column
   const fillArrayIdx = rows[0].tbCols.findIndex(c=>c===state.tbFillColIdx);
   const openArrayIdx = rows[0].tbCols.findIndex(c=>c===state.tbOpenColIdx);
   if(fillArrayIdx < 0){
     document.getElementById('tbResultPreview').innerHTML='<p class="text-sm text-secondary p-4">错误：未找到本期待填列配置</p>';
     return;
   }
-  let html = '<table><thead><tr><th>Detail Num</th><th>Detail</th><th>AG1</th>';
+
+  let html = '<table><thead><tr><th>状态</th><th>Detail Num</th><th>Detail</th><th>AG1</th>';
   if(openArrayIdx >= 0) html += '<th>期初数</th>';
-  html += '<th>本期（已填）</th><th>来源</th><th>类型</th></tr></thead><tbody>';
+  html += '<th>本期（已填）</th><th>备注</th></tr></thead><tbody>';
+
   rows.forEach(d=>{
     const lastVal = d.tbValues[fillArrayIdx];
-    const isFilled = d.filled;
-    html += `<tr>
-      <td>${htmlEscape(d.detailNum)}</td><td>${htmlEscape(d.detailName)}</td><td>${htmlEscape(d.ag1Name)}</td>`;
+    const status = d.status || (d.isNewRow ? 'new' : '');
+    const statusBadge = status==='matched' ? '<span style="color:#5cfca0">🟢</span>' :
+                         status==='diff' ? '<span style="color:#f5a623">🟡</span>' :
+                         status==='unmatched' ? '<span style="color:#fc5c9c">🔴</span>' :
+                         status==='new' ? '<span style="color:#5cfca0">🟢新</span>' : '';
+    const rowClass = status==='matched' ? 'matched' : status==='diff' ? 'warn' : status==='unmatched' ? 'unmatched' : status==='new' ? 'matched' : '';
+
+    html += `<tr class="${rowClass}">
+      <td>${statusBadge}</td>
+      <td>${htmlEscape(d.detailNum)}</td>
+      <td>${htmlEscape(d.detailName)}</td>
+      <td>${htmlEscape(d.ag1Name)}</td>`;
     if(openArrayIdx >= 0) html += `<td class="font-mono">${fmtNum(d.tbValues[openArrayIdx])}</td>`;
-    html += `<td class="font-mono ${isFilled?'filled':(lastVal!==''&&lastVal!==null&&lastVal!==undefined?'':'skipped')}">${fmtNum(lastVal)}</td>
-      <td class="text-xs">${htmlEscape(d.fillSource||'-')}</td>
-      <td class="text-xs">${htmlEscape(d.fillType||'-')}</td>
+    html += `<td class="font-mono ${d.filled?'filled':(lastVal!==''&&lastVal!==null&&lastVal!==undefined?'':'skipped')}">${fmtNum(lastVal)}</td>
+      <td class="text-xs" style="max-width:300px;white-space:normal">${htmlEscape(d.remark||'-')}</td>
     </tr>`;
   });
   html += '</tbody></table>';
@@ -1002,7 +1098,7 @@ function runVerify(){
     const num = parseNum(lastVal);
     if(!fslSums[fsl.fslNum]) fslSums[fsl.fslNum] = { fsl, sum:0, details:[] };
     fslSums[fsl.fslNum].sum += num;
-    fslSums[fsl.fslNum].details.push({detailNum:d.detailNum, detailName:d.detailName, val:num});
+    fslSums[fsl.fslNum].details.push({detailNum:d.detailNum, detailName:d.detailName, val:num, status:d.status});
   });
 
   let assetsTotal = 0, liabTotal = 0, equityTotal = 0;
@@ -1056,45 +1152,120 @@ function downloadFilledTB(){
 
   const wb = JSON.parse(JSON.stringify(state.tbWb));
   const detailSheet = wb.Sheets['Detail'] || wb.Sheets[wb.SheetNames[0]];
+  const ref = XLSX.utils.decode_range(detailSheet['!ref']||'A1');
 
+  // Determine remark column (right after fill column)
+  const remarkColIdx = state.tbFillColIdx + 1;
+
+  // Update sheet range to include remark column
+  if(ref.e.c < remarkColIdx) ref.e.c = remarkColIdx;
+
+  // Write header for remark column
+  const headerAddr = XLSX.utils.encode_cell({r:ref.s.r, c:remarkColIdx});
+  if(!detailSheet[headerAddr]) detailSheet[headerAddr] = {};
+  detailSheet[headerAddr].v = '备注';
+  detailSheet[headerAddr].t = 's';
+
+  // Helper: create cell style for colors
+  function makeCell(val, status){
+    const cell = { v: val, t: typeof val === 'number' ? 'n' : 's' };
+    if(typeof val === 'number') cell.w = fmtNum(val);
+    // SheetJS color styles
+    const colors = {
+      matched: { fgColor: { rgb: 'C6EFCE' } },      // light green
+      diff: { fgColor: { rgb: 'FFEB9C' } },         // light yellow
+      unmatched: { fgColor: { rgb: 'FFC7CE' } },    // light red
+      new: { fgColor: { rgb: 'C6EFCE' } },          // light green
+    };
+    if(status && colors[status]){
+      cell.s = { fill: colors[status] };
+    }
+    return cell;
+  }
+
+  // Process all rows (original + new)
   state.filledDetailRows.forEach(d=>{
-    if(!d.filled) return;
-    const addr = XLSX.utils.encode_cell({r:d.rowIndex, c:state.tbFillColIdx});
-    const fillArrayIdx = d.tbCols.findIndex(c=>c===state.tbFillColIdx);
-    if(fillArrayIdx < 0) return;
-    const val = d.tbValues[fillArrayIdx];
-    if(!detailSheet[addr]) detailSheet[addr] = {};
-    detailSheet[addr].v = val;
-    detailSheet[addr].t = 'n';
-    detailSheet[addr].w = fmtNum(val);
-    delete detailSheet[addr].f;
+    const isNew = d.isNewRow;
+    const status = d.status || '';
+
+    if(isNew){
+      // For new rows, we need to write all columns
+      // Detail Num
+      const numAddr = XLSX.utils.encode_cell({r:d.rowIndex, c:0});
+      detailSheet[numAddr] = makeCell(d.detailNum, 'new');
+      // Detail Name
+      const nameAddr = XLSX.utils.encode_cell({r:d.rowIndex, c:1});
+      detailSheet[nameAddr] = makeCell(d.detailName, 'new');
+      // AG1 Num
+      if(d.ag1Num){
+        const ag1NumAddr = XLSX.utils.encode_cell({r:d.rowIndex, c:2});
+        detailSheet[ag1NumAddr] = makeCell(d.ag1Num, 'new');
+      }
+      // AG1 Name
+      if(d.ag1Name){
+        const ag1NameAddr = XLSX.utils.encode_cell({r:d.rowIndex, c:3});
+        detailSheet[ag1NameAddr] = makeCell(d.ag1Name, 'new');
+      }
+      // Fill value
+      const fillArrayIdx = d.tbCols.findIndex(c=>c===state.tbFillColIdx);
+      if(fillArrayIdx >= 0){
+        const valAddr = XLSX.utils.encode_cell({r:d.rowIndex, c:state.tbFillColIdx});
+        detailSheet[valAddr] = makeCell(d.tbValues[fillArrayIdx], 'new');
+      }
+      // Remark
+      const remarkAddr = XLSX.utils.encode_cell({r:d.rowIndex, c:remarkColIdx});
+      detailSheet[remarkAddr] = makeCell(d.remark || '新增科目-自动添加', 'new');
+    }
+    else if(d.filled || status){
+      // Existing row - fill value and remark
+      const fillArrayIdx = d.tbCols.findIndex(c=>c===state.tbFillColIdx);
+      if(fillArrayIdx >= 0 && d.filled){
+        const valAddr = XLSX.utils.encode_cell({r:d.rowIndex, c:state.tbFillColIdx});
+        detailSheet[valAddr] = makeCell(d.tbValues[fillArrayIdx], status);
+      }
+      // Remark
+      const remarkAddr = XLSX.utils.encode_cell({r:d.rowIndex, c:remarkColIdx});
+      detailSheet[remarkAddr] = makeCell(d.remark || '', status);
+    }
   });
 
+  // Update sheet ref to include all new rows
+  const maxRow = Math.max(...state.filledDetailRows.map(d=>d.rowIndex));
+  if(ref.e.r < maxRow) ref.e.r = maxRow;
+  detailSheet['!ref'] = XLSX.utils.encode_range(ref);
+
   XLSX.writeFile(wb, `TB_智能上数结果_${new Date().toISOString().slice(0,10)}.xlsx`, {cellFormula:true});
-  toast('✓ 已下载填好的TB');
+  toast('✓ 已下载填好的TB（含备注列和颜色标识）');
 }
 
 function downloadMappingReport(){
   if(state.matchResults.length===0){ toast('无匹配数据'); return; }
-  const rows=[['TB Detail编码','TB Detail名称','TB AG1编码','BS科目编码','BS科目名称','匹配类型','置信度','期初数一致']];
-  state.matchResults.forEach(m=>rows.push([
-    m.tbDetailNum, m.tbDetailName, m.tbAG1Num,
-    m.bsCode, m.bsName, m.matchType, m.confidence, m.openBalMatch?'是':'否'
-  ]));
+  const rows=[['TB Detail编码','TB Detail名称','TB AG1编码','BS科目编码','BS科目名称','匹配方式','期初一致','TB期初','BS期初','期初差异','备注']];
+  state.matchResults.forEach(m=>{
+    const diffStr = m.openBalMatch ? '0.00' : (m.openBalDiff>0?'+':'') + fmtNum(Math.abs(m.openBalDiff));
+    rows.push([
+      m.tbDetailNum, m.tbDetailName, m.tbAG1Num,
+      m.bsCode, m.bsName,
+      m.matchType==='name-exact'?'名称精确':m.matchType==='name-fuzzy'?'名称模糊':m.matchType==='code'?'编码':'金额',
+      m.openBalMatch?'是':'否',
+      fmtNum(m.tbOpenBal), fmtNum(m.bsOpenBal), diffStr,
+      m.openBalMatch?'自动匹配-期初一致':`自动匹配-期初差异${diffStr}`
+    ]);
+  });
   const ws=XLSX.utils.aoa_to_sheet(rows); const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'匹配映射报告'); XLSX.writeFile(wb,`TB智能匹配映射报告_${new Date().toISOString().slice(0,10)}.xlsx`);
   toast('✓ 已下载');
 }
 
 function downloadUnmatchedReport(){
-  const u = state.fillResults.unmatched||[];
   const tu = state.unmatchedTB||[];
-  if(u.length===0 && tu.length===0){ toast('无未匹配数据'); return; }
-  const rows=[['类型','编码','名称','原因/期初数']];
-  tu.forEach(t=>rows.push(['TB Detail', t.detailNum, t.detailName, '未匹配到BS科目，期初数='+fmtNum(t.openBal)]));
-  u.forEach(r=>rows.push(['BS科目', r.code, r.name, r.reason]));
+  const ubs = state.unmatchedBS||[];
+  if(tu.length===0 && ubs.length===0){ toast('无未匹配数据'); return; }
+  const rows=[['类型','编码/DetailNum','名称','期初数','期末数','状态']];
+  tu.forEach(t=>rows.push(['TB未匹配', t.detailNum, t.detailName, fmtNum(t.openBal), '-', '未匹配/已清理']));
+  ubs.forEach(bs=>rows.push(['BS新增', bs.code, bs.name, fmtNum(bs.openDr-bs.openCr), fmtNum(bs.endDr-bs.endCr), '将自动新增']));
   const ws=XLSX.utils.aoa_to_sheet(rows); const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,'未匹配清单'); XLSX.writeFile(wb,'TB未匹配清单.xlsx');
+  XLSX.utils.book_append_sheet(wb,ws,'未匹配与新增清单'); XLSX.writeFile(wb,'TB未匹配与新增清单.xlsx');
   toast('✓ 已下载');
 }
 
