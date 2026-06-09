@@ -1096,13 +1096,15 @@ function executeAutoFill(){
         fillVal += bs.endNet;
       } else {
         // PL: 本年累计发生额
+        // Note: in this BS format, yearDr and yearCr are equal (both show cumulative absolute amount)
+        // So we take the single value directly instead of subtracting
         const direction = getPLDirection(bs.code);
         if(direction === 'income'){
-          // Income: credit - debit (negative in TB)
-          fillVal += (bs.yearCr - bs.yearDr);
+          // Income: take credit cumulative (positive in BS), show as negative in TB
+          fillVal += -(bs.yearCr || bs.yearDr || 0);
         } else {
-          // Expense: debit - credit (positive in TB)
-          fillVal += (bs.yearDr - bs.yearCr);
+          // Expense: take debit cumulative (positive in BS), show as positive in TB
+          fillVal += (bs.yearDr || bs.yearCr || 0);
         }
       }
     });
