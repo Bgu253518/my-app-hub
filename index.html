@@ -1656,7 +1656,7 @@ function openToolPanel(appId) {
   if (!app) return;
 
   // 带密码保护的工具
-  const PROTECTED_TOOLS = ['tb-autofill', 'bkd-rollforward', 'word-checkbench'];
+  const PROTECTED_TOOLS = ['bkd-rollforward', 'word-checkbench'];
   if (PROTECTED_TOOLS.includes(appId)) {
     const pw = prompt('请输入管理员密码来打开此工具:');
     if (pw !== 'Asd#522128') { alert('密码错误，无法打开'); return; }
@@ -1671,8 +1671,6 @@ function openToolPanel(appId) {
     'smart-todo': '智能待办/smart-todo.html',
     'word-checkbench': 'Word报告上数与校验工作台/word-checkbench.html',
     'bkd-rollforward': 'BKD底稿滚存与上数助手/bkd-rollforward.html',
-    'tb-autofill': 'TB自动上数器/tb-autofill.html',
-    'tb-autofill-v2': 'TB自动上数器/tb-autofill-v2.html',
     'tb-smart-autofill': 'TB自动上数器/tb-smart-autofill.html',
     'help': '使用说明与操作指引/help.html',
     'audit-sampling': '审计抽凭助手/audit-sampling.html',
