@@ -767,12 +767,31 @@ function executeSmartMatch(){
     return code >= 6001 && code <= 6901;
   }
 
-  // Helper: get match score for name exact matching
-  function getNameExactScore(tbdNameClean, bs){
-    const bsNameClean = bs.name.replace(/\s+/g,'').toLowerCase();
-    if(tbdNameClean === bsNameClean) return 3.0; // exact
-    if(tbdNameClean.includes(bsNameClean) || bsNameClean.includes(tbdNameClean)) return 2.0; // containment
+  // Helper: get match score for name matching
+  // Returns: 3=exact, 2=valid containment, 0=no match
+  function getNameMatchScore(tbdName, bsName){
+    const t = cleanName(tbdName);
+    const b = cleanName(bsName);
+    if(!t || !b) return 0;
+    if(t === b) return 3.0; // exact match
+    if(isValidContainment(t, b)) return 2.0; // valid containment
     return 0;
+  }
+
+  // Helper: clean name for matching
+  function cleanName(name){
+    return String(name || '').replace(/\s+/g,'').replace(/[-_]/g,'').toLowerCase();
+  }
+
+  // Helper: valid containment check (avoid matching "金" to "现金")
+  function isValidContainment(a, b){
+    if(!a || !b || a.length < 2 || b.length < 2) return false;
+    const shorter = a.length < b.length ? a : b;
+    const longer = a.length < b.length ? b : a;
+    // Shorter must be at least 50% of longer, and at least 2 chars
+    if(shorter.length < 2) return false;
+    if(shorter.length / longer.length < 0.5) return false;
+    return longer.includes(shorter);
   }
 
   // Helper: try match a TB row to a BS row
@@ -783,7 +802,6 @@ function executeSmartMatch(){
     let bestScore = 0;
 
     if(phase === 'name-exact'){
-      const tbdNameClean = tbd.detailName.replace(/\s+/g,'').toLowerCase();
       // First try top-level (non-summary) subjects, then summary subjects, then sub-subjects
       const candidates = state.bsRows.filter(bs=>!usedBSCodes.has(bs.code));
       // Sort: prefer level 1 non-summary > level 1 summary > level 2+ 
@@ -793,16 +811,18 @@ function executeSmartMatch(){
         return bScore - aScore;
       });
       for(const bs of candidates){
-        const score = getNameExactScore(tbdNameClean, bs);
+        const score = getNameMatchScore(tbd.detailName, bs.name);
         if(score > bestScore){ bestScore = score; bsMatch = bs; }
       }
+      // Only accept exact (3.0) or valid containment (2.0)
+      if(bestScore < 2.0) bsMatch = null;
     }
     else if(phase === 'name-fuzzy'){
-      const tbdNameClean = tbd.detailName.replace(/\s+/g,'').toLowerCase();
-      let bestFuzzyScore = 0.4;
+      const tbdNameClean = cleanName(tbd.detailName);
+      let bestFuzzyScore = 0.65; // Increased threshold from 0.4
       state.bsRows.forEach(bs=>{
         if(usedBSCodes.has(bs.code)) return;
-        const bsNameClean = bs.name.replace(/\s+/g,'').toLowerCase();
+        const bsNameClean = cleanName(bs.name);
         const score = nameSimilarity(tbdNameClean, bsNameClean);
         if(score > bestFuzzyScore){ bestFuzzyScore = score; bsMatch = bs; }
       });
@@ -810,7 +830,26 @@ function executeSmartMatch(){
     else if(phase === 'code'){
       bsMatch = state.bsRows.find(bs=>{
         if(usedBSCodes.has(bs.code)) return false;
-        if(bs.code && tbd.detailNum.includes(bs.code)) return true;
+        // Extract numeric part from detailNum (e.g., "Detail-001-2" -> "001")
+        const codeMatch = tbd.detailNum.match(/Detail-(\d{3})/);
+        if(codeMatch){
+          const detailCode = codeMatch[1];
+          // Map Detail code to standard subject code prefix
+          const codeMap = {
+            '001': '1001', '002': '1002', '003': '1012', '004': '1021',
+            '005': '1405', '006': '1408', '007': '1601', '008': '1604',
+            '009': '1701', '010': '1702', '011': '1801', '012': '1811',
+            '013': '2202', '014': '2231', '015': '2203', '016': '2241',
+            '017': '2211', '018': '2001', '019': '2221', '020': '2703',
+            '021': '2704', '022': '4001', '023': '4103', '024': '4104',
+            '025': '6001', '026': '6401', '027': '6403', '028': '6602',
+            '029': '6601', '030': '6603', '031': '6701', '032': '6115',
+            '033': '6301', '034': '6117', '035': '6711', '036': '6801',
+            '037': '1471', '038': '6901'
+          };
+          const targetPrefix = codeMap[detailCode];
+          if(targetPrefix && bs.code.startsWith(targetPrefix)) return true;
+        }
         const learned = store.learnedMappings[tbd.detailNum];
         if(learned && learned.bsCode === bs.code) return true;
         return false;
@@ -839,7 +878,7 @@ function executeSmartMatch(){
         bsLevel: bsMatch.level,
         bsIsSummary: bsMatch.isSummary,
         matchType: phase,
-        confidence: phase==='name-exact'?1.0:phase==='name-fuzzy'?0.85:phase==='code'?0.9:0.8,
+        confidence: phase==='name-exact'?1.0:phase==='ag1-exact'?0.95:phase==='name-fuzzy'?0.85:phase==='ag1-fuzzy'?0.8:phase==='code-prefix'?0.9:phase==='code'?0.9:0.8,
         isPL: isPL,
         openBalMatch: isPL ? true : diffInfo.isMatch,
         openBalDiff: isPL ? 0 : diffInfo.diff,
@@ -855,8 +894,8 @@ function executeSmartMatch(){
   // Sort TB rows by absolute openBal descending (important rows first)
   const tbRowsSorted = [...state.tbDetail].sort((a,b)=>Math.abs(b.openBal||0)-Math.abs(a.openBal||0));
 
-  // Phase 1-4: Execute initial matching (sorted by importance)
-  ['name-exact', 'name-fuzzy', 'code', 'amount'].forEach(phase=>{
+  // Phase 1-6: Execute initial matching (sorted by importance)
+  ['name-exact', 'ag1-exact', 'name-fuzzy', 'ag1-fuzzy', 'code-prefix', 'code', 'amount'].forEach(phase=>{
     tbRowsSorted.forEach(tbd=>{
       const m = tryMatch(tbd, phase);
       if(m) matchResults.push(m);
@@ -877,7 +916,7 @@ function executeSmartMatch(){
     }
 
     // Only correct if diff is significant (>1000) and not amount-mapped
-    if(m.matchType === 'amount' || Math.abs(m.openBalDiff) < 1000){
+    if(m.matchType === 'amount' || m.matchType === 'code-prefix' || Math.abs(m.openBalDiff) < 1000){
       correctedResults.push(m);
       return;
     }
@@ -950,7 +989,10 @@ function executeSmartMatch(){
 
   // Update UI stats
   const nameExact = correctedResults.filter(m=>m.matchType==='name-exact').length;
+  const ag1Exact = correctedResults.filter(m=>m.matchType==='ag1-exact').length;
   const nameFuzzy = correctedResults.filter(m=>m.matchType==='name-fuzzy').length;
+  const ag1Fuzzy = correctedResults.filter(m=>m.matchType==='ag1-fuzzy').length;
+  const codePrefix = correctedResults.filter(m=>m.matchType==='code-prefix').length;
   const codeMatch = correctedResults.filter(m=>m.matchType==='code').length;
   const amountMatch = correctedResults.filter(m=>m.matchType==='amount').length;
   const corrected = correctedResults.filter(m=>m.matchType==='corrected-amount').length;
@@ -959,12 +1001,15 @@ function executeSmartMatch(){
   const plCount = correctedResults.filter(m=>m.isPL).length;
 
   document.getElementById('matchStatus').textContent = 
-    `名称精确${nameExact} | 名称模糊${nameFuzzy} | 编码${codeMatch} | 金额${amountMatch} | 修正${corrected} | 期初一致${openBalMatched} | 期初差异${openBalDiffed} | PL${plCount} | 未匹配TB${unmatchedTB.length} | 新增BS${unmatchedBS.length}`;
+    `名称精确${nameExact} | AG1精确${ag1Exact} | 名称模糊${nameFuzzy} | AG1模糊${ag1Fuzzy} | 编码前缀${codePrefix} | 编码${codeMatch} | 金额${amountMatch} | 修正${corrected} | 期初一致${openBalMatched} | 期初差异${openBalDiffed} | PL${plCount} | 未匹配TB${unmatchedTB.length} | 新增BS${unmatchedBS.length}`;
   document.getElementById('matchResult').classList.remove('hidden');
   document.getElementById('matchResult').innerHTML = `
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <span class="badge badge-auto">名称精确 ${nameExact}</span>
+      <span class="badge badge-auto">AG1精确 ${ag1Exact}</span>
       <span class="badge badge-amount">名称模糊 ${nameFuzzy}</span>
+      <span class="badge badge-amount">AG1模糊 ${ag1Fuzzy}</span>
+      <span class="badge badge-auto">编码前缀 ${codePrefix}</span>
       <span class="badge badge-auto">编码 ${codeMatch}</span>
       <span class="badge badge-amount">金额映射 ${amountMatch}</span>
       <span class="badge badge-warn">🟡修正 ${corrected}</span>
@@ -987,13 +1032,13 @@ function executeSmartMatch(){
       const statusClass = m.openBalMatch ? 'matched' : isCorrected ? 'warn' : 'warn';
       const statusText = isPL ? `🟢PL-跳过` :
         m.openBalMatch ? '🟢一致' : 
-        isCorrected ? `🟡修正(原${m.originalMatchType==='name-exact'?'名称精确':m.originalMatchType==='name-fuzzy'?'名称模糊':'编码'}→金额)` : 
+        isCorrected ? `🟡修正(原${m.originalMatchType==='name-exact'?'名称精确':m.originalMatchType==='ag1-exact'?'AG1精确':m.originalMatchType==='name-fuzzy'?'名称模糊':m.originalMatchType==='ag1-fuzzy'?'AG1模糊':m.originalMatchType==='code-prefix'?'编码前缀':'编码'}→金额)` : 
         `🟡差异 ${m.openBalDiff>0?'+':''}${diffStr}`;
       const levelBadge = m.bsIsSummary ? '📁' : m.bsLevel===1 ? '' : '└';
       return `<tr class="${statusClass}">
         <td>${htmlEscape(m.tbDetailNum)}</td>
         <td>${htmlEscape(m.tbDetailName)}</td>
-        <td><span class="badge ${m.matchType==='name-exact'||m.matchType==='code'?'badge-auto':m.matchType==='corrected-amount'?'badge-warn':'badge-amount'}">${m.matchType==='name-exact'?'名称精确':m.matchType==='name-fuzzy'?'名称模糊':m.matchType==='code'?'编码':m.matchType==='amount'?'金额':'修正'}</span>${isPL?'<span class="badge badge-amount" style="margin-left:4px">PL</span>':''}</td>
+        <td><span class="badge ${m.matchType==='name-exact'||m.matchType==='ag1-exact'||m.matchType==='code-prefix'||m.matchType==='code'?'badge-auto':m.matchType==='corrected-amount'?'badge-warn':'badge-amount'}">${m.matchType==='name-exact'?'名称精确':m.matchType==='ag1-exact'?'AG1精确':m.matchType==='name-fuzzy'?'名称模糊':m.matchType==='ag1-fuzzy'?'AG1模糊':m.matchType==='code-prefix'?'编码前缀':m.matchType==='code'?'编码':m.matchType==='amount'?'金额':'修正'}</span>${isPL?'<span class="badge badge-amount" style="margin-left:4px">PL</span>':''}</td>
         <td>${htmlEscape(m.bsCode)}${isCorrected?`<br><span class="text-xs text-secondary">(原:${htmlEscape(m.originalBSCode)})</span>`:''}</td>
         <td>${htmlEscape(m.bsName)}${isCorrected?`<br><span class="text-xs text-secondary">(原:${htmlEscape(m.originalBSName)})</span>`:''}</td>
         <td>${levelBadge} ${m.bsLevel}</td>
@@ -1028,7 +1073,7 @@ function executeSmartMatch(){
   }
   up.innerHTML = unmatchedHtml || '<p class="text-sm" style="color:var(--accent-2)">✅ 所有行均已匹配，无新增科目</p>';
 
-  toast(`✓ 匹配完成：名称${nameExact+nameFuzzy} 编码${codeMatch} 金额${amountMatch} 修正${corrected} | 期初一致${openBalMatched} 差异${openBalDiffed} | PL${plCount} | 未匹配${unmatchedTB.length} | 新增${unmatchedBS.length}`);
+  toast(`✓ 匹配完成：名称精确${nameExact} AG1精确${ag1Exact} 名称模糊${nameFuzzy} AG1模糊${ag1Fuzzy} 编码前缀${codePrefix} 编码${codeMatch} 金额${amountMatch} 修正${corrected} | 期初一致${openBalMatched} 差异${openBalDiffed} | PL${plCount} | 未匹配${unmatchedTB.length} | 新增${unmatchedBS.length}`);
 }
 
 function nameSimilarity(a, b){
@@ -1125,24 +1170,18 @@ function executeAutoFill(){
 
     if(isPL){
       tbRow.status = 'matched';
-      const matchTypeStr = firstMatch.matchType==='name-exact'?'名称精确':firstMatch.matchType==='name-fuzzy'?'名称模糊':firstMatch.matchType==='code'?'编码':firstMatch.matchType==='corrected-amount'?'修正':'金额';
       const valStr = fmtNum(fillVal);
-      if(isCorrected){
-        const origType = firstMatch.originalMatchType==='name-exact'?'名称精确':firstMatch.originalMatchType==='name-fuzzy'?'名称模糊':'编码';
-        tbRow.remark = `PL科目-按名称匹配 [修正:${origType}(${firstMatch.originalBSName})→金额匹配(${firstMatch.bsName}), 本年累计:${valStr}, 不进行期初校验]`;
-      } else {
-        tbRow.remark = `PL科目-按名称匹配 [${matchTypeStr}, 本年累计:${valStr}, 不进行期初校验]`;
-      }
+      tbRow.remark = `根据科目名称上数 [本年累计:${valStr}]`;
       filled++;
     }
     else if(isOpenBalMatch){
       tbRow.status = 'matched';
       const valStr = fmtNum(fillVal);
       if(isCorrected){
-        const origType = firstMatch.originalMatchType==='name-exact'?'名称精确':firstMatch.originalMatchType==='name-fuzzy'?'名称模糊':'编码';
-        tbRow.remark = `自动匹配-期初一致 [修正:${origType}(${firstMatch.originalBSName})→金额匹配(${firstMatch.bsName}), 期末余额:${valStr}]`;
+        const origType = firstMatch.originalMatchType==='name-exact'?'名称精确':firstMatch.originalMatchType==='ag1-exact'?'AG1精确':firstMatch.originalMatchType==='name-fuzzy'?'名称模糊':firstMatch.originalMatchType==='ag1-fuzzy'?'AG1模糊':firstMatch.originalMatchType==='code-prefix'?'编码前缀':'编码';
+        tbRow.remark = `根据科目名称上数 [修正:${origType}→金额匹配, 期末余额:${valStr}]`;
       } else {
-        tbRow.remark = `自动匹配-期初一致 [${firstMatch.matchType==='name-exact'?'名称精确':firstMatch.matchType==='name-fuzzy'?'名称模糊':firstMatch.matchType==='code'?'编码':'金额'}, 期末余额:${valStr}]`;
+        tbRow.remark = `根据科目名称上数 [期末余额:${valStr}]`;
       }
       filled++;
     } else {
@@ -1153,10 +1192,10 @@ function executeAutoFill(){
         return `${m.bsCode}:${d>0?'+':''}${fmtNum(d)}`;
       }).join(', ');
       if(isCorrected){
-        const origType = firstMatch.originalMatchType==='name-exact'?'名称精确':firstMatch.originalMatchType==='name-fuzzy'?'名称模糊':'编码';
-        tbRow.remark = `自动匹配-期初差异 [修正:${origType}(${firstMatch.originalBSName})→金额匹配(${firstMatch.bsName}), 期末余额:${valStr}, 差异:${diffs}]`;
+        const origType = firstMatch.originalMatchType==='name-exact'?'名称精确':firstMatch.originalMatchType==='ag1-exact'?'AG1精确':firstMatch.originalMatchType==='name-fuzzy'?'名称模糊':firstMatch.originalMatchType==='ag1-fuzzy'?'AG1模糊':firstMatch.originalMatchType==='code-prefix'?'编码前缀':'编码';
+        tbRow.remark = `根据科目名称上数 [修正:${origType}→金额匹配, 期末余额:${valStr}, 期初差异:${diffs}]`;
       } else {
-        tbRow.remark = `自动匹配-期初差异 [期末余额:${valStr}, 差异:${diffs}]`;
+        tbRow.remark = `根据科目名称上数 [期末余额:${valStr}, 期初差异:${diffs}]`;
       }
       diffCount++;
     }
@@ -1167,7 +1206,7 @@ function executeAutoFill(){
     const row = filledRows.find(r=>r.detailNum===tbd.detailNum);
     if(row){
       row.status = 'unmatched';
-      row.remark = '未匹配/已清理';
+      row.remark = '未匹配';
       unmatchedCount++;
     }
   });
@@ -1194,7 +1233,7 @@ function executeAutoFill(){
         fillSource: bs.code + ' ' + bs.name,
         fillType: '期末余额',
         status: 'new',
-        remark: `新增科目-自动添加 [期末余额:${fmtNum(bs.endNet)}]`,
+        remark: `新增科目 [期末余额:${fmtNum(bs.endNet)}]`,
         isNewRow: true,
         bsRow: bs,
       };
