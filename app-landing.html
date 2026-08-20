@@ -94,10 +94,44 @@
   .step-text code { font-family: "SF Mono", Consolas, monospace; font-size: 13.5px;
     background: rgba(0,0,0,0.3); padding: 2px 7px; border-radius: 6px; }
 
+  /* 板块概述 */
+  .intro { font-size: 15.5px; color: var(--text); line-height: 1.85; }
+  .intro p + p { margin-top: 12px; }
+
+  /* 功能亮点卡片 */
+  .feature-card {
+    background: var(--card); border: 1px solid var(--card-border); border-radius: 16px;
+    padding: 18px; font-size: 14.5px; color: var(--text); line-height: 1.6;
+    transition: transform .2s, border-color .2s;
+  }
+  .feature-card:hover { transform: translateY(-3px); border-color: var(--secondary); }
+  .feature-card::before { content: "✦"; color: var(--secondary); margin-right: 8px; }
+
+  /* 边界与限制（诚实说明） */
+  .boundaries { display: flex; flex-direction: column; gap: 10px; }
+  .boundary { display: flex; gap: 10px; font-size: 14.5px; color: var(--text-dim); line-height: 1.6; }
+  .boundary::before { content: "▸"; color: var(--accent); }
+
+  /* 质量自检清单 */
+  .checks { display: flex; flex-direction: column; gap: 9px; }
+  .check { display: flex; gap: 10px; align-items: flex-start; font-size: 14.5px; color: var(--text); }
+  .check::before { content: "☐"; color: var(--secondary); font-size: 16px; line-height: 1.4; }
+
+  /* 优化方向 */
+  .roadmap { display: flex; flex-direction: column; gap: 10px; }
+  .roadmap-item {
+    background: var(--card); border: 1px solid var(--card-border); border-radius: 12px;
+    padding: 14px 16px; font-size: 14.5px; color: var(--text); line-height: 1.6;
+  }
+  .roadmap-item::before { content: "▶"; color: var(--secondary); margin-right: 8px; }
+
   /* 注意事项 */
   .notes { display: flex; flex-direction: column; gap: 10px; }
   .note { display: flex; gap: 10px; font-size: 14.5px; color: var(--text-dim); }
   .note::before { content: "⚠"; color: var(--accent); }
+
+  /* 本体隐藏辅助 */
+  .hidden { display: none !important; }
 
   /* 底部 */
   .footer { text-align: center; color: var(--text-dim); font-size: 13px; margin-top: 40px;
@@ -122,17 +156,37 @@
     <div class="actions" id="hero-actions"></div>
   </header>
 
-  <section class="section">
+  <section class="section hidden" id="sec-intro">
+    <h2 class="section-title">📖 板块概述</h2>
+    <div class="intro" id="intro"></div>
+  </section>
+
+  <section class="section hidden" id="sec-features">
     <h2 class="section-title">✨ 功能亮点</h2>
     <div class="feature-grid" id="features"></div>
   </section>
 
-  <section class="section">
+  <section class="section hidden" id="sec-steps">
     <h2 class="section-title">📌 快速上手</h2>
     <div class="steps" id="steps"></div>
   </section>
 
-  <section class="section">
+  <section class="section hidden" id="sec-boundaries">
+    <h2 class="section-title">🛟 边界与能力限制</h2>
+    <div class="boundaries" id="boundaries"></div>
+  </section>
+
+  <section class="section hidden" id="sec-checks">
+    <h2 class="section-title">✅ 质量自检清单</h2>
+    <div class="checks" id="checks"></div>
+  </section>
+
+  <section class="section hidden" id="sec-roadmap">
+    <h2 class="section-title">🧭 优化方向</h2>
+    <div class="roadmap" id="roadmap"></div>
+  </section>
+
+  <section class="section hidden" id="sec-notes">
     <h2 class="section-title">⚠️ 注意事项</h2>
     <div class="notes" id="notes"></div>
   </section>
@@ -213,28 +267,56 @@ async function init() {
   document.getElementById('hero-version').textContent =
     (app.version ? app.version + ' · ' : '') + (statusMap[app.status] || app.status);
 
+  // 通用渲染辅助：有数据才显示章节
+  function fill(secId, boxId, items, itemHtml, fallback) {
+    const itemsArr = Array.isArray(items) ? items
+      : (typeof items === 'string' && items ? items.split('\n').filter(Boolean) : []);
+    const box = document.getElementById(boxId);
+    if (itemsArr.length) {
+      box.innerHTML = itemsArr.map(itemHtml).join('');
+      document.getElementById(secId).classList.remove('hidden');
+    } else {
+      box.innerHTML = fallback;
+    }
+  }
+
+  // 板块概述（段落）
+  const introBox = document.getElementById('intro');
+  const introPara = Array.isArray(app.intro) ? app.intro : (app.intro ? [app.intro] : []);
+  if (introPara.length) {
+    document.getElementById('sec-intro').classList.remove('hidden');
+    introBox.innerHTML = introPara.map(p => `<p>${escapeHtml(p)}</p>`).join('');
+  }
+
   // 功能亮点
-  const f = document.getElementById('features');
-  const features = Array.isArray(app.features) ? app.features
-    : (app.fullDesc ? app.fullDesc.split(/[。；\n]/).filter(Boolean) : []);
-  f.innerHTML = features.length
-    ? features.map(x => `<div class="feature-card">${escapeHtml(x)}</div>`).join('')
-    : '<p style="color:var(--text-dim)">暂无功能说明</p>';
+  fill('sec-features', 'features', app.features,
+    x => `<div class="feature-card">${escapeHtml(x)}</div>`,
+    '<p style="color:var(--text-dim)">暂无功能说明</p>');
 
   // 使用步骤
-  const s = document.getElementById('steps');
-  const steps = Array.isArray(app.steps) ? app.steps : [];
-  s.innerHTML = steps.length
-    ? steps.map((x, i) =>
-        `<div class="step"><div class="step-num">${i+1}</div><div class="step-text">${escapeHtml(x)}</div></div>`).join('')
-    : '<p style="color:var(--text-dim)">暂无步骤说明</p>';
+  fill('sec-steps', 'steps', app.steps,
+    (x, i) => `<div class="step"><div class="step-num">${i+1}</div><div class="step-text">${escapeHtml(x)}</div></div>`,
+    '<p style="color:var(--text-dim)">暂无步骤说明</p>');
+
+  // 边界与能力限制
+  fill('sec-boundaries', 'boundaries', app.boundaries,
+    x => `<div class="boundary">${escapeHtml(x)}</div>`,
+    '<p style="color:var(--text-dim)">暂无特别说明</p>');
+
+  // 质量自检清单
+  fill('sec-checks', 'checks', app.checks,
+    x => `<div class="check">${escapeHtml(x)}</div>`,
+    '<p style="color:var(--text-dim)">暂无自检清单</p>');
+
+  // 优化方向
+  fill('sec-roadmap', 'roadmap', app.roadmap,
+    x => `<div class="roadmap-item">${escapeHtml(x)}</div>`,
+    '<p style="color:var(--text-dim)">暂无优化方向</p>');
 
   // 注意事项
-  const n = document.getElementById('notes');
-  const notes = Array.isArray(app.notes) ? app.notes : [];
-  n.innerHTML = notes.length
-    ? notes.map(x => `<div class="note">${escapeHtml(x)}</div>`).join('')
-    : '<p style="color:var(--text-dim)">暂无特别说明</p>';
+  fill('sec-notes', 'notes', app.notes,
+    x => `<div class="note">${escapeHtml(x)}</div>`,
+    '<p style="color:var(--text-dim)">暂无特别说明</p>');
 
   renderActions(app);
 }
