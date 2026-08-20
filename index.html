@@ -1478,12 +1478,11 @@ function renderCards() {
 
   grid.querySelectorAll('.card').forEach(card => observer.observe(card));
 
-  // Card click -> modal
+  // Card click -> 跳转产品介绍页
   grid.querySelectorAll('.card').forEach(card => {
     card.addEventListener('click', () => {
       const id = card.dataset.id;
-      const app = apps.find(a => a.id === id);
-      if (app) openModal(app);
+      if (id) window.location.href = 'app-landing.html?id=' + encodeURIComponent(id);
     });
   });
 }

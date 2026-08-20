@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>工具介绍 · 顾力菡的应用工坊</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --primary: #7c5cfc;
+    --secondary: #5ccafc;
+    --accent: #fc5c9c;
+    --bg: #16162c;
+    --card: rgba(255,255,255,0.05);
+    --card-border: rgba(255,255,255,0.10);
+    --text: #e8e6f6;
+    --text-dim: #a8a6c0;
+    --grad: linear-gradient(135deg, #7c5cfc 0%, #5ccafc 50%, #fc5c9c 100%);
+  }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(124,92,252,0.18) 0%, transparent 50%),
+      radial-gradient(circle at 85% 10%, rgba(92,202,252,0.12) 0%, transparent 50%),
+      radial-gradient(circle at 60% 90%, rgba(252,92,156,0.10) 0%, transparent 50%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    line-height: 1.7;
+  }
+  .container { max-width: 860px; margin: 0 auto; padding: 48px 22px 80px; }
+
+  /* 顶部返回栏 */
+  .navbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 36px; }
+  .nav-back {
+    color: var(--text-dim); text-decoration: none; font-size: 14px;
+    display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px;
+    border: 1px solid var(--card-border); border-radius: 999px;
+    background: var(--card); transition: color .2s, border-color .2s;
+  }
+  .nav-back:hover { color: var(--text); border-color: var(--secondary); }
+  .nav-brand { font-size: 14px; color: var(--text-dim); }
+
+  /* 头部 */
+  .hero { text-align: center; margin-bottom: 40px; animation: fadeUp .6s ease; }
+  .hero-icon {
+    width: 76px; height: 76px; margin: 0 auto 18px; font-size: 40px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 22px; background: var(--grad); box-shadow: 0 10px 30px rgba(124,92,252,0.35);
+  }
+  .hero h1 { font-size: 34px; font-weight: 700; margin-bottom: 6px; letter-spacing: .5px; }
+  .hero .version { display: inline-block; font-size: 13px; color: var(--text-dim); margin-bottom: 16px;
+    padding: 3px 12px; border-radius: 999px; border: 1px solid var(--card-border); background: var(--card); }
+  .hero .tagline { font-size: 17px; color: var(--text-dim); max-width: 640px; margin: 0 auto; }
+
+  /* 主要按钮 */
+  .actions { display: flex; justify-content: center; gap: 16px; margin: 26px 0 56px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; padding: 13px 28px;
+    border-radius: 999px; font-size: 15px; font-weight: 600; text-decoration: none;
+    border: none; cursor: pointer; transition: transform .15s, box-shadow .2s, opacity .2s;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn-primary { background: var(--grad); color: #fff; box-shadow: 0 8px 24px rgba(124,92,252,0.4); }
+  .btn-ghost { background: var(--card); color: var(--text); border: 1px solid var(--card-border); }
+  .btn-ghost:hover { border-color: var(--secondary); }
+
+  /* 区块 */
+  .section { margin-bottom: 44px; animation: fadeUp .6s ease both; }
+  .section:nth-child(2) { animation-delay: .1s; }
+  .section:nth-child(3) { animation-delay: .2s; }
+  .section:nth-child(4) { animation-delay: .3s; }
+  .section-title { font-size: 20px; font-weight: 700; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
+
+  /* 功能亮点卡片 */
+  .feature-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+  .feature-card {
+    background: var(--card); border: 1px solid var(--card-border); border-radius: 16px;
+    padding: 18px; font-size: 14.5px; color: var(--text); line-height: 1.6;
+    transition: transform .2s, border-color .2s;
+  }
+  .feature-card:hover { transform: translateY(-3px); border-color: var(--secondary); }
+  .feature-card::before { content: "✦"; color: var(--secondary); margin-right: 8px; }
+
+  /* 使用步骤 */
+  .steps { display: flex; flex-direction: column; gap: 12px; }
+  .step { display: flex; gap: 14px; align-items: flex-start; }
+  .step-num {
+    flex: 0 0 30px; height: 30px; border-radius: 50%; font-size: 14px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; color: #fff; background: var(--grad);
+  }
+  .step-text { padding-top: 4px; font-size: 15px; }
+  .step-text code { font-family: "SF Mono", Consolas, monospace; font-size: 13.5px;
+    background: rgba(0,0,0,0.3); padding: 2px 7px; border-radius: 6px; }
+
+  /* 注意事项 */
+  .notes { display: flex; flex-direction: column; gap: 10px; }
+  .note { display: flex; gap: 10px; font-size: 14.5px; color: var(--text-dim); }
+  .note::before { content: "⚠"; color: var(--accent); }
+
+  /* 底部 */
+  .footer { text-align: center; color: var(--text-dim); font-size: 13px; margin-top: 40px;
+    padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.08); }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <nav class="navbar">
+    <a class="nav-back" href="index.html">← 返回应用工坊</a>
+    <span class="nav-brand">🧩 顾力菡的应用工坊</span>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-icon" id="hero-icon">🧰</div>
+    <h1 id="hero-name">工具介绍</h1>
+    <div class="version" id="hero-version"></div>
+    <p class="tagline" id="hero-tagline"></p>
+
+    <div class="actions" id="hero-actions"></div>
+  </header>
+
+  <section class="section">
+    <h2 class="section-title">✨ 功能亮点</h2>
+    <div class="feature-grid" id="features"></div>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">📌 快速上手</h2>
+    <div class="steps" id="steps"></div>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">⚠️ 注意事项</h2>
+    <div class="notes" id="notes"></div>
+  </section>
+
+  <footer class="footer">
+    顾力菡的应用工坊 · 本地安全计算 · 数据不上传
+  </footer>
+</div>
+
+<script>
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function getParam(name) {
+  return new URLSearchParams(window.location.search).get(name);
+}
+
+function showError(msg) {
+  document.getElementById('hero-name').textContent = '未找到该工具';
+  document.getElementById('hero-tagline').textContent = msg;
+}
+
+function renderActions(app) {
+  const box = document.getElementById('hero-actions');
+  let html = '';
+  if (app.onlineTool) {
+    html += `<button class="btn btn-primary" onclick="openTool('${escapeHtml(app.id)}')">🛠️ 在线使用</button>`;
+  }
+  if (app.download) {
+    html += `<a class="btn btn-primary" href="${escapeHtml(app.download)}" download>⬇ 下载</a>`;
+  }
+  const gh = app.github || 'https://github.com/Bgu253518/my-app-hub';
+  html += `<a class="btn btn-ghost" href="${escapeHtml(gh)}" target="_blank" rel="noopener">⌥ GitHub</a>`;
+  box.innerHTML = html;
+}
+
+// 在线使用：受保护工具需要密码（与主站相同逻辑）
+async function sha256Hex(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+const PROTECTED = {
+  'tb-smart-autofill': 'c0b021ecc69edc890183be4e835e8fc7a0df7c1f1be49c6de2f761e273b26c84'
+};
+async function openTool(id) {
+  if (PROTECTED[id]) {
+    const pw = prompt('请输入管理员密码来打开此工具:');
+    if (pw === null) return;
+    if (await sha256Hex(pw) !== PROTECTED[id]) { alert('密码错误，无法打开'); return; }
+  }
+  const map = {
+    'tb-smart-autofill': 'TB自动上数器/tb-smart-autofill.html'
+  };
+  if (map[id]) { window.location.href = map[id]; return; }
+  alert('该工具暂未开放在线版');
+}
+
+async function init() {
+  const id = getParam('id');
+  if (!id) { showError('缺少工具标识（?id=xxx）'); return; }
+  let apps = [];
+  try {
+    const resp = await fetch('apps.json?t=' + Date.now());
+    apps = await resp.json();
+  } catch (e) { showError('加载应用数据失败'); return; }
+  const app = apps.find(a => a.id === id);
+  if (!app) { showError('未找到该工具，请返回重试'); return; }
+
+  document.getElementById('hero-icon').textContent = app.icon || '🧰';
+  document.getElementById('hero-name').textContent = app.name;
+  document.getElementById('hero-tagline').textContent = app.tagline || app.shortDesc || '';
+  document.title = app.name + ' · 顾力菡的应用工坊';
+
+  const statusMap = { done: '已完成', wip: '开发中' };
+  document.getElementById('hero-version').textContent =
+    (app.version ? app.version + ' · ' : '') + (statusMap[app.status] || app.status);
+
+  // 功能亮点
+  const f = document.getElementById('features');
+  const features = Array.isArray(app.features) ? app.features
+    : (app.fullDesc ? app.fullDesc.split(/[。；\n]/).filter(Boolean) : []);
+  f.innerHTML = features.length
+    ? features.map(x => `<div class="feature-card">${escapeHtml(x)}</div>`).join('')
+    : '<p style="color:var(--text-dim)">暂无功能说明</p>';
+
+  // 使用步骤
+  const s = document.getElementById('steps');
+  const steps = Array.isArray(app.steps) ? app.steps : [];
+  s.innerHTML = steps.length
+    ? steps.map((x, i) =>
+        `<div class="step"><div class="step-num">${i+1}</div><div class="step-text">${escapeHtml(x)}</div></div>`).join('')
+    : '<p style="color:var(--text-dim)">暂无步骤说明</p>';
+
+  // 注意事项
+  const n = document.getElementById('notes');
+  const notes = Array.isArray(app.notes) ? app.notes : [];
+  n.innerHTML = notes.length
+    ? notes.map(x => `<div class="note">${escapeHtml(x)}</div>`).join('')
+    : '<p style="color:var(--text-dim)">暂无特别说明</p>';
+
+  renderActions(app);
+}
+
+init();
+</script>
+</body>
+</html>
