@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DWW 常用工具合集 · 工具总览</title>
+<style>
+/* ===== 主题（深色炫彩 Dark-Tech，与 app-slide 一致） ===== */
+:root{
+  --bg0:#070b16; --bg1:#0b1020; --bg2:#121a33;
+  --card:rgba(255,255,255,.045); --card-b:rgba(255,255,255,.09);
+  --line:rgba(148,163,255,.14); --line-s:rgba(148,163,255,.28);
+  --ink:#eaf0ff; --sub:#9aa8c9; --faint:#5d6a8a;
+  --blue:#4f8bff; --cyan:#22d3ee; --magenta:#ec4899; --violet:#8b5cf6;
+  --green:#34d399; --gold:#fbbf24; --red:#f87171;
+  --grad:linear-gradient(120deg,#4f8bff,#22d3ee 55%,#8b5cf6);
+  --grad2:linear-gradient(120deg,#8b5cf6,#ec4899);
+  --shadow:0 16px 44px rgba(0,0,0,.45);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:"Segoe UI","PingFang SC","Microsoft YaHei","Hiragino Sans",sans-serif;color:var(--ink);
+  background:var(--bg1);overflow-x:hidden;background:
+   radial-gradient(1000px 700px at 12% -10%,rgba(79,139,255,.20),transparent 60%),
+   radial-gradient(900px 640px at 92% 112%,rgba(139,92,246,.18),transparent 60%),
+   radial-gradient(700px 500px at 50% 120%,rgba(34,211,238,.10),transparent 60%),
+   var(--bg1)}
+#fx{position:fixed;inset:0;z-index:0;pointer-events:none}
+.progress{position:fixed;top:0;left:0;height:4px;z-index:80;width:0%;
+  background:linear-gradient(90deg,#4f8bff,#22d3ee,#ec4899,#8b5cf6,#4f8bff);background-size:300% 100%;
+  animation:flow 3.5s linear infinite;box-shadow:0 0 14px rgba(34,211,238,.7)}
+@keyframes flow{to{background-position:300% 0}}
+.stage{height:100vh;overflow-y:auto;scroll-snap-type:y mandatory;position:relative;z-index:1;scrollbar-width:none}
+.stage::-webkit-scrollbar{display:none}
+.slide{min-height:100vh;scroll-snap-align:start;display:flex;align-items:center;justify-content:center;
+  padding:6vh 5vw;position:relative}
+.inner{width:100%;max-width:1120px}
+.rev{opacity:0;transform:translateY(34px);transition:opacity .8s cubic-bezier(.22,.61,.36,1),transform .8s cubic-bezier(.22,.61,.36,1)}
+.rev.on{opacity:1;transform:none}
+
+.kicker{display:inline-flex;align-items:center;gap:8px;font-size:13px;letter-spacing:2px;font-weight:600;
+  text-transform:uppercase;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.kicker::before{content:"";width:22px;height:2px;background:var(--grad)}
+h1.title{font-size:clamp(28px,4.4vw,50px);line-height:1.22;font-weight:800;letter-spacing:1px;margin:14px 0 12px;
+  background:linear-gradient(120deg,#fff,#b8c8ff 70%);-webkit-background-clip:text;background-clip:text;color:transparent}
+p.lead{font-size:clamp(15px,1.9vw,20px);color:var(--sub);max-width:820px;line-height:1.7}
+.cta{margin-top:26px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;
+  backdrop-filter:blur(12px);box-shadow:var(--shadow);position:relative;overflow:hidden;transform-style:preserve-3d}
+.card .ico{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:12px}
+.card p{font-size:14px;color:var(--sub);line-height:1.65}
+
+.statbar{display:flex;gap:14px;flex-wrap:wrap;margin-top:18px}
+.stat{flex:1;min-width:120px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;text-align:center;backdrop-filter:blur(12px)}
+.stat b{display:block;font-size:27px;font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat span{font-size:12.5px;color:var(--sub)}
+
+.cover .inner{text-align:center;position:relative;z-index:1}
+.cover .logo{width:82px;height:82px;margin:0 auto 22px;border-radius:24px;display:flex;align-items:center;justify-content:center;
+  font-size:40px;background:var(--grad);box-shadow:0 0 0 1px rgba(255,255,255,.12),0 18px 50px rgba(79,139,255,.45);position:relative}
+.cover .logo::after{content:"";position:absolute;inset:-8px;border-radius:30px;
+  background:conic-gradient(from 0deg,transparent,rgba(34,211,238,.5),transparent 60%);z-index:-1;
+  animation:spin 6s linear infinite;filter:blur(6px)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cover .subline{font-size:clamp(15px,1.9vw,20px);color:var(--sub);max-width:760px;margin:0 auto;line-height:1.8}
+.cover .tip{margin-top:30px;color:var(--faint);font-size:13px;letter-spacing:1px}
+.backlink{color:var(--cyan);font-size:14px;text-decoration:none;font-weight:600;display:inline-block}
+.cover .backlink{margin-top:14px}
+.backlink:hover{text-decoration:underline}
+
+/* ===== 工具地图 ===== */
+.maplist{display:flex;flex-direction:column;gap:14px;margin-top:8px}
+.map-cat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;backdrop-filter:blur(12px)}
+.map-cat h3{font-size:15px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.map-cat h3 .ico{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.mchips{display:flex;flex-wrap:wrap;gap:8px}
+.mchip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:rgba(255,255,255,.03);
+  border-radius:11px;padding:7px 12px;font-size:13px;cursor:pointer;transition:.2s;color:var(--ink)}
+.mchip:hover{transform:translateY(-2px);border-color:var(--cyan);box-shadow:0 8px 18px rgba(20,40,120,.25);background:rgba(34,211,238,.08)}
+.mchip .no{font-weight:800;color:var(--cyan);font-size:11.5px;background:rgba(34,211,238,.12);border-radius:6px;padding:2px 6px}
+.mchip small{color:var(--faint);font-size:10.5px}
+
+/* ===== tool slide ===== */
+.thead{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+.tnum{flex:none;min-width:54px;height:54px;padding:0 10px;border-radius:14px;background:var(--grad);color:#fff;font-size:18px;
+  font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(79,139,255,.4)}
+.thead h2{font-size:clamp(20px,2.8vw,29px);font-weight:800}
+.ttag{display:inline-block;background:rgba(79,139,255,.16);color:#7fb0ff;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;margin-top:6px;border:1px solid rgba(79,139,255,.25)}
+.oneline{font-size:clamp(15px,1.8vw,18px);font-weight:600;margin-bottom:18px;letter-spacing:.3px;
+  background:linear-gradient(120deg,#7fe3ff,#c3a6ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.cols{display:grid;grid-template-columns:1.05fr .95fr;gap:20px;align-items:start}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 24px;backdrop-filter:blur(12px)}
+.panel h4{font-size:14px;letter-spacing:2px;color:var(--faint);text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.panel h4::after{content:"";flex:1;height:1px;background:var(--line)}
+.tipbox{font-size:14px;color:var(--sub);line-height:1.7}
+.blist{display:flex;flex-direction:column;gap:9px}
+.bli{display:flex;gap:10px;font-size:13.5px;line-height:1.55;color:var(--sub)}
+.bli::before{content:"▸";color:var(--cyan);font-weight:700}
+.bli.good::before{content:"✅";color:var(--green)}
+.bli.warn::before{content:"⚠";color:var(--gold)}
+.step{display:flex;gap:14px;margin-bottom:14px}
+.step:last-child{margin-bottom:0}
+.step b{flex:none;width:26px;height:26px;border-radius:50%;background:var(--grad);color:#fff;font-size:13px;
+  display:flex;align-items:center;justify-content:center;margin-top:2px;box-shadow:0 4px 14px rgba(79,139,255,.4)}
+.step div p{font-size:14px;line-height:1.6;color:var(--ink)}
+.step div em{font-style:normal;color:var(--sub);font-size:13px;display:block;margin-top:2px}
+.foot{padding-top:8px;border-top:1px solid var(--line);margin-top:26px;display:flex;justify-content:space-between;color:var(--faint);font-size:12.5px}
+
+.nav{position:fixed;bottom:22px;right:26px;z-index:80;display:flex;align-items:center;gap:6px}
+.nav button{width:42px;height:42px;border-radius:50%;border:none;cursor:pointer;font-size:18px;color:#0b1020;font-weight:800;
+  background:var(--grad);transition:.2s;box-shadow:0 6px 18px rgba(79,139,255,.4)}
+.nav button:hover{transform:scale(1.08);filter:brightness(1.1)}
+.pagenum{position:fixed;bottom:22px;left:26px;z-index:80;font-size:12.5px;color:var(--faint);letter-spacing:1px;
+  background:rgba(11,16,32,.7);padding:6px 12px;border-radius:20px;backdrop-filter:blur(8px);border:1px solid var(--line)}
+.hint{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:80;font-size:12.5px;color:var(--faint);
+  letter-spacing:1px;background:rgba(11,16,32,.7);padding:6px 16px;border-radius:20px;backdrop-filter:blur(8px);
+  border:1px solid var(--line);white-space:nowrap}
+.hint b{color:var(--cyan)}
+
+@media(max-width:860px){
+  .cols{grid-template-columns:1fr}
+  .g2,.g3,.g4{grid-template-columns:1fr}
+  .hint{display:none}
+}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div class="progress" id="progress"></div>
+<div class="stage" id="stage">
+  <section class="slide cover"><div class="inner">
+    <div class="logo">🧰</div>
+    <div class="kicker" style="justify-content:center">DWW COMMON TOOLS</div>
+    <h1 class="title">DWW 常用工具合集</h1>
+    <p class="lead" style="margin:0 auto">33 款自研办公效率工具 · 绿色免安装 · 拷贝即用</p>
+    <div class="cta"><div class="statbar" id="stats" style="max-width:820px;margin:0 auto"></div></div>
+    <p class="tip">按 ↓ 或 → 进入工具地图，点击任意工具查看其专属介绍页</p>
+    <a class="backlink" href="index.html">← 返回应用工坊</a>
+  </div></section>
+
+  <section class="slide"><div class="inner">
+    <div class="kicker">TOOL MAP · 工具地图</div>
+    <h1 class="title" style="font-size:clamp(24px,3.6vw,40px)">26 款工具 · 4 大分类</h1>
+    <p class="lead">点击任意工具编号，跳到它的专属介绍页（每个工具一页）。按 ↓ 逐页浏览亦可。</p>
+    <div class="maplist" id="map" style="margin-top:24px"></div>
+  </div></section>
+</div>
+
+<div class="nav"><button id="btnPrev">←</button><button id="btnNext">→</button></div>
+<div class="pagenum" id="pagenum"></div>
+<div class="hint">按 <b>↓</b> / <b>→</b> 翻页 · <b>Esc</b> 回封面</div>
+/* ===================== 粒子背景 ===================== */
+(function(){
+  var c=document.getElementById('fx'),x=c.getContext('2d'),W,H,parts=[];
+  function res(){W=c.width=innerWidth;H=c.height=innerHeight;}
+  addEventListener('resize',res);res();
+  for(var i=0;i<70;i++){parts.push({x:Math.random()*W,y:Math.random()*H,
+    r:Math.random()*1.6+.4,vx:(Math.random()-.5)*.35,vy:(Math.random()-.5)*.35,
+    hue:Math.random()<.5?213:262,a:Math.random()*.5+.2});}
+  (function tick(){x.clearRect(0,0,W,H);
+    for(var i=0;i<parts.length;i++){var p=parts[i];p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+      x.beginPath();x.arc(p.x,p.y,p.r,0,7);x.fillStyle='hsla('+p.hue+',90%,70%,'+p.a+')';x.fill();}
+    for(var a=0;a<parts.length;a++)for(var b=a+1;b<parts.length;b++){
+      var dx=parts[a].x-parts[b].x,dy=parts[a].y-parts[b].y,d=Math.hypot(dx,dy);
+      if(d<130){x.strokeStyle='rgba(120,160,255,'+(0.12*(1-d/130))+')';x.lineWidth=1;x.beginPath();
+        x.moveTo(parts[a].x,parts[a].y);x.lineTo(parts[b].x,parts[b].y);x.stroke();}}
+    requestAnimationFrame(tick);})();
+})();
+
+/* ===================== 工具数据（21 款自研工具，剔除第三方） ===================== */
+var CATS=[
+  {key:'file',name:'文件管理',ico:'📁',color:'rgba(79,139,255,.18)',
+   tools:[
+    ['1.1','文件目录扫描对比','对比两个文件夹/目录的差异，定位缺失或多余文件，检查外发文件是否齐全。'],
+    ['1.2','文件提取','从分散的多处自动提取/整理需要的文件，按规则归集到指定目录。'],
+    ['1.3','万能解压','批量解压 zip/rar/7z 等常见压缩包，支持嵌套压缩，统一释放处理。'],
+    ['1.4','文件夹整理归类','把散乱的文件按名称/类型/时间规则自动归类到不同子文件夹。'],
+    ['2.15','Excel 嵌入文件提取','一键提取 Excel 内嵌入的 PDF、图片、Office 等附件对象，导出为独立文件。'],
+    ['-','文件夹模板工具','按预设模板一键生成成套的文件夹结构，用于项目资料初始化布局。']
+   ]},
+  {key:'data',name:'数据处理',ico:'🧹',color:'rgba(52,211,153,.18)',
+   tools:[
+    ['2.1','数据清洗','对大体积/格式混乱的 Excel 做预处理，统一字段、清理冗余，提速后续分析。'],
+    ['2.2','银行流水合并','把多个银行账户/渠道的流水合并为统一字段的一张表，方便对账与汇总。'],
+    ['2.3','银行流水完整性测试','双向匹配流水与序时账，快速定位对不上的记录，输出完整性测试结果。'],
+    ['2.4','数据提取汇总','从多张同结构表批量提取数据并按规则汇总，减少手工复制。'],
+    ['2.6','样本多步骤替换','对抽样明细按多条规则/多科目做批量替换与展开，校验金额一致性。'],
+    ['2.7','序时账 Tab 合并','把 Excel 多个 Sheet / Tab 合并为一张表，处理跨分公司/多期间汇总。'],
+    ['2.8','POP 拆分&金额汇总','按 POP 维度拆分大表，并对各拆分后的金额做汇总统计。'],
+    ['2.9','抓取全部 Tab','一键抓取工作簿内所有工作表内容，便于全览与进一步处理。'],
+    ['2.10','正负冲抵账筛选','按科目/对手方配对找出正负相抵的记录，辅助抵销与异常筛查。'],
+    ['2.11','批量标题行修改助手','批量统一多表标题行字段顺序/名称，解决各表表头不一致无法合并的痛点。'],
+    ['2.12','Excel 转 CSV','把 Excel 批量转换为 CSV，便于大数据量处理与后续程序读取。'],
+    ['2.13','序时账关键字筛选','对序时账/明细按关键字快速筛选，定位指定科目的业务记录。'],
+    ['2.14','筛选工具','通用多条件筛选，把大表按条件抽取所需行，生成独立结果表。']
+   ]},
+  {key:'pdf',name:'PDF / 图片',ico:'📄',color:'rgba(34,211,238,.18)',
+   tools:[
+    ['3.1','PDF 和图片工具箱','PDF / 图片常用处理：转换、合并、导出、批量处理等日常操作集合。']
+   ]},
+  {key:'audit',name:'审计专项',ico:'🎯',color:'rgba(251,191,36,.18)',
+   tools:[
+    ['31','MUS log 转换&汇总','把 MUS 抽样的 log 记录转换并汇总，辅助货币单元抽样数据整理。']
+   ]}
+];
+var HINT={
+ '1.1':['选择两个要对比的文件夹','运行扫描，定位缺失 / 多余文件','导出对比结果清单'],
+ '1.2':['指定源目录与提取规则','自动提取并归集文件','核对输出目录文件数量'],
+ '1.3':['拖入压缩包/文件夹','一键批量解压（支持嵌套）','到输出目录核对结果'],
+ '1.4':['选择待整理目录','按规则自动归类','检查归类后的文件夹'],
+ '2.15':['选择含嵌入附件的 Excel','一键提取全部嵌入对象','到导出目录查看附件'],
+ '-':['选择模板','生成标准化文件夹结构','按需重命名并开始使用'],
+ '2.1':['导入原始大表','自动清洗并统一字段','导出清洗后结果'],
+ '2.2':['导入多账户流水','按统一字段合并','核对合计与记录数'],
+ '2.3':['导入流水与序时账','双向匹配','查看对不上的记录清单'],
+ '2.4':['选择多张同结构表','自动提取汇总','导出汇总结果'],
+ '2.6':['导入样本明细','设定替换规则/科目展开','校验金额一致性'],
+ '2.7':['选择多 Sheet 工作簿','一键合并所有 Tab','导出合并后单表'],
+ '2.8':['导入数据表','按 POP 拆分','查看各拆分金额汇总'],
+ '2.9':['打开工作簿','抓取全部 Tab 内容','导出全览表'],
+ '2.10':['导入序时账','设置科目/对手方配对','查看正负相抵记录'],
+ '2.11':['选择多张表','批量统一标题行','导出统一表头结果'],
+ '2.12':['选择 Excel 文件','批量转 CSV','到输出目录查看 CSV'],
+ '2.13':['导入序时账','输入关键字','查看筛选结果'],
+ '2.14':['导入数据表','设置多条件','导出筛选结果']
+};
+
+/* ===================== 辅助 ===================== */
+function esc(s){ if(s==null)return ''; return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function buildSlides(){
+  var stage=document.getElementById('stage'),idx=2; /* 0封面 1地图 */
+  CATS.forEach(function(cat){
+    cat.tools.forEach(function(t){
+      var no=t[0],name=t[1],one=t[2];
+      var h=HINT[no]||['选择数据','运行工具','查看结果'];
+      var sec=document.createElement('section');sec.className='slide';
+      sec.innerHTML='<div class="inner">'+
+        '<div class="thead"><div class="tnum">'+esc(no)+'</div>'+
+          '<div><h2>'+esc(name)+'</h2><span class="ttag">'+esc(cat.name)+'</span></div></div>'+
+        '<p class="oneline">'+esc(one)+'</p>'+
+        '<div class="cols"><div class="panel"><h4>用它能做什么</h4><p class="tipbox">'+esc(one)+'</p>'+
+          '<h4 style="margin-top:20px">3 步上手</h4>'+
+          '<div class="step" style="margin-top:12px"><b>1</b><div><p>'+esc(h[0])+'</p></div></div>'+
+          '<div class="step"><b>2</b><div><p>'+esc(h[1])+'</p></div></div>'+
+          '<div class="step"><b>3</b><div><p>'+esc(h[2])+'</p></div></div></div>'+
+        '<div class="panel"><h4>适用场景</h4><div class="blist">'+
+          '<div class="bli good">'+esc(cat.name)+' · 日常工作提效</div>'+
+          '<div class="bli">绿色免安装，双击即用</div>'+
+          '<div class="bli">数据本地处理，不上传</div>'+
+          '<div class="bli warn">自研工具，复杂边界需人工复核</div></div>'+
+        '</div></div>'+
+        '<div class="foot"><span>'+esc(cat.name)+' · '+esc(no)+'</span><span>DWW 常用工具合集</span></div>'+
+        '</div>';
+      sec._idx=idx++;stage.appendChild(sec);
+    });
+  });
+}
+function buildMap(){
+  var root=document.getElementById('map'),html='';
+  CATS.forEach(function(cat){
+    html+='<div class="map-cat"><h3><span class="ico" style="background:'+cat.color+'">'+cat.ico+'</span>'+esc(cat.name)+'</h3><div class="mchips">';
+    cat.tools.forEach(function(t){
+      html+='<span class="mchip" data-i="'+t._i+'"><span class="no">'+esc(t[0])+'</span>'+esc(t[1])+'</span>';
+    });
+    html+='</div></div>';
+  });
+  root.innerHTML=html;
+  root.querySelectorAll('.mchip').forEach(function(ch){
+    ch.addEventListener('click',function(){go(parseInt(ch.getAttribute('data-i'),10));});
+  });
+}
+function animNum(el){
+  var raw=el.getAttribute('data-n'); if(raw==null)return;
+  var target=parseFloat(raw)||0,start=performance.now(),dur=900;
+  (function step(t){var k=Math.min(1,(t-start)/dur);k=1-Math.pow(1-k,3);
+    el.textContent=Math.round(target*k);if(k<1)requestAnimationFrame(step);})(start);
+}
+function watchReveal(){
+  var io=new IntersectionObserver(function(es){es.forEach(function(en){
+    if(en.isIntersecting){en.target.classList.add('on');io.unobserve(en.target);}});},{threshold:.12});
+  document.querySelectorAll('.slide>.inner>*').forEach(function(el){el.classList.add('rev');io.observe(el);});
+}
+
+/* ===================== 主流程 ===================== */
+var stage=document.getElementById('stage'),slides,prog,pn,total;
+function cur(){return Math.round(stage.scrollTop/(stage.clientHeight||1));}
+function go(i){ i=Math.max(0,Math.min(total-1,i)); stage.scrollTo({top:i*stage.clientHeight,behavior:'smooth'}); }
+function render(){ var i=cur(); pn.textContent=(i+1)+' / '+total; prog.style.width=((i+1)/total*100)+'%'; }
+
+/* 生成 slide 并记录索引 */
+(function linkIdx(){
+  var i=2;
+  CATS.forEach(function(cat){cat.tools.forEach(function(t){t._i=i++;});});
+})();
+buildSlides();
+buildMap();
+
+/* 封面统计：动态计算 */
+(function(){
+  var n=0;CATS.forEach(function(c){n+=c.tools.length;});
+  var st=['<div class="stat"><b data-n="'+n+'">0</b><span>合集工具</span></div>',
+          '<div class="stat"><b data-n="'+CATS.length+'">0</b><span>大分类</span></div>',
+          '<div class="stat"><b data-n="100">0</b><span>% 本地离线</span></div>',
+          '<div class="stat"><b data-n="0">0</b><span>安装步骤</span></div>'].join('');
+  document.getElementById('stats').innerHTML=st;
+  document.querySelectorAll('#stats .stat b').forEach(animNum);
+})();
+
+slides=document.querySelectorAll('.slide');
+prog=document.getElementById('progress');pn=document.getElementById('pagenum');
+total=slides.length;
+stage.addEventListener('scroll',render,{passive:true});
+document.getElementById('btnNext').onclick=function(){go(cur()+1);};
+document.getElementById('btnPrev').onclick=function(){go(cur()-1);};
+document.addEventListener('keydown',function(e){
+  if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' '){e.preventDefault();go(cur()+1);}
+  else if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();go(cur()-1);}
+  else if(e.key==='Escape'){e.preventDefault();go(0);}
+});
+render();
+watchReveal();
+</script>
+</body>
+</html>

@@ -450,6 +450,7 @@ textarea:focus-visible,
 .tag-category.data { background: rgba(92, 252, 160, 0.15); color: #8affc4; }
 .tag-category.web { background: rgba(252, 92, 156, 0.15); color: #ff8ab4; }
 .tag-category.game { background: rgba(200, 92, 252, 0.15); color: #d48aff; }
+.tag-category.audit { background: rgba(251, 191, 36, 0.16); color: #fcd66a; }
 .tag-category.other { background: rgba(160, 160, 180, 0.15); color: #c0c0d0; }
 
 .tag-status { background: rgba(92, 252, 160, 0.1); color: #5cfca0; }
@@ -1304,6 +1305,7 @@ const CATEGORIES = {
   data: { label: '数据处理', icon: '📊' },
   web: { label: 'Web 应用', icon: '🌐' },
   game: { label: '游戏', icon: '🎮' },
+  audit: { label: '审计工具', icon: '🎯' },
   other: { label: '其他', icon: '📦' }
 };
 
@@ -1478,11 +1480,13 @@ function renderCards() {
 
   grid.querySelectorAll('.card').forEach(card => observer.observe(card));
 
-  // Card click -> 跳转板块演示页（slide）
+  // Card click -> 跳转（DWW 合集进下钻页，其余进板块演示页）
   grid.querySelectorAll('.card').forEach(card => {
     card.addEventListener('click', () => {
       const id = card.dataset.id;
-      if (id) window.location.href = 'app-slide.html?id=' + encodeURIComponent(id);
+      if (!id) return;
+      if (id === 'dww-toolbox') window.location.href = 'dww-tools.html';
+      else window.location.href = 'app-slide.html?id=' + encodeURIComponent(id);
     });
   });
 }
