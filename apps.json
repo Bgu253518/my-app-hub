@@ -153,8 +153,8 @@
     "version": "v2.1",
     "icon": "📊",
     "onlineTool": false,
-    "github": "https://github.com/Bgu253518/my-app-hub",
-    "download": ""
+    "github": "https://github.com/Bgu253518/my-app-hub/releases/tag/ROU-lease-v1.0",
+    "download": "https://github.com/Bgu253518/my-app-hub/releases/download/ROU-lease-v1.0/ROU-lease-v1.0.zip"
   },
   {
     "id": "levvia-guide",
@@ -206,8 +206,8 @@
     "version": "v1.0",
     "icon": "🧭",
     "onlineTool": false,
-    "github": "https://github.com/Bgu253518/my-app-hub",
-    "download": ""
+    "github": "https://github.com/Bgu253518/my-app-hub/releases/tag/Levvia-guide-v1.0",
+    "download": "https://github.com/Bgu253518/my-app-hub/releases/download/Levvia-guide-v1.0/Levvia-guide-v1.0.zip"
   },
   {
     "id": "feedback-collector",
@@ -260,7 +260,7 @@
     "version": "v1.0",
     "icon": "💬",
     "onlineTool": false,
-    "github": "https://github.com/Bgu253518/my-app-hub",
-    "download": ""
+    "github": "https://github.com/Bgu253518/my-app-hub/releases/tag/Feedback-collector-v1.0",
+    "download": "https://github.com/Bgu253518/my-app-hub/releases/download/Feedback-collector-v1.0/Feedback-collector-v1.0.zip"
   }
 ]
