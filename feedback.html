@@ -86,8 +86,16 @@ tr:hover td{background:rgba(255,255,255,.025)}
 
   <div id="regView">
     <div class="card">
-      <label>姓名</label><input id="f_reporter" placeholder="请输入姓名">
-      <label>工号</label><input id="f_emp" placeholder="请输入工号">
+      <label>所属流程 / 场景（简称）</label>
+      <select id="f_flow">
+        <option value="TB上数">TB 上数</option>
+        <option value="ROU测算">ROU 租赁测算</option>
+        <option value="底稿滚存">底稿滚存 / BKD</option>
+        <option value="Levvia">Levvia 指引</option>
+        <option value="其他">其他</option>
+      </select>
+      <div class="hint">为保护同事信息，这里只需选流程简称，无需真实姓名。</div>
+      <label>称呼（英文名 / 昵称，可选）</label><input id="f_alias" placeholder="如 Amy / Tom，想匿名可直接留空">
       <label>类型</label>
       <select id="f_cat">
         <option value="需求">需求（重复性工作想自动化/优化）</option>
@@ -145,17 +153,17 @@ function adminPanelHide(){document.getElementById('gateBox').style.display='';do
 
 /* 登记提交 */
 function submit(){
-  var r=document.getElementById('f_reporter').value.trim(),
-      e=document.getElementById('f_emp').value.trim(),
+  var flow=document.getElementById('f_flow').value,
+      alias=document.getElementById('f_alias').value.trim(),
       d=document.getElementById('f_detail').value.trim(),
       c=document.getElementById('f_cat').value,
       n=document.getElementById('f_need').value,
       m=document.getElementById('f_mail').value.trim();
-  if(!r||!e||!d){alert('请填写姓名、工号和描述。');return;}
-  var a=load();a.push({id:a.length+1,t:c,reporter:r,emp:e,detail:d,need:n,mail:m,
+  if(!d){alert('请填写需求 / 问题描述。');return;}
+  var a=load();a.push({id:a.length+1,t:c,flow:flow,alias:alias,detail:d,need:n,mail:m,
     time:new Date().toLocaleString('zh-CN',{hour12:false}),ts:Date.now()});save(a);
-  alert('✅ 已登记，感谢您的反馈！');['f_reporter','f_emp','f_detail','f_mail'].forEach(function(id){document.getElementById(id).value='';});
-  document.getElementById('f_cat').value='需求';document.getElementById('f_need').value='否';
+  alert('✅ 已登记，感谢您的反馈！');document.getElementById('f_alias').value='';document.getElementById('f_detail').value='';
+  document.getElementById('f_mail').value='';document.getElementById('f_cat').value='需求';document.getElementById('f_need').value='否';
 }
 
 /* 管理员解锁 */
@@ -180,19 +188,19 @@ function renderAdmin(){
   var w=document.getElementById('tblWrap');
   if(!a.length){w.innerHTML='<div class="empty">暂无登记数据</div>';return;}
   var rows=a.slice().reverse().map(function(x){
-    return '<tr><td>'+x.id+'</td><td>'+esc(x.reporter)+'</td><td>'+esc(x.emp)+'</td>'+
+    return '<tr><td>'+x.id+'</td><td>'+esc(x.flow)+'</td><td>'+esc(x.alias)+'</td>'+
       '<td><span class="badge b-'+esc(x.t)+'">'+esc(x.t)+'</span></td>'+
       '<td>'+esc(x.detail)+'</td><td>'+esc(x.need)+'</td><td>'+esc(x.mail)+'</td><td>'+esc(x.time)+'</td></tr>';
   }).join('');
-  w.innerHTML='<table><thead><tr><th>ID</th><th>姓名</th><th>工号</th><th>类型</th><th>描述</th><th>需资料</th><th>邮箱</th><th>提交时间</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  w.innerHTML='<table><thead><tr><th>ID</th><th>流程</th><th>称呼</th><th>类型</th><th>描述</th><th>需资料</th><th>邮箱</th><th>提交时间</th></tr></thead><tbody>'+rows+'</tbody></table>';
 }
 
 /* 导出 */
 function exportCSV(){
   var a=load();if(!a.length){alert('暂无数据');return;}
-  var heads=['ID','姓名','工号','类型','描述','需资料','邮箱','提交时间'];
+  var heads=['ID','流程','称呼','类型','描述','需资料','邮箱','提交时间'];
   var lines=[heads.join(',')].concat(a.map(function(x){
-    return ['id','reporter','emp','t','detail','need','mail','time'].map(function(k){
+    return ['id','flow','alias','t','detail','need','mail','time'].map(function(k){
       var v=String(x[k]==null?'':x[k]).replace(/"/g,'""');
       return '"'+v+'"';
     }).join(',');
@@ -202,12 +210,12 @@ function exportCSV(){
 function exportHTML(){
   var a=load();if(!a.length){alert('暂无数据');return;}
   var rows=a.map(function(x){
-    return '<tr><td>'+x.id+'</td><td>'+esc(x.reporter)+'</td><td>'+esc(x.emp)+'</td><td>'+esc(x.t)+'</td><td>'+esc(x.detail)+'</td><td>'+esc(x.need)+'</td><td>'+esc(x.mail)+'</td><td>'+esc(x.time)+'</td></tr>';
+    return '<tr><td>'+x.id+'</td><td>'+esc(x.flow)+'</td><td>'+esc(x.alias)+'</td><td>'+esc(x.t)+'</td><td>'+esc(x.detail)+'</td><td>'+esc(x.need)+'</td><td>'+esc(x.mail)+'</td><td>'+esc(x.time)+'</td></tr>';
   }).join('');
   var html='<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>问题反馈汇总</title>'+
     '<style>body{font-family:Microsoft YaHei;padding:30px}table{border-collapse:collapse;width:100%;font-size:13px}th,td{border:1px solid #ccc;padding:8px;text-align:left}th{background:#1565C0;color:#fff}</style></head><body>'+
     '<h2>问题反馈汇总（'+new Date().toLocaleDateString('zh-CN')+'）</h2>'+
-    '<table><thead><tr><th>ID</th><th>姓名</th><th>工号</th><th>类型</th><th>描述</th><th>需资料</th><th>邮箱</th><th>提交时间</th></tr></thead><tbody>'+rows+'</tbody></table></body></html>';
+    '<table><thead><tr><th>ID</th><th>流程</th><th>称呼</th><th>类型</th><th>描述</th><th>需资料</th><th>邮箱</th><th>提交时间</th></tr></thead><tbody>'+rows+'</tbody></table></body></html>';
   download('问题反馈汇总_'+new Date().toISOString().slice(0,10)+'.html',html,'text/html;charset=utf-8');
 }
 function download(name,content,mime){
@@ -222,7 +230,7 @@ function copySummary(){
       dProb=a.length-dReq;
   var txt='【问题反馈统计】'+new Date().toLocaleDateString('zh-CN')+'\n'+
     '全部登记：'+a.length+' 条　需求：'+dReq+'　问题：'+dProb+'\n\n';
-  a.forEach(function(x){txt+='#'+x.id+' ['+x.t+'] '+x.reporter+'('+x.emp+')\n  '+x.time+'\n  '+x.detail+'\n\n';});
+  a.forEach(function(x){txt+='#'+x.id+' ['+x.t+'] ['+(x.flow||'')+'] '+(x.alias||'匿名')+'\n  '+x.time+'\n  '+x.detail+'\n\n';});
   (navigator.clipboard?navigator.clipboard.writeText(txt):function(){var t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();})();
   alert('📋 统计文本已复制到剪贴板，可直接粘贴到邮件。');
 }
