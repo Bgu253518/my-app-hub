@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -1486,6 +1486,7 @@ function renderCards() {
       const id = card.dataset.id;
       if (!id) return;
       if (id === 'dww-toolbox') window.location.href = 'dww-tools.html';
+      else if (id === 'feedback-collector') window.location.href = 'feedback.html';
       else window.location.href = 'app-slide.html?id=' + encodeURIComponent(id);
     });
   });

@@ -1,11 +1,11 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DWW 常用工具合集 · 工具总览</title>
 <style>
-/* ===== 主题（深色炫彩 Dark-Tech，与 app-slide 一致） ===== */
+/* ===== 主题（深色炫彩 Dark-Tech） ===== */
 :root{
   --bg0:#070b16; --bg1:#0b1020; --bg2:#121a33;
   --card:rgba(255,255,255,.045); --card-b:rgba(255,255,255,.09);
@@ -90,23 +90,26 @@ p.lead{font-size:clamp(15px,1.9vw,20px);color:var(--sub);max-width:820px;line-he
   font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(79,139,255,.4)}
 .thead h2{font-size:clamp(20px,2.8vw,29px);font-weight:800}
 .ttag{display:inline-block;background:rgba(79,139,255,.16);color:#7fb0ff;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;margin-top:6px;border:1px solid rgba(79,139,255,.25)}
-.oneline{font-size:clamp(15px,1.8vw,18px);font-weight:600;margin-bottom:18px;letter-spacing:.3px;
+.oneline{font-size:clamp(16px,2vw,19px);font-weight:600;margin-bottom:18px;letter-spacing:.3px;
   background:linear-gradient(120deg,#7fe3ff,#c3a6ff);-webkit-background-clip:text;background-clip:text;color:transparent}
-.cols{display:grid;grid-template-columns:1.05fr .95fr;gap:20px;align-items:start}
+.cols{display:grid;grid-template-columns:1.02fr .98fr;gap:20px;align-items:start}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 24px;backdrop-filter:blur(12px)}
-.panel h4{font-size:14px;letter-spacing:2px;color:var(--faint);text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.panel h4{font-size:13.5px;letter-spacing:2px;color:var(--faint);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px}
 .panel h4::after{content:"";flex:1;height:1px;background:var(--line)}
-.tipbox{font-size:14px;color:var(--sub);line-height:1.7}
+.tipbox{font-size:15px;color:var(--sub);line-height:1.8}
+/* 操作指引正文 字体稍大 */
+.guidetext{font-size:15.5px;color:var(--ink);line-height:1.9;margin-bottom:14px}
+.guidetext b{color:#9cc0ff;font-weight:700}
 .blist{display:flex;flex-direction:column;gap:9px}
-.bli{display:flex;gap:10px;font-size:13.5px;line-height:1.55;color:var(--sub)}
+.bli{display:flex;gap:10px;font-size:14.5px;line-height:1.65;color:var(--ink)}
 .bli::before{content:"▸";color:var(--cyan);font-weight:700}
 .bli.good::before{content:"✅";color:var(--green)}
 .bli.warn::before{content:"⚠";color:var(--gold)}
-.step{display:flex;gap:14px;margin-bottom:14px}
+.step{display:flex;gap:14px;margin-bottom:13px}
 .step:last-child{margin-bottom:0}
 .step b{flex:none;width:26px;height:26px;border-radius:50%;background:var(--grad);color:#fff;font-size:13px;
   display:flex;align-items:center;justify-content:center;margin-top:2px;box-shadow:0 4px 14px rgba(79,139,255,.4)}
-.step div p{font-size:14px;line-height:1.6;color:var(--ink)}
+.step div p{font-size:14.5px;line-height:1.6;color:var(--ink)}
 .step div em{font-style:normal;color:var(--sub);font-size:13px;display:block;margin-top:2px}
 .foot{padding-top:8px;border-top:1px solid var(--line);margin-top:26px;display:flex;justify-content:space-between;color:var(--faint);font-size:12.5px}
 
@@ -173,92 +176,177 @@ p.lead{font-size:clamp(15px,1.9vw,20px);color:var(--sub);max-width:820px;line-he
     requestAnimationFrame(tick);})();
 })();
 
-/* ===================== 工具数据（21 款自研工具，剔除第三方） ===================== */
+/* ===================== 工具数据（21 款自研工具，差异化内容） ===================== */
+/* 每工具：[no, name, 一句话, feat(2-3功能), guide(操作指引~100字), steps(3步), good(边界·友好), warn(边界·注意)] */
 var CATS=[
   {key:'file',name:'文件管理',ico:'📁',color:'rgba(79,139,255,.18)',
    tools:[
-    ['1.1','文件目录扫描对比','对比两个文件夹/目录的差异，定位缺失或多余文件，检查外发文件是否齐全。'],
-    ['1.2','文件提取','从分散的多处自动提取/整理需要的文件，按规则归集到指定目录。'],
-    ['1.3','万能解压','批量解压 zip/rar/7z 等常见压缩包，支持嵌套压缩，统一释放处理。'],
-    ['1.4','文件夹整理归类','把散乱的文件按名称/类型/时间规则自动归类到不同子文件夹。'],
-    ['2.15','Excel 嵌入文件提取','一键提取 Excel 内嵌入的 PDF、图片、Office 等附件对象，导出为独立文件。'],
-    ['-','文件夹模板工具','按预设模板一键生成成套的文件夹结构，用于项目资料初始化布局。']
+    {no:'1.1',name:'文件目录扫描对比',one:'对比两个文件夹/目录的差异，定位缺失或多余文件，检查外发文件是否齐全。',
+     feat:['递归扫描目录树，逐文件比对名称与大小','定位「仅在一侧存在」的缺失/多余文件','输出差异清单，支持导出核对'],
+     guide:'选择两个要对比的文件夹，点开始扫描。工具会递归遍历两侧文件，按文件名与大小逐项比对，区分出「仅源有」「仅目标有」「两侧均有但大小不同」几类差异。扫描完成后在列表里高亮显示，可一键导出对比结果，便于把差异发给搭档或留档。适合核对已外发或归档的文件是否齐全。',
+     steps:['选择「源目录」与「目标目录」','运行扫描，查看差异分类','导出差异清单并核对'],
+     good:['适用于文件夹/目录层面的完整性核对','支持大目录批量扫描'],
+     warn:['触碰海量文件的目录扫描可能较慢','仅比对名称与大小，不校验文件内容是否真的相同']},
+    {no:'1.2',name:'文件提取',one:'从分散的多处自动提取/整理需要的文件，按规则归集到指定目录。',
+     feat:['按规则批量提取指定类型/关键字的文件','把分散在多处的文件归集到输出目录','避免逐个翻找与手工复制'],
+     guide:'指定一个或多个源目录，设置提取规则（按扩展名、或文件名含某关键字），点提取。工具会遍历源目录，把符合条件的文件复制到统一输出目录，避免在多个嵌套文件夹里逐个翻找。适合把一个项目几十个文件夹里的所有 Excel、PDF 收拢到一处。设好规则即可一次完成。',
+     steps:['指定源目录并设置提取规则','自动提取并归集到输出目录','核对输出目录文件数量'],
+     good:['适合从多层级目录批量收拢指定类型文件','规则简单直观，上手快'],
+     warn:['规则较粗时可能误收多余文件','已有同名文件时留意覆盖提示']},
+    {no:'1.3',name:'万能解压',one:'批量解压 zip/rar/7z 等常见压缩包，支持嵌套压缩，统一释放处理。',
+     feat:['批量解压常见压缩格式（zip/rar/7z）','支持嵌套压缩自动逐层解压','统一释放到指定目录'],
+     guide:'把需要解压的压缩包（可多个）拖进来，或选择所在文件夹，点一键解压。工具自动识别 zip/rar/7z 等常见格式并统一释放到目标目录；遇到压缩包里还套着压缩包的情况会自动继续往下解，直到没有压缩文件为止。适合一次性批量处理一批从网上下载的多层压缩资源。',
+     steps:['拖入压缩包或选择所在文件夹','一键批量解压（支持嵌套）','到输出目录核对解压结果'],
+     good:['适配常见压缩格式，日常够用','嵌套压缩自动逐层释放'],
+     warn:['极罕见或私有加密格式可能无法解压','解压内容较大时请预留磁盘空间']},
+    {no:'1.4',name:'文件夹整理归类',one:'把散乱的文件按名称/类型/时间规则自动归类到不同子文件夹。',
+     feat:['按类型/时间/关键字等规则自动归类','把散乱文件移到对应子文件夹','可先预览归类结果再执行'],
+     guide:'选定一个待整理的文件夹，选择归类规则（按扩展名分类型、按修改时间分年月、或按文件名关键字分主题），先点预览查看将要归类到哪些子文件夹，确认无误后执行。工具会把散乱的文件移动到对应子目录，让杂乱文件夹一目了然。建议整理前先备份或先小范围试跑。',
+     steps:['选择待整理文件夹并设定归类规则','预览归类结果','确认后执行归类'],
+     good:['支持类型/时间/关键字多种规则','先预览后执行，降低误整理风险'],
+     warn:['规则冲突时按优先级处理，需人工确认','大规模移动前建议先备份']},
+    {no:'2.15',name:'Excel 嵌入文件提取',one:'一键提取 Excel 内嵌入的 PDF、图片、Office 等附件对象，导出为独立文件。',
+     feat:['识别工作簿内嵌的各类附件对象','把嵌入的 PDF/图片/Office 提取为独立文件','导出到指定目录供进一步使用'],
+     guide:'打开含嵌入对象的 Excel（如内嵌的 PDF、图片、Word/PPT），点提取。工具会遍历工作簿内所有嵌入对象，把它们另存为对应格式的独立文件放到输出目录。适合从客户「一表打包」的 Excel 里把附带的 PDF、扫描件、图片还原出来，便于单独归档或进一步审计核对。',
+     steps:['选择含嵌入附件的 Excel','一键提取全部嵌入对象','到导出目录查看与核对附件'],
+     good:['适用于从 Excel 中还原内嵌附件','批量提取省时省力'],
+     warn:['部分加密/受保护的嵌入对象可能无法提取','个别特殊 OLE 对象格式需人工处理']},
+    {no:'-',name:'文件夹模板工具',one:'按预设模板一键生成成套的文件夹结构，用于项目资料初始化布局。',
+     feat:['按预设模板一键生成成套文件夹结构','适用于项目初始化统一目录布局','避免每次手动新建一堆文件夹'],
+     guide:'选择一个放置位置，选择/导入需要的模板结构，点生成。工具会按模板一次建好整套子文件夹（如按年度、公司、底稿类别分层），让每个项目都用统一的目录结构，后续放资料、找资料都方便。适合在接手新项目、新建客户底稿目录时快速初始化布局。',
+     steps:['选择模板','一键生成标准化文件夹结构','按需重命名并开始使用'],
+     good:['统一项目目录，提升资料可寻性','支持自定义/复用模板'],
+     warn:['模板需按实际项目粒度调整','建议结构固定后再大规模铺开']}
    ]},
   {key:'data',name:'数据处理',ico:'🧹',color:'rgba(52,211,153,.18)',
    tools:[
-    ['2.1','数据清洗','对大体积/格式混乱的 Excel 做预处理，统一字段、清理冗余，提速后续分析。'],
-    ['2.2','银行流水合并','把多个银行账户/渠道的流水合并为统一字段的一张表，方便对账与汇总。'],
-    ['2.3','银行流水完整性测试','双向匹配流水与序时账，快速定位对不上的记录，输出完整性测试结果。'],
-    ['2.4','数据提取汇总','从多张同结构表批量提取数据并按规则汇总，减少手工复制。'],
-    ['2.6','样本多步骤替换','对抽样明细按多条规则/多科目做批量替换与展开，校验金额一致性。'],
-    ['2.7','序时账 Tab 合并','把 Excel 多个 Sheet / Tab 合并为一张表，处理跨分公司/多期间汇总。'],
-    ['2.8','POP 拆分&金额汇总','按 POP 维度拆分大表，并对各拆分后的金额做汇总统计。'],
-    ['2.9','抓取全部 Tab','一键抓取工作簿内所有工作表内容，便于全览与进一步处理。'],
-    ['2.10','正负冲抵账筛选','按科目/对手方配对找出正负相抵的记录，辅助抵销与异常筛查。'],
-    ['2.11','批量标题行修改助手','批量统一多表标题行字段顺序/名称，解决各表表头不一致无法合并的痛点。'],
-    ['2.12','Excel 转 CSV','把 Excel 批量转换为 CSV，便于大数据量处理与后续程序读取。'],
-    ['2.13','序时账关键字筛选','对序时账/明细按关键字快速筛选，定位指定科目的业务记录。'],
-    ['2.14','筛选工具','通用多条件筛选，把大表按条件抽取所需行，生成独立结果表。']
+    {no:'2.1',name:'数据清洗',one:'对大体积/格式混乱的 Excel 做预处理，统一字段、清理冗余，提速后续分析。',
+     feat:['统一字段名与列序，消除表头不一致','清理空行/重复/格式异常数据','为后续合并与分析铺平底座'],
+     guide:'导入需要清洗的大表，设置字段对应关系与清洗规则（去空行、去重、统一表头），运行时自动完成预处理并输出干净的结果表。清洗后的数据字段一致、无冗余，可直接用于后续银行流水合并、序时账处理等步骤。建议先看清洗报告再导回，确认无关键信息被误删。',
+     steps:['导入原始大表','设置清洗规则并运行','检查清洗报告，导出结果'],
+     good:['解决多来源表头/格式不一致问题','一次清洗为后续步骤打底'],
+     warn:['清洗规则需手工确认，特殊逻辑可能误删','清洗前建议保留原始备份']},
+    {no:'2.2',name:'银行流水合并',one:'把多个银行账户/渠道的流水合并为统一字段的一张表，方便对账与汇总。',
+     feat:['把多账户/多渠道流水合并为统一字段','自动对齐账号/日期/金额等列','便于对账、汇总与进一步分析'],
+     guide:'导入多个银行账户（或不同渠道）导出的流水表，设置字段映射（账号、交易日期、摘要、借贷方金额），点合并。工具把多张表统一字段后纵向拼成一张流水总表，重复部分去重，方便后续对账与加总。适合做合并范围内多家账户流水的集中核对。',
+     steps:['导入多账户/渠道流水','按统一字段映射并合并','核对合计金额与记录数'],
+     good:['解决多账户流水分散、字段不一的问题','合并后便于统一对账汇总'],
+     warn:['字段映射需按实际表头配置','超大流水量处理耗时较长']},
+    {no:'2.3',name:'银行流水完整性测试',one:'双向匹配流水与序时账，快速定位对不上的记录，输出完整性测试结果。',
+     feat:['流水与序时账双向匹配','定位两侧对不上/缺失的记录','输出完整性测试结果供审计留档'],
+     guide:'导入银行流水表与序时账表，设置匹配字段（日期、金额、对方户名/摘要），运行双向匹配。工具把「流水有但序时账没有」「序时账有但流水没有」的记录找出来并分类列出，输出完整性测试结果表。是银行流水核对、底稿完整性测试里的常用步骤。',
+     steps:['导入流水与序时账','执行双向匹配','查看对不上的记录清单并输出结果'],
+     good:['辅助银行流水完整性测试与对账','对不上项一眼定位'],
+     warn:['匹配规则（金额/日期/户名）需按数据设定','疑似异常差异需人工复核']},
+    {no:'2.4',name:'数据提取汇总',one:'从多张同结构表批量提取数据并按规则汇总，减少手工复制。',
+     feat:['从多张同结构表批量提取指定字段','按规则累加/汇总','一次汇总多张表，省去手工复制'],
+     guide:'选择多张同结构的表（如同一口径的月度、分店、分户报表），指定要提取的字段与汇总方式（求和/计数/逐项），点汇总。工具纵向读取所有表并按要求合并汇总成一张结果表，适合把散落的多张同结构报表集中成一份。',
+     steps:['选择多张同结构表','指定提取字段与汇总方式','导出汇总结果'],
+     good:['多表同口径汇总，减少手工复制','适配月度/分店/分户等批量场景'],
+     warn:['前提是各表结构基本一致','个别表字段差异需先统一']},
+    {no:'2.6',name:'样本多步骤替换',one:'对抽样明细按多条规则/多科目做批量替换与展开，校验金额一致性。',
+     feat:['对抽样明细按多条规则/多科目批量替换','支持展开与多科目对应','内置金额一致性校验'],
+     guide:'导入抽样明细表，配置多条替换规则（科目名标准化、摘要展开、多对应科目拆行），运行批量替换。工具按规则重写目标字段，并对金额做加总校验，确保替换前后金额一致、没有丢数。适合抽样明细的科目、摘要批量规范化处理。',
+     steps:['导入样本明细','设定替换规则与科目展开','运行并校验金额一致性'],
+     good:['多规则批量替换，兼顾金额校验','适合抽样明细的科目/摘要规范化'],
+     warn:['复杂替换逻辑需逐一验证','替换前建议先备份原始样本']},
+    {no:'2.7',name:'序时账 Tab 合并',one:'把 Excel 多个 Sheet / Tab 合并为一张表，处理跨分公司/多期间汇总。',
+     feat:['把工作簿多个 Tab / Sheet 合并为一张表','适用于跨分公司、多期间序时账汇总','统一表头后纵向合并'],
+     guide:'打开含多个 Sheet 的序时账 Excel（如多家分公司、多个期间各占一个 Tab），点合并。工具把各 Tab 统一表头后纵向合成一张大表，供后续筛选/测试使用。遇到各 Tab 表头字段顺序或名称不一致的，可先用「批量标题行修改助手」统一后再合并。',
+     steps:['选择多 Tab 工作簿','一键合并所有 Sheet','核对合并后记录数并导出'],
+     good:['跨 Sheet/分公司/期间汇总','与标题行修改工具搭配更佳'],
+     warn:['各 Tab 表头差异较大时需先统一','超大合并量需留意内存']},
+    {no:'2.8',name:'POP 拆分&金额汇总',one:'按 POP 维度拆分大表，并对各拆分后的金额做汇总统计。',
+     feat:['按 POP 维度把大表拆分成多张子表','对拆分后的各子表金额做汇总','便于分主体/分项目查看'],
+     guide:'导入数据大表，指定 POP 维度的列，点拆分。工具按该列取值把大表拆成多张子表（或筛选分页），并对每个拆分后子表的金额自动求和汇总，输出各 POP 的金额小计。适合按主体、项目或客户维度把一张总表拆开分别核对。',
+     steps:['导入数据表并指定 POP 维度','运行拆分','查看各拆分后的金额汇总'],
+     good:['按维度拆分+金额汇总一体','适合分主体/项目拆分核对'],
+     warn:['POP 字段需取值规范','拆分后子表数量较多时注意管理']},
+    {no:'2.9',name:'抓取全部 Tab',one:'一键抓取工作簿内所有工作表内容，便于全览与进一步处理。',
+     feat:['获得工作簿内全部工作表数据','把多个 Tab 内容汇总便于全览','为后续合并/筛选做准备'],
+     guide:'打开目标工作簿，点抓取全部 Tab。工具会把各工作表的数据统一读取出来，汇总成一份便于全览与进一步处理的表/列表，避免逐个 Tab 复制粘贴。适合先整体看一个大工作簿里到底有哪些内容，再决定下一步处理。',
+     steps:['打开工作簿','一键抓取全部 Tab 内容','导出全览结果继续处理'],
+     good:['全览整个工作簿内容','为后续处理做数据准备'],
+     warn:['工作表数量极多时读取时间较长','公式单元格按结果值抓取']},
+    {no:'2.10',name:'正负冲抵账筛选',one:'按科目/对手方配对找出正负相抵的记录，辅助抵销与异常筛查。',
+     feat:['按科目/对手方配对找正负相抵记录','辅助抵销与异常筛查','输出冲抵候选清单'],
+     guide:'导入序时账/明细表，设置配对维度（科目、对手方、金额绝对值），运行。工具把同名同额一正一负的记录配成对冲候选标识出来，辅助判断是否可以抵销或是否有异常。适合应收应付互抵、异常冲销的筛查场景。',
+     steps:['导入序时账','设置科目/对手方配对维度','查看正负相抵候选记录'],
+     good:['辅助抵销与异常冲销筛查','冲抵候选一眼定位'],
+     warn:['配对规则需结合实际结算口径','能否抵销需人工判断，工具仅提示']},
+    {no:'2.11',name:'批量标题行修改助手',one:'批量统一多表标题行字段顺序/名称，解决各表表头不一致无法合并的痛点。',
+     feat:['批量统一多张表的标题行字段顺序','重命名表头字段名','解决表头不一导致的无法合并问题'],
+     guide:'选择多张表头不一致的表，设置统一的字段顺序与名称对照，运行。工具把各表的标题行改成一致，字段按对照重排/重命名。这样原本因表头各异无法合并的表就能顺利纵向合并，是「序时账 Tab 合并」「多表合并」的常用前置步骤。',
+     steps:['选择多张表','设置统一表头对照','批量应用并导出统一结果'],
+     good:['解决多表表头不一致难题','与合并类工具衔接顺畅'],
+     warn:['字段对照需逐项确认','特殊合并单元格表头需人工调整']},
+    {no:'2.12',name:'Excel 转 CSV',one:'把 Excel 批量转换为 CSV，便于大数据量处理与后续程序读取。',
+     feat:['批量把 Excel 转为 CSV 格式','适配大数据量处理','便于后续程序/工具读取'],
+     guide:'选择要转换的 Excel 文件（可多个），设置分隔符与编码，点转换。工具批量输出对应的 CSV 文件，适合把 Excel 数据转到需要 CSV 输入的场景，或在大数据量时用 CSV 加速处理。转换后建议抽查首尾几行确认字段与中文不乱码。',
+     steps:['选择 Excel 文件','批量转 CSV（设置分隔符/编码）','到输出目录抽查结果'],
+     good:['批量转换，适配大数据量与程序读取','分隔符/编码可调'],
+     warn:['CSV 不含格式与公式，仅存值','特殊字符（逗号/换行）需留意转义']},
+    {no:'2.13',name:'序时账关键字筛选',one:'对序时账/明细按关键字快速筛选，定位指定科目的业务记录。',
+     feat:['按关键字快速筛选序时账/明细','定位指定科目/摘要的业务记录','输出筛选结果供进一步核对'],
+     guide:'导入序时账/明细表，输入一个或多个关键字（科目名、摘要、对手方等），设置筛选列，运行。工具按关键字定位匹配的行并输出筛选结果，方便快速找到涉及某科目或某关键词的所有业务记录。适合抽查某类交易、定位异常摘要。',
+     steps:['导入序时账/明细','输入关键字并设置筛选列','查看并导出筛选结果'],
+     good:['快速定位指定科目/关键词记录','支持多关键字'],
+     warn:['关键字匹配方式（包含/精确）需选择','结果需结合上下文判断']},
+    {no:'2.14',name:'筛选工具',one:'通用多条件筛选，把大表按条件抽取所需行，生成独立结果表。',
+     feat:['按多条件组合筛选大表','逻辑与/或条件可配置','生成独立的筛选结果表'],
+     guide:'导入数据表，添加一个或多个筛选条件（字段、比较符、值），组合方式（满足全部/满足任一）可切换，运行。工具按条件抽取符合的行并生成独立结果表，供进一步测试或核对。适合从大表里按多维度抽取关注对象。',
+     steps:['导入数据表','设置多条件与组合逻辑','运行并导出筛选结果'],
+     good:['通用多条件筛选，灵活组合','输出独立结果便于使用'],
+     warn:['条件写错会漏筛/多筛，需复核','与关键字筛选侧重点不同，可配合用']}
    ]},
   {key:'pdf',name:'PDF / 图片',ico:'📄',color:'rgba(34,211,238,.18)',
    tools:[
-    ['3.1','PDF 和图片工具箱','PDF / 图片常用处理：转换、合并、导出、批量处理等日常操作集合。']
+    {no:'3.1',name:'PDF 和图片工具箱',one:'PDF / 图片常用处理：转换、合并、导出、批量处理等日常操作集合。',
+     feat:['PDF 与图片常用操作一站式处理','支持转换、合并、导出、批量处理','覆盖日常审计/办公提效场景'],
+     guide:'这是一个 PDF 与图片常用处理的操作集合，把日常高频的转换、合并、拆分、导出、批量处理等能力集中到一个工具里。按功能入口选择要做的操作，导入文件、点执行即可。具体能力以工具内实际入口为准。适合遇到 PDF/图片小需求时随手调用。',
+     steps:['选择要做的 PDF/图片操作','导入文件并设置参数','执行并导出结果'],
+     good:['PDF/图片日常操作集中处理','方便随手调用'],
+     warn:['具体支持的功能以工具内实现为准','涉及格式转换时注意结果兼容性']}
    ]},
   {key:'audit',name:'审计专项',ico:'🎯',color:'rgba(251,191,36,.18)',
    tools:[
-    ['31','MUS log 转换&汇总','把 MUS 抽样的 log 记录转换并汇总，辅助货币单元抽样数据整理。']
+    {no:'31',name:'MUS log 转换&汇总',one:'把 MUS 抽样的 log 记录转换并汇总，辅助货币单元抽样数据整理。',
+     feat:['把 MUS 抽样的 log 记录转换整理','按规则汇总抽样数据','辅助货币单元抽样数据整理'],
+     guide:'导入 MUS（货币单元抽样）工具输出的 log/记录，设置转换与汇总规则，运行。工具把 log 整理为标准字段并汇总，便于后续抽样结果的分析与归档。适合需要把 MUS 抽样过程数据规整成可直接使用的底稿素材。',
+     steps:['导入 MUS log 记录','设置转换与汇总规则','导出整理后的抽样汇总'],
+     good:['辅助 MUS 抽样数据整理','log 转标准字段并汇总'],
+     warn:['具体 log 格式以实际工具输出为准','抽样结果需结合底稿口径复核']}
    ]}
 ];
-var HINT={
- '1.1':['选择两个要对比的文件夹','运行扫描，定位缺失 / 多余文件','导出对比结果清单'],
- '1.2':['指定源目录与提取规则','自动提取并归集文件','核对输出目录文件数量'],
- '1.3':['拖入压缩包/文件夹','一键批量解压（支持嵌套）','到输出目录核对结果'],
- '1.4':['选择待整理目录','按规则自动归类','检查归类后的文件夹'],
- '2.15':['选择含嵌入附件的 Excel','一键提取全部嵌入对象','到导出目录查看附件'],
- '-':['选择模板','生成标准化文件夹结构','按需重命名并开始使用'],
- '2.1':['导入原始大表','自动清洗并统一字段','导出清洗后结果'],
- '2.2':['导入多账户流水','按统一字段合并','核对合计与记录数'],
- '2.3':['导入流水与序时账','双向匹配','查看对不上的记录清单'],
- '2.4':['选择多张同结构表','自动提取汇总','导出汇总结果'],
- '2.6':['导入样本明细','设定替换规则/科目展开','校验金额一致性'],
- '2.7':['选择多 Sheet 工作簿','一键合并所有 Tab','导出合并后单表'],
- '2.8':['导入数据表','按 POP 拆分','查看各拆分金额汇总'],
- '2.9':['打开工作簿','抓取全部 Tab 内容','导出全览表'],
- '2.10':['导入序时账','设置科目/对手方配对','查看正负相抵记录'],
- '2.11':['选择多张表','批量统一标题行','导出统一表头结果'],
- '2.12':['选择 Excel 文件','批量转 CSV','到输出目录查看 CSV'],
- '2.13':['导入序时账','输入关键字','查看筛选结果'],
- '2.14':['导入数据表','设置多条件','导出筛选结果']
-};
 
-/* ===================== 辅助 ===================== */
 function esc(s){ if(s==null)return ''; return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* 单工具 slide：左=用它能做什么+操作指引；右侧两块=3步+边界 */
+function toolSlide(cat,t,idx){
+  var feat=t.feat||[],good=t.good||[],warn=t.warn||[],steps=t.steps||['选择数据','运行工具','查看结果'];
+  var featHtml=feat.map(function(f){return '<div class="bli">'+esc(f)+'</div>';}).join('');
+  var goodHtml=good.map(function(g){return '<div class="bli good">'+esc(g)+'</div>';}).join('');
+  var warnHtml=warn.map(function(w){return '<div class="bli warn">'+esc(w)+'</div>';}).join('');
+  var stepsHtml=steps.map(function(s,i){return '<div class="step"><b>'+(i+1)+'</b><div><p>'+esc(s)+'</p></div></div>';}).join('');
+  var sec=document.createElement('section');sec.className='slide';
+  sec.innerHTML='<div class="inner">'+
+    '<div class="thead"><div class="tnum">'+esc(t.no)+'</div>'+
+      '<div><h2>'+esc(t.name)+'</h2><span class="ttag">'+esc(cat.name)+'</span></div></div>'+
+    '<p class="oneline">'+esc(t.one)+'</p>'+
+    '<div class="cols">'+
+      '<div class="panel" style="grid-row:span 2"><h4>用它能做什么</h4><div class="blist">'+featHtml+'</div>'+
+        '<h4 style="margin-top:22px">操作指引</h4><p class="guidetext">'+esc(t.guide)+'</p></div>'+
+      '<div class="panel"><h4>怎么用（3 步）</h4>'+stepsHtml+'</div>'+
+      '<div class="panel"><h4>边界与复核</h4><div class="blist">'+goodHtml+warnHtml+'</div></div>'+
+    '</div>'+
+    '<div class="foot"><span>'+esc(cat.name)+' · '+esc(t.no)+'</span><span>DWW 常用工具合集</span></div>'+
+    '</div>';
+  sec._idx=idx;return sec;
+}
 function buildSlides(){
-  var stage=document.getElementById('stage'),idx=2; /* 0封面 1地图 */
+  var stage=document.getElementById('stage'),idx=2;
   CATS.forEach(function(cat){
-    cat.tools.forEach(function(t){
-      var no=t[0],name=t[1],one=t[2];
-      var h=HINT[no]||['选择数据','运行工具','查看结果'];
-      var sec=document.createElement('section');sec.className='slide';
-      sec.innerHTML='<div class="inner">'+
-        '<div class="thead"><div class="tnum">'+esc(no)+'</div>'+
-          '<div><h2>'+esc(name)+'</h2><span class="ttag">'+esc(cat.name)+'</span></div></div>'+
-        '<p class="oneline">'+esc(one)+'</p>'+
-        '<div class="cols"><div class="panel"><h4>用它能做什么</h4><p class="tipbox">'+esc(one)+'</p>'+
-          '<h4 style="margin-top:20px">3 步上手</h4>'+
-          '<div class="step" style="margin-top:12px"><b>1</b><div><p>'+esc(h[0])+'</p></div></div>'+
-          '<div class="step"><b>2</b><div><p>'+esc(h[1])+'</p></div></div>'+
-          '<div class="step"><b>3</b><div><p>'+esc(h[2])+'</p></div></div></div>'+
-        '<div class="panel"><h4>适用场景</h4><div class="blist">'+
-          '<div class="bli good">'+esc(cat.name)+' · 日常工作提效</div>'+
-          '<div class="bli">绿色免安装，双击即用</div>'+
-          '<div class="bli">数据本地处理，不上传</div>'+
-          '<div class="bli warn">自研工具，复杂边界需人工复核</div></div>'+
-        '</div></div>'+
-        '<div class="foot"><span>'+esc(cat.name)+' · '+esc(no)+'</span><span>DWW 常用工具合集</span></div>'+
-        '</div>';
-      sec._idx=idx++;stage.appendChild(sec);
-    });
+    cat.tools.forEach(function(t){ t._i=idx; stage.appendChild(toolSlide(cat,t,idx)); idx++; });
   });
 }
 function buildMap(){
@@ -266,7 +354,7 @@ function buildMap(){
   CATS.forEach(function(cat){
     html+='<div class="map-cat"><h3><span class="ico" style="background:'+cat.color+'">'+cat.ico+'</span>'+esc(cat.name)+'</h3><div class="mchips">';
     cat.tools.forEach(function(t){
-      html+='<span class="mchip" data-i="'+t._i+'"><span class="no">'+esc(t[0])+'</span>'+esc(t[1])+'</span>';
+      html+='<span class="mchip" data-i="'+t._i+'"><span class="no">'+esc(t.no)+'</span>'+esc(t.name)+'</span>';
     });
     html+='</div></div>';
   });
@@ -293,11 +381,6 @@ function cur(){return Math.round(stage.scrollTop/(stage.clientHeight||1));}
 function go(i){ i=Math.max(0,Math.min(total-1,i)); stage.scrollTo({top:i*stage.clientHeight,behavior:'smooth'}); }
 function render(){ var i=cur(); pn.textContent=(i+1)+' / '+total; prog.style.width=((i+1)/total*100)+'%'; }
 
-/* 生成 slide 并记录索引 */
-(function linkIdx(){
-  var i=2;
-  CATS.forEach(function(cat){cat.tools.forEach(function(t){t._i=i++;});});
-})();
 buildSlides();
 buildMap();
 
@@ -326,5 +409,6 @@ document.addEventListener('keydown',function(e){
 render();
 watchReveal();
 </script>
+
 </body>
 </html>

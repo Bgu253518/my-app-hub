@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>问题反馈 · 网页版</title>
+<style>
+:root{
+  --bg:#0b1020;--card:rgba(255,255,255,.045);--line:rgba(148,163,255,.16);
+  --ink:#eaf0ff;--sub:#9aa8c9;--faint:#5d6a8a;
+  --blue:#4f8bff;--cyan:#22d3ee;--green:#34d399;--gold:#fbbf24;--red:#f87171;
+  --grad:linear-gradient(120deg,#4f8bff,#22d3ee);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);
+  background:radial-gradient(800px 500px at 15% -10%,rgba(79,139,255,.18),transparent 60%),
+  radial-gradient(700px 500px at 95% 110%,rgba(34,211,238,.12),transparent 60%),var(--bg);
+  min-height:100vh}
+.wrap{max-width:860px;margin:0 auto;padding:36px 20px 60px}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px}
+.back{color:var(--cyan);text-decoration:none;font-size:14px;font-weight:600}
+.back:hover{text-decoration:underline}
+h1{font-size:24px;font-weight:800;letter-spacing:.5px}
+h1 .i{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--sub);font-size:14px;margin-top:6px;line-height:1.7}
+
+.seg{display:flex;gap:6px;margin:22px 0;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:5px;width:fit-content}
+.seg button{border:none;background:transparent;color:var(--sub);padding:8px 18px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;transition:.2s}
+.seg button.on{background:var(--grad);color:#0b1020}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px;backdrop-filter:blur(10px)}
+label{display:block;font-size:13px;color:var(--sub);margin:16px 0 6px}
+input,textarea,select{width:100%;padding:11px 12px;background:rgba(0,0,0,.25);border:1px solid var(--line);
+  border-radius:9px;color:var(--ink);font-size:14.5px;font-family:inherit;outline:none;transition:.2s}
+input:focus,textarea:focus,select:focus{border-color:var(--cyan)}
+textarea{min-height:130px;resize:vertical;line-height:1.7}
+select option{background:#121a33}
+.hint{color:var(--faint);font-size:12.5px;margin-top:6px;line-height:1.7}
+.btn{width:100%;padding:13px;border:none;border-radius:10px;background:var(--grad);color:#0b1020;
+  font-size:15px;font-weight:800;cursor:pointer;margin-top:22px;transition:.2s}
+.btn:hover{filter:brightness(1.1)}
+.ok{background:linear-gradient(120deg,#34d399,#22d3ee)}
+.warn{background:linear-gradient(120deg,#fbbf24,#f87171)}
+
+.gate{text-align:center;padding:40px 10px}
+.gate .lock{font-size:40px;margin-bottom:14px}
+.gate p{color:var(--sub);margin-bottom:20px}
+.pwdrow{display:flex;gap:10px}
+.pwdrow input{flex:1}
+.pwdrow button{width:auto;padding:11px 24px;margin-top:0}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;text-align:center}
+.stat b{display:block;font-size:24px;font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat span{font-size:12.5px;color:var(--sub)}
+
+.tools{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.tools button{flex:1;min-width:130px;border:1px solid var(--line);background:var(--card);color:var(--ink);
+  padding:11px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:.2s}
+.tools button:hover{border-color:var(--cyan);background:rgba(34,211,238,.08)}
+
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:rgba(79,139,255,.18);color:#bcd0ff;text-align:left;padding:10px;font-weight:700;white-space:nowrap}
+td{padding:10px;border-top:1px solid var(--line);color:var(--sub);vertical-align:top}
+tr:hover td{background:rgba(255,255,255,.025)}
+.empty{color:var(--faint);text-align:center;padding:36px;font-size:14px}
+.tbl{overflow-x:auto;max-height:520px;overflow-y:auto;border:1px solid var(--line);border-radius:12px}
+.badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11.5px;font-weight:700}
+.b-需求{background:rgba(79,139,255,.2);color:#7fb0ff}
+.b-问题{background:rgba(248,113,113,.18);color:#fca5a5}
+@media(max-width:680px){.stats{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <h1><span class="i">📝 问题反馈</span> · 网页版</h1>
+    <a class="back" href="index.html">← 返回应用工坊</a>
+  </div>
+  <div class="sub" id="topSub">工作中遇到重复性工作想做自动化、或遇到任何问题，欢迎登记。数据仅保存在您自己的浏览器本地，不上传任何服务器。</div>
+
+  <div class="seg" id="seg">
+    <button data-v="reg" class="on">📨 我要登记</button>
+    <button data-v="adm">📊 统计 / 管理</button>
+  </div>
+
+  <div id="regView">
+    <div class="card">
+      <label>姓名</label><input id="f_reporter" placeholder="请输入姓名">
+      <label>工号</label><input id="f_emp" placeholder="请输入工号">
+      <label>类型</label>
+      <select id="f_cat">
+        <option value="需求">需求（重复性工作想自动化/优化）</option>
+        <option value="问题">问题（工作中遇到的问题）</option>
+      </select>
+      <label>需求 / 问题描述</label>
+      <textarea id="f_detail" placeholder="请尽量详细描述，包括：&#10;① 背景/现状（目前是怎么做的）&#10;② 具体想要什么（期望的效果）&#10;③ 场景和频率（多久做一次/多少数据量）&#10;④ 是否紧急"></textarea>
+      <div class="hint">写清楚"背景 + 想要什么 + 场景"能帮我们更快处理。</div>
+      <label>是否需要提供资料</label>
+      <select id="f_need"><option value="否">否</option><option value="是">是（我会补充相关资料）</option></select>
+      <label>邮箱（可选，便于回复）</label><input id="f_mail" placeholder="请输入邮箱">
+      <button class="btn" onclick="submit()">提交</button>
+    </div>
+  </div>
+
+  <div id="admView" style="display:none">
+    <div class="card gate" id="gateBox">
+      <div class="lock">🔒</div>
+      <p>此区域为管理员查看汇总统计，请输入口令。</p>
+      <div class="pwdrow"><input type="password" id="pwd" placeholder="请输入管理员口令"><button class="btn" onclick="unlock()">进入</button></div>
+    </div>
+    <div id="adminPanel" style="display:none">
+      <div class="stats" id="statsRow"></div>
+      <div class="tools">
+        <button onclick="copySummary()">📋 复制统计文本</button>
+        <button onclick="exportCSV()">⬇ 导出 CSV</button>
+        <button onclick="exportHTML()">📄 导出汇总表</button>
+        <button onclick="clearAll()" style="border-color:rgba(248,113,113,.4)">🗑 清空全部</button>
+      </div>
+      <div class="tbl" id="tblWrap"></div>
+      <div class="hint" style="margin-top:14px">💡 汇总表保存在本浏览器 localStorage。纯静态网页无法定时自动发送，如需每天邮件一份可点「复制统计文本/导出 CSV」手动发给自己（详见说明）。</div>
+    </div>
+  </div>
+</div>
+<script>
+var KEY='dww_feedback_v1',ADMIN_HASH='60806cab075df7ac00a893f29d1957f8f645907b3d82f115f96c2b5aae919d02';
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function sha256(t){return crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)).then(function(b){return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0');}).join('');});}
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||'[]');}catch(e){return[];}}
+function save(a){localStorage.setItem(KEY,JSON.stringify(a));}
+
+/* 切换视图 */
+document.getElementById('seg').querySelectorAll('button').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.getElementById('seg').querySelectorAll('button').forEach(function(x){x.classList.remove('on');});
+    b.classList.add('on');
+    var v=b.getAttribute('data-v');
+    document.getElementById('regView').style.display = v==='reg'?'':'none';
+    document.getElementById('admView').style.display = v==='adm'?'':'none';
+    if(v==='adm'){ if(!sessionStorage.getItem('fb_unlocked')){document.getElementById('gateBox').style.display='';adminPanelHide();}else{showAdmin();} }
+  });
+});
+function adminPanelHide(){document.getElementById('gateBox').style.display='';document.getElementById('adminPanel').style.display='none';}
+
+/* 登记提交 */
+function submit(){
+  var r=document.getElementById('f_reporter').value.trim(),
+      e=document.getElementById('f_emp').value.trim(),
+      d=document.getElementById('f_detail').value.trim(),
+      c=document.getElementById('f_cat').value,
+      n=document.getElementById('f_need').value,
+      m=document.getElementById('f_mail').value.trim();
+  if(!r||!e||!d){alert('请填写姓名、工号和描述。');return;}
+  var a=load();a.push({id:a.length+1,t:c,reporter:r,emp:e,detail:d,need:n,mail:m,
+    time:new Date().toLocaleString('zh-CN',{hour12:false}),ts:Date.now()});save(a);
+  alert('✅ 已登记，感谢您的反馈！');['f_reporter','f_emp','f_detail','f_mail'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('f_cat').value='需求';document.getElementById('f_need').value='否';
+}
+
+/* 管理员解锁 */
+async function unlock(){
+  var p=document.getElementById('pwd').value;
+  var h=await sha256(p);
+  if(h===ADMIN_HASH){sessionStorage.setItem('fb_unlocked','1');showAdmin();document.getElementById('pwd').value='';}
+  else{alert('口令不正确。');}
+}
+function showAdmin(){document.getElementById('gateBox').style.display='none';document.getElementById('adminPanel').style.display='';renderAdmin();}
+
+/* 渲染统计 */
+function renderAdmin(){
+  var a=load();
+  var dReq=a.filter(function(x){return x.t==='需求';}).length,
+      dProb=a.filter(function(x){return x.t==='问题';}).length;
+  document.getElementById('statsRow').innerHTML=
+    '<div class="stat"><b>'+a.length+'</b><span>全部登记</span></div>'+
+    '<div class="stat"><b>'+dReq+'</b><span>需求</span></div>'+
+    '<div class="stat"><b>'+dProb+'</b><span>问题</span></div>'+
+    '<div class="stat"><b>'+new Set(a.map(function(x){return (x.time||'').slice(0,10);})).size+'</b><span>登记天数</span></div>';
+  var w=document.getElementById('tblWrap');
+  if(!a.length){w.innerHTML='<div class="empty">暂无登记数据</div>';return;}
+  var rows=a.slice().reverse().map(function(x){
+    return '<tr><td>'+x.id+'</td><td>'+esc(x.reporter)+'</td><td>'+esc(x.emp)+'</td>'+
+      '<td><span class="badge b-'+esc(x.t)+'">'+esc(x.t)+'</span></td>'+
+      '<td>'+esc(x.detail)+'</td><td>'+esc(x.need)+'</td><td>'+esc(x.mail)+'</td><td>'+esc(x.time)+'</td></tr>';
+  }).join('');
+  w.innerHTML='<table><thead><tr><th>ID</th><th>姓名</th><th>工号</th><th>类型</th><th>描述</th><th>需资料</th><th>邮箱</th><th>提交时间</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+/* 导出 */
+function exportCSV(){
+  var a=load();if(!a.length){alert('暂无数据');return;}
+  var heads=['ID','姓名','工号','类型','描述','需资料','邮箱','提交时间'];
+  var lines=[heads.join(',')].concat(a.map(function(x){
+    return ['id','reporter','emp','t','detail','need','mail','time'].map(function(k){
+      var v=String(x[k]==null?'':x[k]).replace(/"/g,'""');
+      return '"'+v+'"';
+    }).join(',');
+  }));
+  download('问题反馈汇总_'+new Date().toISOString().slice(0,10)+'.csv','\uFEFF'+lines.join('\r\n'),'text/csv;charset=utf-8');
+}
+function exportHTML(){
+  var a=load();if(!a.length){alert('暂无数据');return;}
+  var rows=a.map(function(x){
+    return '<tr><td>'+x.id+'</td><td>'+esc(x.reporter)+'</td><td>'+esc(x.emp)+'</td><td>'+esc(x.t)+'</td><td>'+esc(x.detail)+'</td><td>'+esc(x.need)+'</td><td>'+esc(x.mail)+'</td><td>'+esc(x.time)+'</td></tr>';
+  }).join('');
+  var html='<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>问题反馈汇总</title>'+
+    '<style>body{font-family:Microsoft YaHei;padding:30px}table{border-collapse:collapse;width:100%;font-size:13px}th,td{border:1px solid #ccc;padding:8px;text-align:left}th{background:#1565C0;color:#fff}</style></head><body>'+
+    '<h2>问题反馈汇总（'+new Date().toLocaleDateString('zh-CN')+'）</h2>'+
+    '<table><thead><tr><th>ID</th><th>姓名</th><th>工号</th><th>类型</th><th>描述</th><th>需资料</th><th>邮箱</th><th>提交时间</th></tr></thead><tbody>'+rows+'</tbody></table></body></html>';
+  download('问题反馈汇总_'+new Date().toISOString().slice(0,10)+'.html',html,'text/html;charset=utf-8');
+}
+function download(name,content,mime){
+  var blob=new Blob([content],{type:mime});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(url);a.remove();},200);
+}
+function copySummary(){
+  var a=load();if(!a.length){alert('暂无数据');return;}
+  var dReq=a.filter(function(x){return x.t==='需求';}).length,
+      dProb=a.length-dReq;
+  var txt='【问题反馈统计】'+new Date().toLocaleDateString('zh-CN')+'\n'+
+    '全部登记：'+a.length+' 条　需求：'+dReq+'　问题：'+dProb+'\n\n';
+  a.forEach(function(x){txt+='#'+x.id+' ['+x.t+'] '+x.reporter+'('+x.emp+')\n  '+x.time+'\n  '+x.detail+'\n\n';});
+  (navigator.clipboard?navigator.clipboard.writeText(txt):function(){var t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();})();
+  alert('📋 统计文本已复制到剪贴板，可直接粘贴到邮件。');
+}
+function clearAll(){
+  if(!confirm('确定清空全部登记数据？此操作不可撤销！'))return;
+  localStorage.removeItem(KEY);renderAdmin();
+}
+</script>
+</body>
+</html>
