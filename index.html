@@ -1651,15 +1651,23 @@ if (typeof pdfjsLib !== 'undefined') {
 
 let currentToolType = '';
 
-function openToolPanel(appId) {
+async function sha256Hex(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function openToolPanel(appId) {
   const app = apps.find(a => a.id === appId);
   if (!app) return;
 
-  // 带密码保护的工具
+  // 带密码保护的工具（前端不存明文密码，仅比对 SHA-256 哈希）
   const PROTECTED_TOOLS = ['tb-smart-autofill', 'bkd-rollforward', 'word-checkbench'];
   if (PROTECTED_TOOLS.includes(appId)) {
     const pw = prompt('请输入管理员密码来打开此工具:');
-    if (pw !== 'Glh*522128') { alert('密码错误，无法打开'); return; }
+    if (pw === null) return;
+    const expectedHash = 'c0b021ecc69edc890183be4e835e8fc7a0df7c1f1be49c6de2f761e273b26c84';
+    const actualHash = await sha256Hex(pw);
+    if (actualHash !== expectedHash) { alert('密码错误，无法打开'); return; }
   }
 
   // 独立页面的工具：先跳转，不显示面板（避免闪现 PDF 拖拽区）
