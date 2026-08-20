@@ -11,5 +11,19 @@
     "onlineTool": true,
     "github": "https://github.com/Bgu253518/my-app-hub",
     "download": ""
+  },
+  {
+    "id": "dww-toolbox",
+    "name": "DWW 常用工具合集",
+    "shortDesc": "33款本地办公效率工具合集（文件整理/Excel处理/PDF/测试等），含便携Python运行时，解压即用",
+    "fullDesc": "本人自研的 DWW 常用工具合集，打包为绿色免安装版（Windows）。内含 33 款自研办公效率工具，涵盖：① 文件目录管理（目录扫描对比、文件提取、万能解压、文件夹整理归类、文件模板）；② Excel/数据清洗（数据清洗、银行流水合并与完整性测试、正负冲抵筛选、批量标题行修改、Excel转CSV、序时账筛选、样本多步骤替换、序时账Tab合并、POP拆分汇总、抓取全部Tab、多文件智能合并、数据提取汇总）；③ PDF 与图片（PDF和图片工具箱）；④ ROU 租赁管理系统；⑤ 指引执行助手等。\n\n【下载与使用步骤】\n1. 点击本卡片「⬇ 下载」按钮，下载 DWW-toolbox-v1.0.zip（约 124MB）；\n2. 解压到任意目录（建议英文路径，如 D:\\DWW-toolbox）；\n3. 双击「启动工具箱.bat」打开工具箱总界面，或直接双击对应工具的 .exe；\n4. 内置 _runtime 便携 Python 3.13，无需安装任何环境，解压即用。\n\n【注意事项】\n· 首次运行若出现 Windows SmartScreen 提示，点击「更多信息 → 仍要运行」即可；\n· 本合集已剔除第三方工具（Q-Dir、截图精灵）与示例数据，仅含自研工具；\n· 请从本页提供的官方下载链接获取，勿从其他渠道下载以防篡改。",
+    "category": "other",
+    "status": "done",
+    "version": "v1.0",
+    "icon": "🧰",
+    "onlineTool": false,
+    "github": "https://github.com/Bgu253518/my-app-hub/releases/tag/DWW-toolkit-v1.0",
+    "download": "https://github.com/Bgu253518/my-app-hub/releases/download/DWW-toolkit-v1.0/DWW-toolbox-v1.0.zip"
   }
 ]
+
