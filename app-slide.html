@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>板块演示 · 顾力菡的应用工坊</title>
+<style>
+/* ===== 主题（corp-blue 浅色商务） ===== */
+:root{
+  --bg1:#eef3fb; --bg2:#f8fbff;
+  --card:#ffffff; --line:#e3ebf7;
+  --ink:#1b2b4b; --sub:#5a6b8a; --faint:#93a1bd;
+  --blue:#2563eb; --blue-d:#1e40af; --cyan:#0ea5e9;
+  --gold:#f59e0b; --green:#10b981; --red:#ef4444; --purple:#8b5cf6;
+  --shadow:0 10px 30px rgba(30,64,175,.08);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:"Segoe UI","PingFang SC","Microsoft YaHei","Hiragino Sans",sans-serif;
+  color:var(--ink);background:linear-gradient(160deg,var(--bg1),var(--bg2));
+  overflow-x:hidden}
+.progress{position:fixed;top:0;left:0;height:4px;background:linear-gradient(90deg,var(--blue),var(--cyan));z-index:60;width:0%}
+.stage{height:100vh;overflow-y:auto;scroll-snap-type:y mandatory}
+.slide{min-height:100vh;scroll-snap-align:start;display:flex;align-items:center;justify-content:center;
+  padding:6vh 5vw;position:relative}
+.inner{width:100%;max-width:1100px}
+.slide.frost{background:rgba(255,255,255,.25)}
+
+/* ===== 通用版式 ===== */
+.kicker{display:inline-flex;align-items:center;gap:8px;font-size:13px;letter-spacing:2px;color:var(--blue);
+  font-weight:600;text-transform:uppercase}
+.kicker::before{content:"";width:22px;height:2px;background:var(--blue)}
+h1.title{font-size:clamp(28px,4.4vw,50px);line-height:1.22;font-weight:800;letter-spacing:1px;margin:14px 0 12px}
+p.lead{font-size:clamp(15px,1.9vw,20px);color:var(--sub);max-width:820px;line-height:1.7}
+.cta{margin-top:26px}
+
+/* ===== 卡片网格 ===== */
+.grid{display:grid;gap:18px}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;
+  box-shadow:var(--shadow);transition:.25s}
+.card:hover{transform:translateY(-3px);box-shadow:0 14px 34px rgba(30,64,175,.14)}
+.card .ico{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  font-size:22px;margin-bottom:12px}
+.card h3{font-size:17px;margin-bottom:6px}
+.card p{font-size:13.5px;color:var(--sub);line-height:1.6}
+
+/* ===== 统计条 ===== */
+.statbar{display:flex;gap:14px;flex-wrap:wrap;margin-top:18px}
+.stat{flex:1;min-width:120px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;text-align:center}
+.stat b{display:block;font-size:26px;font-weight:800;background:linear-gradient(120deg,var(--blue),var(--cyan));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.stat span{font-size:12.5px;color:var(--sub)}
+
+/* ===== 封面 ===== */
+.cover{background:
+  radial-gradient(1200px 500px at 15% -10%,rgba(37,99,235,.14),transparent 60%),
+  radial-gradient(900px 500px at 90% 110%,rgba(14,165,233,.12),transparent 60%),
+  linear-gradient(150deg,#e9f1ff,#f7fbff 60%,#eef6ff)}
+.cover .inner{text-align:center}
+.cover .logo{width:78px;height:78px;margin:0 auto 22px;border-radius:22px;display:flex;align-items:center;justify-content:center;
+  font-size:38px;background:linear-gradient(135deg,var(--blue),var(--cyan));box-shadow:0 14px 34px rgba(37,99,235,.3)}
+.cover .subline{font-size:clamp(15px,1.9vw,20px);color:var(--sub);max-width:760px;margin:0 auto;line-height:1.8}
+.cover .tip{margin-top:30px;color:var(--faint);font-size:13px;letter-spacing:1px}
+.cover .backlink{margin-top:12px;color:var(--blue);font-size:14px;text-decoration:none;font-weight:600}
+.cover .backlink:hover{text-decoration:underline}
+
+/* ===== section 页头 ===== */
+.shead{display:flex;align-items:center;gap:14px;margin-bottom:20px;flex-wrap:wrap}
+.snum{width:48px;height:48px;border-radius:13px;background:linear-gradient(135deg,var(--blue),var(--cyan));
+  color:#fff;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none}
+.shead h2{font-size:clamp(21px,2.8vw,30px);font-weight:800}
+.tag{display:inline-block;background:#eef4ff;color:var(--blue);font-size:12px;font-weight:600;
+  padding:4px 12px;border-radius:20px;margin-top:6px}
+.slogan{font-size:clamp(15px,1.8vw,19px);color:var(--blue);font-weight:600;margin-bottom:18px;letter-spacing:.5px}
+
+/* ===== 两栏 ===== */
+.cols{display:grid;grid-template-columns:1.05fr .95fr;gap:20px;align-items:start}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 24px;box-shadow:var(--shadow)}
+.panel h4{font-size:14px;letter-spacing:2px;color:var(--faint);text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.panel h4::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* 列表行（highlight 通用） */
+.hrow{display:flex;gap:12px;margin-bottom:13px}
+.hrow:last-child{margin-bottom:0}
+.hrow .hd{flex:none;width:34px;height:34px;border-radius:10px;font-size:17px;display:flex;align-items:center;justify-content:center}
+.hrow b{font-size:15px}
+.hrow p{font-size:13px;color:var(--sub);line-height:1.55;margin-top:2px}
+
+/* 步骤 */
+.step{display:flex;gap:14px;margin-bottom:15px}
+.step:last-child{margin-bottom:0}
+.step b{flex:none;width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--cyan));
+  color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;margin-top:2px}
+.step div p{font-size:14px;line-height:1.6;color:var(--ink)}
+.step div em{font-style:normal;color:var(--sub);font-size:13px;display:block;margin-top:2px}
+
+/* 边界/备注 列表 */
+.list{display:flex;flex-direction:column;gap:10px}
+.li{display:flex;gap:10px;font-size:14px;line-height:1.6;color:var(--ink)}
+.li::before{content:"▸";color:var(--blue);font-weight:700}
+.li.warn::before{content:"⚠";color:var(--gold)}
+.li.good::before{content:"✅";color:var(--green)}
+
+/* 高亮提示框 */
+.callout{margin-top:16px;background:#e6f7f1;border-radius:10px;padding:12px 14px;font-size:13px;color:var(--green)}
+.callout.blue{background:#eef4ff;color:var(--blue)}
+.callout.gold{background:#fef6e7;color:var(--gold)}
+
+/* ===== CTA 页 ===== */
+.go{display:inline-flex;align-items:center;gap:8px;margin:8px 8px 0 0;text-decoration:none;border:none;cursor:pointer;
+  padding:13px 26px;border-radius:12px;font-size:15px;font-weight:700;transition:.2s}
+.go:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(37,99,235,.25)}
+.go.primary{background:linear-gradient(135deg,var(--blue),var(--cyan));color:#fff}
+.go.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.foot{padding-top:8px;border-top:1px solid var(--line);margin-top:26px;display:flex;justify-content:space-between;
+  color:var(--faint);font-size:12.5px}
+
+/* ===== 导航 ===== */
+.nav{position:fixed;bottom:22px;right:26px;z-index:60;display:flex;align-items:center;gap:6px}
+.nav button{width:42px;height:42px;border-radius:50%;border:none;cursor:pointer;font-size:18px;
+  background:var(--ink);color:#fff;transition:.2s;box-shadow:0 6px 16px rgba(27,43,75,.3)}
+.nav button:hover{background:var(--blue);transform:scale(1.06)}
+.pagenum{position:fixed;bottom:22px;left:26px;z-index:60;font-size:12.5px;color:var(--faint);letter-spacing:1px;
+  background:rgba(255,255,255,.7);padding:6px 12px;border-radius:20px;backdrop-filter:blur(6px);border:1px solid var(--line)}
+.hint{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:60;font-size:12.5px;color:var(--faint);
+  letter-spacing:1px;background:rgba(255,255,255,.75);padding:6px 16px;border-radius:20px;backdrop-filter:blur(6px);
+  border:1px solid var(--line);white-space:nowrap}
+.hint b{color:var(--blue)}
+
+@media(max-width:860px){
+  .cols{grid-template-columns:1fr}
+  .g2,.g3,.g4{grid-template-columns:1fr}
+  .hint{display:none}
+}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="stage" id="stage">
+  <section class="slide cover"><div class="inner">
+    <div class="logo" id="logo">🧰</div>
+    <div class="kicker" style="justify-content:center" id="kicker">DWW TOOLBOX</div>
+    <h1 class="title" id="title">板块</h1>
+    <p class="lead" id="lead"></p>
+    <div class="cta"><div class="statbar" id="stats" style="max-width:820px;margin:0 auto"></div></div>
+    <p class="tip">按 ↓ 或 → 翻页查看板块说明</p>
+    <a class="backlink" href="index.html">← 返回应用工坊</a>
+  </div></section>
+
+  <section class="slide"><div class="inner">
+    <div class="shead"><div class="snum">1</div><div><h2>板块概述</h2><span class="tag" id="tag1"></span></div></div>
+    <p class="lead" style="font-size:clamp(15px,1.8vw,19px)" id="overview"></p>
+  </div></section>
+
+  <section class="slide frost"><div class="inner">
+    <div class="kicker" id="kick2">FEATURES</div>
+    <h1 class="title" style="font-size:clamp(24px,3.6vw,40px)">功能一览</h1>
+    <div class="grid g2" style="margin-top:26px" id="features"></div>
+  </div></section>
+
+  <section class="slide"><div class="inner">
+    <div class="shead"><div class="snum">3</div><div><h2>快速上手</h2><span class="tag">使用步骤</span></div></div>
+    <div class="cols"><div class="panel"><h4>操作步骤</h4><div id="steps"></div></div>
+      <div class="panel"><h4>注意事项</h4><div class="list" id="notes"></div></div>
+    </div>
+  </div></section>
+
+  <section class="slide"><div class="inner">
+    <div class="shead"><div class="snum">4</div><div><h2>边界与自检</h2><span class="tag">诚实说明</span></div></div>
+    <div class="cols">
+      <div class="panel"><h4>能力边界</h4><div class="list" id="boundaries"></div></div>
+      <div class="panel"><h4>质量自检</h4><div class="list" id="checks"></div></div>
+    </div>
+  </div></section>
+
+  <section class="slide cover"><div class="inner" style="text-align:center">
+    <div class="logo" id="logo2" style="margin-bottom:18px;background:linear-gradient(135deg,var(--blue),var(--cyan));font-size:34px">✓</div>
+    <div class="kicker" style="justify-content:center">READY TO USE</div>
+    <h1 class="title" id="endtitle">开始使用</h1>
+    <p class="subline" style="margin-top:10px" id="endsub"></p>
+    <div class="cta" id="endcta" style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap"></div>
+    <p class="tip"><a class="backlink" href="index.html" style="margin-top:22px;display:inline-block">← 返回应用工坊</a></p>
+  </div></section>
+</div>
+
+<div class="nav"><button id="btnPrev">←</button><button id="btnNext">→</button></div>
+<div class="pagenum" id="pagenum"></div>
+<div class="hint">按 <b>↓</b> / <b>→</b> 翻页 · <b>Esc</b> 回封面</div>
+
+<script>
+function esc(s){ if(s==null)return ''; return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function param(n){ return new URLSearchParams(window.location.search).get(n); }
+function statbar(arr){ return arr.map(function(st){return '<div class="stat"><b>'+esc(st.v)+'</b><span>'+esc(st.l)+'</span></div>';}).join(''); }
+function listHtml(arr,cls){ return arr.map(function(x){return '<div class="li '+ (cls||'') +'">'+esc(x)+'</div>';}).join(''); }
+function stepHtml(arr){ return arr.map(function(x,i){return '<div class="step"><b>'+(i+1)+'</b><div><p>'+esc(x)+'</p></div></div>';}).join(''); }
+
+async function sha256Hex(str){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+const PROTECTED={'tb-smart-autofill':'c0b021ecc69edc890183be4e835e8fc7a0df7c1f1be49c6de2f761e273b26c84'};
+const EXTERNAL={
+  'tb-smart-autofill':'TB自动上数器/tb-smart-autofill.html',
+  'dww-toolbox':'https://github.com/Bgu253518/my-app-hub/releases/download/DWW-toolkit-v1.0/DWW-toolbox-v1.0.zip'
+};
+async function openTool(app){
+  if(app.onlineTool){
+    if(PROTECTED[app.id]){
+      const pw=prompt('请输入管理员密码来打开此工具:');
+      if(pw===null)return;
+      if(await sha256Hex(pw)!==PROTECTED[app.id]){alert('密码错误，无法打开');return;}
+    }
+    if(EXTERNAL[app.id]){window.open(EXTERNAL[app.id],'_blank');return;}
+    alert('该工具暂未开放在线版');return;
+  }
+  if(app.download){window.open(app.download,'_blank');return;}
+}
+
+// 渲染
+async function init(){
+  const id=param('id');
+  if(!id){ document.title='未找到板块'; document.getElementById('title').textContent='缺少板块标识'; return; }
+  let apps=[];
+  try{ apps=await (await fetch('apps.json?t='+Date.now())).json(); }catch(e){}
+  const app=apps.find(a=>a.id===id);
+  if(!app){ document.getElementById('title').textContent='未找到该板块'; document.getElementById('lead').textContent='请返回重试'; return; }
+  document.title=app.name+' · 板块演示';
+  document.getElementById('kicker').textContent=(app.name||'板块').toUpperCase().slice(0,18);
+  document.getElementById('logo').textContent=app.icon||'🧰';
+  document.getElementById('logo2').textContent=app.icon||'✓';
+  document.getElementById('title').textContent=app.name;
+  document.getElementById('lead').textContent=app.tagline||app.shortDesc||'';
+  document.getElementById('tag1').textContent=(app.version?app.version+' · ':'')+(app.status==='done'?'已完成':app.status==='wip'?'开发中':'');
+  document.getElementById('overview').textContent=Array.isArray(app.intro)?app.intro.join(' '):(app.intro||'');
+
+  // 封面统计条
+  var stats=[];
+  if(Array.isArray(app.features)) stats.push({v:app.features.length,l:'功能亮点'});
+  if(Array.isArray(app.steps)) stats.push({v:app.steps.length,l:'上手步骤'});
+  if(Array.isArray(app.boundaries)) stats.push({v:app.boundaries.length,l:'边界说明'});
+  if(Array.isArray(app.checks)) stats.push({v:app.checks.length,l:'自检项'});
+  if(!stats.length) stats.push({v:'100%',l:'本地离线'},{v:'1',l:'板块'});
+  document.getElementById('stats').innerHTML=statbar(stats);
+
+  // 功能亮点
+  const fcolor = app.status === 'wip' ? '#0ea5e9' : '#2563eb';
+  document.getElementById('features').innerHTML=(Array.isArray(app.features)?app.features:[]).map(function(f){
+    return '<div class="card"><div class="ico" style="background:#eef4ff;color:'+fcolor+'">✦</div><p style="font-size:14.5px;color:var(--ink);line-height:1.7">'+esc(f)+'</p></div>';
+  }).join('');
+
+  // 步骤 + 注意
+  document.getElementById('steps').innerHTML=stepHtml(Array.isArray(app.steps)?app.steps:[]);
+  document.getElementById('notes').innerHTML=listHtml(Array.isArray(app.notes)?app.notes:[],'warn')||'<div class="li">暂无特别说明</div>';
+
+  // 边界 + 自检
+  document.getElementById('boundaries').innerHTML=listHtml(Array.isArray(app.boundaries)?app.boundaries:[])||'<div class="li">暂无说明</div>';
+  document.getElementById('checks').innerHTML=listHtml(Array.isArray(app.checks)?app.checks:[],'good')||'<div class="li">暂无自检项</div>';
+
+  // 结尾
+  document.getElementById('endtitle').textContent='开始使用 · '+app.name;
+  document.getElementById('endsub').textContent=app.tagline||'';
+  var cta='';
+  if(app.onlineTool) cta+='<a class="go primary" href="javascript:openTool(appCtx)">🛠️ 在线使用</a>';
+  if(app.download) cta+='<a class="go primary" href="'+esc(app.download)+'" download>⬇ 下载</a>';
+  cta+='<a class="go ghost" href="'+(app.github||'https://github.com/Bgu253518/my-app-hub')+'" target="_blank" rel="noopener">⌥ GitHub</a>';
+  document.getElementById('endcta').innerHTML=cta;
+  window.appCtx=app;
+
+  // 翻页
+  var stage=document.getElementById('stage'),slides=document.querySelectorAll('.slide');
+  var prog=document.getElementById('progress'),pn=document.getElementById('pagenum');
+  var total=slides.length;
+  function cur(){return Math.round(stage.scrollTop/(stage.clientHeight||1));}
+  function go(i){ i=Math.max(0,Math.min(total-1,i)); stage.scrollTo({top:i*stage.clientHeight,behavior:'smooth'}); }
+  function render(){ var i=cur(); pn.textContent=(i+1)+' / '+total; prog.style.width=((i+1)/total*100)+'%'; }
+  stage.addEventListener('scroll',render,{passive:true});
+  document.getElementById('btnNext').onclick=function(){go(cur()+1);};
+  document.getElementById('btnPrev').onclick=function(){go(cur()-1);};
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' '){e.preventDefault();go(cur()+1);}
+    else if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();go(cur()-1);}
+    else if(e.key==='Escape'){e.preventDefault();go(0);}
+  });
+  render();
+}
+init();
+</script>
+</body>
+</html>
