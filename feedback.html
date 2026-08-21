@@ -121,12 +121,13 @@ tr:hover td{background:rgba(255,255,255,.025)}
       <div class="stats" id="statsRow"></div>
       <div class="tools">
         <button onclick="copySummary()">📋 复制统计文本</button>
+        <button onclick="exportJSON()">⬇ 导出 JSON（本地汇总用）</button>
         <button onclick="exportCSV()">⬇ 导出 CSV</button>
         <button onclick="exportHTML()">📄 导出汇总表</button>
         <button onclick="clearAll()" style="border-color:rgba(248,113,113,.4)">🗑 清空全部</button>
       </div>
       <div class="tbl" id="tblWrap"></div>
-      <div class="hint" style="margin-top:14px">💡 汇总表保存在本浏览器 localStorage。纯静态网页无法定时自动发送，如需每天邮件一份可点「复制统计文本/导出 CSV」手动发给自己（详见说明）。</div>
+      <div class="hint" style="margin-top:14px">💡 数据保存在本浏览器。想把反馈回流到你自己：点「导出 JSON」下载文件，配合本地脚本（feedback_export.py）一键汇总成统计报表。所有数据仅本地处理，不上传任何服务器。</div>
     </div>
   </div>
 </div>
@@ -196,6 +197,11 @@ function renderAdmin(){
 }
 
 /* 导出 */
+function exportJSON(){
+  var a=load();if(!a.length){alert('暂无数据');return;}
+  var payload={exportedAt:new Date().toISOString(),app:'问题反馈',count:a.length,records:a};
+  download('反馈数据_'+(new Date().toISOString().slice(0,10))+'.json',JSON.stringify(payload,null,2),'application/json;charset=utf-8');
+}
 function exportCSV(){
   var a=load();if(!a.length){alert('暂无数据');return;}
   var heads=['ID','流程','称呼','类型','描述','需资料','邮箱','提交时间'];
