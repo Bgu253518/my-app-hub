@@ -7,28 +7,28 @@
 <style>
 /* ===== 主题（深色炫彩 Dark-Tech） ===== */
 :root{
-  --bg0:#070b16; --bg1:#0b1020; --bg2:#121a33;
-  --card:rgba(255,255,255,.045); --card-b:rgba(255,255,255,.09);
-  --line:rgba(148,163,255,.14); --line-s:rgba(148,163,255,.28);
-  --ink:#eaf0ff; --sub:#9aa8c9; --faint:#5d6a8a;
-  --blue:#4f8bff; --cyan:#22d3ee; --magenta:#ec4899; --violet:#8b5cf6;
+  --bg-deep:#05060a; --bg0:#070b16; --bg1:#0b1020; --bg2:#121a33;
+  --card:rgba(16,18,34,.72); --card-b:rgba(255,255,255,.08);
+  --line:rgba(139,92,246,.15); --line-s:rgba(34,211,238,.35);
+  --ink:#f0f2ff; --sub:#a8b0cf; --faint:#5d6a8a;
+  --blue:#8b5cf6; --cyan:#22d3ee; --magenta:#f472b6; --violet:#8b5cf6;
   --green:#34d399; --gold:#fbbf24; --red:#f87171;
-  --grad:linear-gradient(120deg,#4f8bff,#22d3ee 55%,#8b5cf6);
-  --grad2:linear-gradient(120deg,#8b5cf6,#ec4899);
+  --grad:linear-gradient(120deg,#8b5cf6,#22d3ee 55%,#f472b6);
+  --grad2:linear-gradient(120deg,#8b5cf6,#f472b6);
   --shadow:0 16px 44px rgba(0,0,0,.45);
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{font-family:"Segoe UI","PingFang SC","Microsoft YaHei","Hiragino Sans",sans-serif;color:var(--ink);
-  background:var(--bg1);overflow-x:hidden;background:
-   radial-gradient(1000px 700px at 12% -10%,rgba(79,139,255,.20),transparent 60%),
-   radial-gradient(900px 640px at 92% 112%,rgba(139,92,246,.18),transparent 60%),
-   radial-gradient(700px 500px at 50% 120%,rgba(34,211,238,.10),transparent 60%),
-   var(--bg1)}
+  background:var(--bg-deep);overflow-x:hidden;background:
+   radial-gradient(1000px 700px at 12% -10%,rgba(139,92,246,.20),transparent 60%),
+   radial-gradient(900px 640px at 92% 112%,rgba(34,211,238,.14),transparent 60%),
+   radial-gradient(700px 500px at 50% 120%,rgba(244,114,182,.10),transparent 60%),
+   var(--bg-deep)}
 #fx{position:fixed;inset:0;z-index:0;pointer-events:none}
-.progress{position:fixed;top:0;left:0;height:4px;z-index:80;width:0%;
-  background:linear-gradient(90deg,#4f8bff,#22d3ee,#ec4899,#8b5cf6,#4f8bff);background-size:300% 100%;
-  animation:flow 3.5s linear infinite;box-shadow:0 0 14px rgba(34,211,238,.7)}
+.progress{position:fixed;top:0;left:0;height:3px;z-index:80;width:0%;
+  background:linear-gradient(90deg,var(--violet),var(--cyan),var(--magenta),var(--violet));background-size:300% 100%;
+  animation:flow 3s linear infinite;box-shadow:0 0 12px rgba(34,211,238,.6)}
 @keyframes flow{to{background-position:300% 0}}
 .stage{height:100vh;overflow-y:auto;scroll-snap-type:y mandatory;position:relative;z-index:1;scrollbar-width:none}
 .stage::-webkit-scrollbar{display:none}
@@ -124,14 +124,77 @@ p.lead{font-size:clamp(15px,1.9vw,20px);color:var(--sub);max-width:820px;line-he
   border:1px solid var(--line);white-space:nowrap}
 .hint b{color:var(--cyan)}
 
+/* Mascot */
+.mascot {
+  position: fixed; left: 26px; bottom: 26px; z-index: 90;
+  width: 64px; height: 64px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--violet), var(--cyan));
+  box-shadow: 0 0 30px rgba(139,92,246,0.45);
+  display: grid; place-items: center; cursor: pointer;
+  animation: mascotBounce 3s ease-in-out infinite;
+  transition: transform 0.2s;
+}
+.mascot:hover { transform: scale(1.1); }
+@keyframes mascotBounce { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);} }
+.mascot-face { display: flex; gap: 10px; }
+.eye { width: 16px; height: 16px; border-radius: 50%; background: #fff; position: relative; overflow: hidden; }
+.pupil { width: 7px; height: 7px; border-radius: 50%; background: #0a0a14; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); }
+.mascot-bubble {
+  position: absolute; left: 76px; bottom: 10px; width: 180px;
+  background: rgba(16,18,34,0.95); border: 1px solid rgba(139,92,246,0.35);
+  border-radius: 14px; padding: 10px 12px; font-size: 12px; color: var(--sub);
+  opacity: 0; transform: translateX(-10px); pointer-events: none; transition: all 0.3s;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.mascot-bubble.show { opacity: 1; transform: translateX(0); }
+.mascot-bubble::before {
+  content: ""; position: absolute; left: -7px; top: 50%; transform: translateY(-50%);
+  border-width: 7px 7px 7px 0; border-style: solid;
+  border-color: transparent rgba(139,92,246,0.35) transparent transparent;
+}
+.mascot-close {
+  position: absolute; top: -6px; right: -6px; width: 20px; height: 20px;
+  border-radius: 50%; border: none; background: rgba(255,255,255,0.12);
+  color: var(--ink); font-size: 14px; line-height: 1;
+  cursor: pointer; opacity: 0; transition: opacity 0.2s; display: grid; place-items: center;
+}
+.mascot:hover .mascot-close { opacity: 1; }
+.mascot.minimized {
+  width: 44px; height: 44px; animation: none;
+}
+.mascot.minimized .mascot-face,
+.mascot.minimized .mascot-bubble,
+.mascot.minimized .mascot-close { display: none; }
+.mascot-min {
+  display: none; font-size: 22px;
+}
+.mascot.minimized .mascot-min { display: block; }
+
 @media(max-width:860px){
   .cols{grid-template-columns:1fr}
   .g2,.g3,.g4{grid-template-columns:1fr}
   .hint{display:none}
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .progress, .cover .logo::after, .mascot, .mchip:hover, .nav button:hover,
+  .rev { animation: none !important; transition: none !important; }
+  .card, .mchip, .panel, .stat, .nav button, .mascot-bubble { transition: none !important; }
+  .rev { opacity: 1 !important; transform: none !important; }
+  #fx { display: none !important; }
+}
 </style>
 </head>
 <body>
+<div class="mascot" id="mascot" title="小 D">
+  <button class="mascot-close" id="mascotClose" aria-label="收起">×</button>
+  <div class="mascot-face">
+    <div class="eye"><div class="pupil"></div></div>
+    <div class="eye"><div class="pupil"></div></div>
+  </div>
+  <div class="mascot-min">🤖</div>
+  <div class="mascot-bubble" id="mascotBubble">嗨！我是小 D，按 ↓ 或 → 翻页，点击工具编号可跳转~</div>
+</div>
 <canvas id="fx"></canvas>
 <div class="progress" id="progress"></div>
 <div class="stage" id="stage">
@@ -408,6 +471,27 @@ document.addEventListener('keydown',function(e){
 });
 render();
 watchReveal();
+
+/* Mascot interactions */
+(function(){
+  var mascot=document.getElementById('mascot'), bubble=document.getElementById('mascotBubble'), closeBtn=document.getElementById('mascotClose');
+  if(!mascot||!bubble)return;
+  var tips=['按 ↑ ↓ ← → 或空格翻页','Esc 可快速回到封面','点击工具编号直接跳转','DWW 合集工具都是绿色免安装','所有数据都在本地处理'];
+  var timer;
+  function showTip(t){bubble.textContent=t;bubble.classList.add('show');clearTimeout(timer);timer=setTimeout(function(){bubble.classList.remove('show');},4000);}
+  mascot.addEventListener('mouseenter',function(){showTip(tips[Math.floor(Math.random()*tips.length)]);});
+  mascot.addEventListener('mouseleave',function(){clearTimeout(timer);bubble.classList.remove('show');});
+  if(closeBtn){
+    closeBtn.addEventListener('click',function(e){e.stopPropagation();mascot.classList.add('minimized');});
+    mascot.addEventListener('click',function(){if(mascot.classList.contains('minimized'))mascot.classList.remove('minimized');});
+  }
+  document.addEventListener('mousemove',function(e){
+    var pupils=mascot.querySelectorAll('.pupil'), r=mascot.getBoundingClientRect();
+    var cx=r.left+r.width/2, cy=r.top+r.height/2;
+    var angle=Math.atan2(e.clientY-cy,e.clientX-cx), dist=Math.min(3,Math.hypot(e.clientX-cx,e.clientY-cy)/20);
+    pupils.forEach(function(p){p.style.transform='translate(-50%,-50%) translate('+Math.cos(angle)*dist+'px,'+Math.sin(angle)*dist+'px)';});
+  });
+})();
 </script>
 
 </body>

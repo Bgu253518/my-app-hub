@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>使用说明 · 审计工具箱</title>
+<style>
+:root {
+  --bg-deep: #05060a;
+  --bg-card: rgba(16,18,34,0.72);
+  --glass-border: rgba(255,255,255,0.08);
+  --text-primary: #f0f2ff;
+  --text-secondary: #a8b0cf;
+  --accent-1: #8b5cf6;
+  --accent-2: #22d3ee;
+  --accent-3: #f472b6;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  line-height: 1.7;
+}
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(5,6,10,0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.topbar a { color: var(--accent-2); text-decoration: none; font-weight: 700; }
+.topbar a:hover { text-decoration: underline; }
+.topbar button {
+  padding: 8px 16px; border-radius: 8px; border: 1px solid var(--glass-border);
+  background: rgba(139,92,246,0.15); color: #b4a0ff; cursor: pointer; font-weight: 700;
+}
+.container { max-width: 900px; margin: 0 auto; padding: 40px 20px 80px; }
+h1 { font-size: 28px; margin-bottom: 8px; }
+h2 { font-size: 20px; margin: 32px 0 12px; color: var(--accent-2); border-bottom: 1px solid var(--glass-border); padding-bottom: 8px; }
+h3 { font-size: 16px; margin: 18px 0 8px; color: var(--accent-1); }
+p { margin: 8px 0; color: var(--text-secondary); }
+ul, ol { margin: 8px 0 16px 20px; color: var(--text-secondary); }
+li { margin: 4px 0; }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+th, td { border: 1px solid var(--glass-border); padding: 10px; text-align: left; }
+th { background: rgba(139,92,246,0.15); color: #d4c8ff; }
+.meta { color: var(--text-secondary); font-size: 14px; margin-bottom: 24px; }
+.footer { margin-top: 50px; padding-top: 20px; border-top: 1px solid var(--glass-border); color: var(--text-secondary); font-size: 12px; text-align: center; }
+@media (max-width: 680px) { table { font-size: 12px; } th, td { padding: 6px; } }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">← 返回应用工坊</a>
+  <button onclick="downloadHelpPDF()">📥 下载 PDF 手册</button>
+</div>
+
+<div class="container">
+  <h1>审计工具箱 · 使用说明</h1>
+  <div class="meta">版本 2.1 · 更新日期：2026年8月 · 所有工具浏览器本地运行 · 数据不上传服务器</div>
+
+  <h2>一、简介</h2>
+  <p>审计工具箱是一套面向审计、财务人员的纯浏览器端工具集合。所有工具在本地运行，无需安装，数据不上传服务器。</p>
+  <ul>
+    <li><strong>在线工具</strong>：打开浏览器即可使用。</li>
+    <li><strong>桌面工具</strong>：下载解压后双击运行。</li>
+  </ul>
+
+  <h2>二、快速上手</h2>
+  <ol>
+    <li>在首页搜索框输入关键词，或按分类筛选工具。</li>
+    <li>在线工具点击卡片即可使用；桌面工具点击下载后解压运行。</li>
+    <li>按页面提示上传文件或输入参数，处理完成后下载结果。</li>
+  </ol>
+
+  <h2>三、工具清单</h2>
+  <table>
+    <tr><th>类型</th><th>工具</th><th>说明</th></tr>
+    <tr><td>在线</td><td>PDF 多功能工具箱</td><td>合并、拆分、提取文字、读取信息、加密、解密、逐页拆图片</td></tr>
+    <tr><td>在线</td><td>批量文件重命名</td><td>查找替换（含正则）、序号前缀、自定义模板，支持预览撤销</td></tr>
+    <tr><td>在线</td><td>CSV 数据清洗器</td><td>空值填充、去重、日期标准化、数字格式化、不可见字符清理</td></tr>
+    <tr><td>在线</td><td>图片批量压缩</td><td>压缩、格式转换、图片转 PDF、HEIC 转换</td></tr>
+    <tr><td>在线</td><td>ROU 租赁测算器</td><td>CAS 21 / IFRS 16 使用权资产与租赁负债摊销测算</td></tr>
+    <tr><td>在线</td><td>Word 报告上数与校验</td><td>提取 Word 报告数据，与底稿数值校验差异</td></tr>
+    <tr><td>在线</td><td>BKD 底稿滚存与上数</td><td>期初审定期末的滚存调整与数据迁移</td></tr>
+    <tr><td>在线</td><td>TB 智能上数器</td><td>科目余额表自动对应填入标准 TB 模板</td></tr>
+    <tr><td>在线</td><td>审计抽凭助手</td><td>货币单位抽样与随机抽样，支持单家与批量</td></tr>
+    <tr><td>在线</td><td>AI 聊天助手</td><td>内嵌 AI 聊天窗口，支持本地模型运行</td></tr>
+    <tr><td>桌面</td><td>DWW 常用工具合集</td><td>33 款绿色免安装办公效率工具，解压即用</td></tr>
+    <tr><td>桌面</td><td>ROU 租赁管理系统</td><td>租赁合同全生命周期管理，一键产出 Excel 底稿</td></tr>
+    <tr><td>桌面</td><td>Levvia 指引执行助手</td><td>指引、项目、产出、归档一站式管理</td></tr>
+    <tr><td>桌面</td><td>问题反馈收集器</td><td>内网需求/问题登记，自动汇总到本地或公盘</td></tr>
+  </table>
+
+  <h2>四、数据安全</h2>
+  <ul>
+    <li>所有文件处理在浏览器本地完成（WebAssembly / Canvas / File API）。</li>
+    <li>不上传服务器、不使用 Cookie、不嵌入第三方分析脚本。</li>
+    <li>密码锁仅使用 sessionStorage，关闭标签即清除。</li>
+  </ul>
+
+  <h2>五、常见问题</h2>
+  <p><strong>Q：PDF 预览不显示？</strong><br>A：刷新页面，确认浏览器支持 Web Worker。</p>
+  <p><strong>Q：AI 助手加载失败？</strong><br>A：首次需下载模型（约 600MB），推荐使用 Chrome 并支持 WebGPU。</p>
+  <p><strong>Q：桌面工具无法运行？</strong><br>A：Windows 可能提示 SmartScreen，点击「更多信息 → 仍要运行」。</p>
+  <p><strong>Q：如何反馈需求或问题？</strong><br>A：在首页「同事反馈」区登记，或访问 feedback.html。</p>
+
+  <div class="footer">
+    审计工具箱 · 版本 2.1 · 本地安全计算 · © 顾力菡 Gu Lihan
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+<script>
+function downloadHelpPDF(){
+  var element = document.querySelector('.container');
+  var opt = {
+    margin: [12,12,12,12],
+    filename: '审计工具箱使用说明_' + new Date().toISOString().slice(0,10) + '.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#05060a' },
+    jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' }
+  };
+  html2pdf().set(opt).from(element).save();
+}
+</script>
+</body>
+</html>
