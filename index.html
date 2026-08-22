@@ -1350,7 +1350,7 @@ textarea:focus-visible,
 
 /* Screens */
 .screens-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 30px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-top: 30px;
 }
 .screen-frame {
   background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: 18px;
@@ -1608,6 +1608,38 @@ body.matrix-mode .nav-brand .logo {
   .bento-tile::after { display: none !important; }
 }
 
+
+/* ===== PDF 多功能工具箱独立板块 ===== */
+.pdf-section {
+  background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(34,211,238,0.04));
+}
+.pdf-layout { display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; align-items: center; }
+.pdf-icon {
+  width: 64px; height: 64px; border-radius: 18px;
+  background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  display: grid; place-items: center; font-size: 30px;
+  box-shadow: 0 0 28px rgba(139,92,246,0.35);
+  margin-bottom: 18px;
+}
+.pdf-title { font-size: 28px; font-weight: 800; margin-bottom: 10px; }
+.pdf-desc { color: var(--text-secondary); margin-bottom: 20px; max-width: 520px; }
+.pdf-features { list-style: none; margin: 0 0 24px 0; padding: 0; }
+.pdf-features li { padding: 7px 0; color: var(--text-secondary); font-size: 14px; display: flex; align-items: center; gap: 8px; }
+.pdf-features li::before { content: "✓"; color: var(--green); font-weight: 800; }
+.pdf-mockup {
+  border-radius: 20px; padding: 20px;
+  background: rgba(12,14,28,0.85); border: 1px solid rgba(139,92,246,0.25);
+  box-shadow: 0 24px 70px rgba(0,0,0,0.5);
+}
+.pdf-mockup .row { height: 14px; border-radius: 4px; background: rgba(255,255,255,0.05); margin-bottom: 10px; }
+.pdf-mockup .row.short { width: 65%; }
+.pdf-mockup .row.accent { background: rgba(139,92,246,0.18); }
+.pdf-mockup .op-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin: 14px 0; }
+.pdf-mockup .op { padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); text-align: center; font-size: 11px; color: var(--text-secondary); }
+@media (max-width: 900px) {
+  .pdf-layout { grid-template-columns: 1fr; }
+}
+
 </style>
 <script>
 
@@ -1839,7 +1871,25 @@ body.matrix-mode .nav-brand .logo {
     <h2 class="section-title reveal">工具界面一览</h2>
     <p class="section-desc reveal">点击截图查看工具详情；把真实截图放入 screenshots/ 目录即可替换占位图</p>
     <div class="screens-grid reveal stagger-1">
-      <a class="screen-frame" href="index.html#tools-matrix" title="在首页打开 PDF 工具箱">
+      <a class="screen-frame" href="index.html#tools-matrix" title="查看审计工具箱总览">
+        <div class="screen-bar">
+          <span class="dot" style="background:var(--red)"></span>
+          <span class="dot" style="background:var(--orange)"></span>
+          <span class="dot" style="background:var(--green)"></span>
+        </div>
+        <div class="screen-body" style="position:relative;">
+          <img class="screen-img" src="screenshots/audit-toolbox.png" alt="审计工具箱合集" onerror="this.style.display='none'; this.parentNode.querySelector('.screen-placeholder').style.display='flex';">
+          <div class="screen-placeholder" style="display:none;">
+            <div class="screen-row accent"></div>
+            <div class="screen-row"></div>
+            <div class="screen-row short"></div>
+            <div class="screen-row"></div>
+          </div>
+          <span class="screen-missing-tip" style="display:none;">screenshots/audit-toolbox.png 待补充</span>
+          <span class="screen-badge" style="background:rgba(124,92,252,0.18);color:var(--accent-1);">审计工具箱合集</span>
+        </div>
+      </a>
+      <a class="screen-frame" href="index.html#tools-matrix" title="在首页打开 PDF 多功能工具箱">
         <div class="screen-bar">
           <span class="dot" style="background:var(--red)"></span>
           <span class="dot" style="background:var(--orange)"></span>
@@ -1893,6 +1943,42 @@ body.matrix-mode .nav-brand .logo {
           <span class="screen-badge" style="background:rgba(139,92,246,0.18);color:var(--accent-1);">TB 智能上数器</span>
         </div>
       </a>
+    </div>
+  </div>
+</section>
+
+
+
+<div class="section-divider"></div>
+
+<!-- PDF 多功能工具箱 -->
+<section class="section pdf-section" style="min-height:auto;padding:70px 5vw;">
+  <div class="container pdf-layout reveal">
+    <div>
+      <div class="pdf-icon">📄</div>
+      <h2 class="pdf-title">PDF 多功能工具箱</h2>
+      <p class="pdf-desc">合并、拆分、提取文字、读取信息、加密、解密、逐页拆图片，七个常用 PDF 操作一个页面搞定，文件只在本地浏览器处理。</p>
+      <ul class="pdf-features">
+        <li>多个 PDF 按顺序合并为一个</li>
+        <li>按页码范围拆分或逐页导出图片</li>
+        <li>一键提取全文、查看元数据</li>
+        <li>设置或移除 PDF 打开密码</li>
+      </ul>
+      <button class="btn btn-primary" onclick="openPDFPanel()">🛠️ 立即使用 PDF 工具箱</button>
+    </div>
+    <div class="pdf-mockup reveal stagger-1">
+      <div class="row"></div>
+      <div class="row short"></div>
+      <div class="op-grid">
+        <div class="op">🔗 合并</div>
+        <div class="op">✂️ 拆分</div>
+        <div class="op">📝 提字</div>
+        <div class="op">📄 信息</div>
+        <div class="op">🔒 加密</div>
+        <div class="op">🖼️ 转图</div>
+      </div>
+      <div class="row accent"></div>
+      <div class="row"></div>
     </div>
   </div>
 </section>
@@ -3756,6 +3842,21 @@ document.addEventListener('keydown', (e) => {
   }
   renderRecent();
 })();
+
+/* PDF 工具箱面板快速入口 */
+function openPDFPanel(){
+  var panel = document.getElementById('tool-panel');
+  if(!panel || typeof initPDFTool !== 'function'){ alert('PDF 工具加载失败，请刷新页面重试。'); return; }
+  document.getElementById('tool-title').textContent = '📄 PDF 多功能工具箱';
+  panel.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  if(typeof currentToolType !== 'undefined') currentToolType = 'pdf';
+  if(typeof toolState !== 'undefined') toolState = { currentOp: 'merge', files: [], resultBytes: null, resultName: '' };
+  if(typeof clearResult === 'function') clearResult();
+  var ctrl = document.getElementById('tool-controls');
+  if(ctrl) ctrl.innerHTML = '';
+  initPDFTool();
+}
 </script>
 
 </body>
