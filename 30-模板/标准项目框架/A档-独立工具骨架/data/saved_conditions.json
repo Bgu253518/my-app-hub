@@ -1,0 +1,5 @@
+{
+  "_说明": "用户条件记忆（出处：项目18 saved_conditions.json 实践）。界面层读写此文件，引擎不碰。last_folder 等字段由各界面自行维护。",
+  "last_folder": "",
+  "last_output_dir": ""
+}

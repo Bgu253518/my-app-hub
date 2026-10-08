@@ -1,0 +1,87 @@
+/* 多Excel合并汇总 — 界面样式（浅色专业风 · 项目5 基准）
+   视觉规范唯一入口是 :root 令牌表：以后调审美只改令牌，不改组件（规范 5.1） */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  /* ── 语义色：按钮按职能上色（蓝=选择 绿=执行 橙=危险），出处：项目5 ── */
+  --header-bg: #1a3a5c;
+  --blue: #4472C4;  --green: #70AD47;  --orange: #C55A11;
+  /* ── Excel 匹配三色：与 Excel 条件格式同色，同事零学习成本 ── */
+  --match-bg: #C6EFCE;  --diff-bg: #FFC7CE;  --partial-bg: #FFEB9C;
+  /* ── 中性色 ── */
+  --bg: #f0f2f5;  --card: #ffffff;  --border: #d9dde3;
+  --text: #212121;  --muted: #6b7280;
+  /* ── 品牌点缀：启动器门户的紫，仅用于聚焦光环/进度条（家族感，规范 5.4） ── */
+  --brand: #7c5cfc;
+  /* ── 间距/圆角/字号令牌 ── */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 16px;  --sp-4: 22px;
+  --radius-ctl: 6px;  --radius-card: 10px;
+  --fs-sm: 12px;  --fs-base: 13px;  --fs-title: 16px;  --fs-stat: 28px;
+}
+
+html, body { height: 100%; }
+body {
+  font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+  font-size: var(--fs-base); color: var(--text); background: var(--bg);
+  /* 卡片进入：渐显上移（微交互标准，规范 5.4） */
+  animation: fadeUp .3s ease;
+}
+@keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: none; } }
+
+.app-header {
+  background: var(--header-bg); color: #fff;
+  display: flex; align-items: baseline; gap: 14px;
+  padding: 10px 18px; position: sticky; top: 0; z-index: 10;
+}
+.header-title { font-size: var(--fs-title); font-weight: bold; }
+.header-sub { font-size: 11px; color: #cfd8e3; }
+
+.content { max-width: 860px; margin: var(--sp-4) auto; padding: 0 var(--sp-3); display: flex; flex-direction: column; gap: 14px; }
+
+/* ── 组件 .card ── */
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-card); padding: 18px 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.card-title { font-size: 14px; font-weight: bold; margin-bottom: 12px; color: var(--header-bg); }
+
+/* ── 组件 .row ── */
+.row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.row label { min-width: 76px; color: var(--muted); font-size: var(--fs-base); text-align: right; }
+.row input[type=text] {
+  flex: 1; min-width: 200px; padding: 7px 10px;
+  border: 1px solid var(--border); border-radius: var(--radius-ctl); font-size: var(--fs-base); font-family: inherit;
+}
+.row input[type=text]:focus { outline: none; border-color: var(--blue); }
+
+/* ── 组件 .btn（三职能色） ── */
+.btn {
+  padding: 8px 18px; border: 1px solid var(--border); background: #eceff1;
+  border-radius: var(--radius-ctl); cursor: pointer; font-size: var(--fs-base); font-family: inherit; color: var(--text);
+  transition: filter .15s, transform .15s;   /* 微交互：hover 上浮 1px */
+}
+.btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
+.btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+.btn-green { background: var(--green); border-color: var(--green); color: #fff; }
+.btn-lg { font-weight: bold; }
+
+/* ── 组件 .status（图标由母版 toolbox.js 自动缀，这里只管颜色） ── */
+.actions { display: flex; align-items: center; gap: 12px; }
+.status { margin-left: auto; color: var(--muted); font-size: var(--fs-sm); }
+
+/* ── 进度条（家族感：品牌紫渐变，规范 5.4） ── */
+.progress-wrap { height: 8px; background: #eceff1; border-radius: 4px; overflow: hidden; }
+.progress-bar {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--brand), #5ccafc);
+  border-radius: 4px; transition: width .25s ease;
+}
+.progress-text { margin-top: 8px; color: var(--muted); font-size: var(--fs-sm); }
+
+#resultInfo { font-size: var(--fs-base); line-height: 1.9; word-break: break-all; }
+
+/* 状态三色与母版 toolbox.css 一致（ok #2E7D32 / err #C62828 / busy #1565C0） */
+.status.ok   { color: #2E7D32; }
+.status.err  { color: #C62828; }
+.status.busy { color: #1565C0; }

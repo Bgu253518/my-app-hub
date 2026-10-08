@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>多Excel合并汇总</title>
+<!-- 加载顺序铁律：style.css（工具主题）→ toolbox.css（母版补强），不许反 -->
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="toolbox.css">
+</head>
+<body>
+<header class="app-header">
+  <span class="header-title">多Excel合并汇总</span>
+  <span class="header-sub">同结构表格一键合并 · 每行带来源标记 · 自动剔除合计行</span>
+  <!-- 品牌签名：工具名 · 菡（规范第六章）。标题栏不放图标，图标属于启动器/exe 场景 -->
+</header>
+
+<div class="content">
+  <!-- 空状态引导：未选文件时给明确动作，不放灰着的空表单（视觉规范 5.3） -->
+  <div class="card" id="pickCard">
+    <div class="card-title">📂 数据源</div>
+    <div class="row">
+      <label>源文件夹</label>
+      <input type="text" id="folderPath" placeholder="点击「浏览…」选择含 Excel 的文件夹">
+      <button class="btn" id="btnBrowse">浏览…</button>
+    </div>
+    <!-- label 必须含「输出目录」四字：母版据此自动加「📁 默认」按钮（toolbox.js 契约） -->
+    <div class="row">
+      <label>输出目录</label>
+      <input type="text" id="outDir" placeholder="留空 = 与源文件夹同目录">
+    </div>
+  </div>
+
+  <!-- 进度呈现：进度条 + 阶段文字，不许只闪状态栏（工程标准 3.5） -->
+  <div class="card" id="progressCard" style="display:none;">
+    <div class="progress-wrap">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="progress-text" id="progressText">就绪</div>
+  </div>
+
+  <div class="card actions">
+    <button class="btn btn-green btn-lg" id="btnRun" disabled>▶ 开始合并</button>
+    <button class="btn" id="btnOpen" style="display:none">📂 打开结果文件夹</button>
+    <!-- 状态提示：只写 class 和文字，✅❌⏳ 图标由母版自动缀（不许手写） -->
+    <span id="status" class="status">请选择源文件夹</span>
+  </div>
+
+  <div class="card" id="resultCard" style="display:none;">
+    <div class="card-title">✅ 结果</div>
+    <div id="resultInfo"></div>
+  </div>
+</div>
+
+<!-- script 顺序铁律：app.js（业务）→ guide.js（📖 指引按钮）→ toolbox.js（母版，永远最后） -->
+<script src="app.js"></script>
+<script src="guide.js"></script>
+<script src="toolbox.js"></script>
+</body>
+</html>

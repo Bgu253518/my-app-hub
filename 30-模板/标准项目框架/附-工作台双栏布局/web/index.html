@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>{工具名} · 工作台</title>
+<!-- 数据预览类工具的第二形态（规范 5.3）：左步骤面板 + 右结果 tab + 统计卡 + 日志盒
+     出处：项目5-银行流水完整性测试 工作台布局。与 B 档单栏骨架二选一，不要混用 -->
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="toolbox.css">
+</head>
+<body>
+<header class="app-header">
+  <span class="header-title">{工具名}</span>
+  <span class="header-sub">{一句话说清干什么 · 核心特性}</span>
+</header>
+
+<div class="main-layout">
+  <!-- ════ 左控制面板：编号步骤 1-2-3-4，同事按数字顺序操作 ════ -->
+  <aside class="control-panel">
+    <section class="panel-section">
+      <h3>1. 文件选择</h3>
+      <div class="file-row">
+        <label>源文件</label><span class="file-name" id="fileName">未选择</span>
+        <button class="btn btn-blue" id="btnSelect">选择</button>
+      </div>
+    </section>
+
+    <section class="panel-section" id="secCols" style="display:none;">
+      <h3>2. 确认列</h3>
+      <div class="col-row"><label>关键列</label><select id="selKey" class="sel"></select></div>
+      <div class="col-row"><label>金额列</label><select id="selAmount" class="sel"></select></div>
+    </section>
+
+    <section class="panel-section">
+      <h3>3. 执行</h3>
+      <div class="col-row">
+        <button class="btn btn-green btn-lg" id="btnRun" disabled>▶ 一键分析</button>
+        <button class="btn btn-orange" id="btnClear">🗑️ 清空</button>
+      </div>
+    </section>
+
+    <!-- 方向警示条：把业务规则写在界面上，出处：项目5 借贷方向提示 -->
+    <div class="direction-tip">⚠️ {业务规则一句话，如：银行借方↔序时账贷方}</div>
+
+    <section class="panel-section">
+      <h3>4. 统计</h3>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-value c-blue" id="stTotal">0</div><div class="stat-label">总笔数</div></div>
+        <div class="stat-card"><div class="stat-value c-green" id="stMatch">0</div><div class="stat-label">匹配</div></div>
+        <div class="stat-card"><div class="stat-value c-orange" id="stUnmatch">0</div><div class="stat-label">未匹配</div></div>
+        <div class="stat-card"><div class="stat-value" style="color:#E6A700" id="stRate">0%</div><div class="stat-label">匹配率</div></div>
+      </div>
+    </section>
+
+    <section class="panel-section">
+      <h3>日志</h3>
+      <div class="log-box" id="logBox"></div>
+    </section>
+  </aside>
+
+  <!-- ════ 右结果面板：tab 页签看明细 ════ -->
+  <main class="result-panel">
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="t1">{结果页 1}</button>
+      <button class="tab-btn" data-tab="t2">{结果页 2}</button>
+    </div>
+    <div class="table-wrap" id="pane-t1"><!-- 结果表格注入这里；匹配/差异行用 --match-bg/--diff-bg 底色 --></div>
+    <div class="table-wrap" id="pane-t2" style="display:none;"></div>
+  </main>
+</div>
+</body>
+</html>

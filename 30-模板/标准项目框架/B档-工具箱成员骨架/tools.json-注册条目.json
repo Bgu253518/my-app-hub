@@ -1,0 +1,13 @@
+{
+  "说明": "把本对象并入 启动器/tools.json 对应大类的 tools 数组，字段含义见下",
+  "注册条目": {
+    "name": "多Excel合并汇总",
+    "desc": "把文件夹内所有 Excel/CSV 一键合并成一个汇总表，每行带来源文件标记",
+    "icon": "🧩",
+    "py_path": "tools/项目N-新工具名/run.py",
+    "work_dir": "tools/项目N-新工具名",
+    "guide_pdf": "tools/项目N-新工具名/操作指引.pdf",
+    "admin": false
+  },
+  "字段速查": "name=显示名 | desc=一句话给同事看 | icon=emoji | py_path=相对工具箱根的启动脚本 | work_dir=工作目录 | guide_pdf=指引(可空) | admin=true 仅管理员可见"
+}

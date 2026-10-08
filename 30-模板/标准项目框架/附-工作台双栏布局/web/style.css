@@ -1,0 +1,90 @@
+/* {工具名} — 工作台双栏布局样式（规范 5.3 · 项目5 基准）
+   与 B 档单栏骨架共用同一套 :root 令牌（规范 5.1），只多四个工作台专属组件 */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --header-bg: #1a3a5c;
+  --blue: #4472C4;  --green: #70AD47;  --orange: #C55A11;
+  --match-bg: #C6EFCE;  --diff-bg: #FFC7CE;  --partial-bg: #FFEB9C;
+  --bg: #f0f2f5;  --card: #ffffff;  --border: #d9dde3;
+  --text: #212121;  --muted: #6b7280;
+}
+
+html, body { height: 100%; }
+body {
+  font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+  font-size: 13px; color: var(--text); background: var(--bg);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+
+.app-header { background: var(--header-bg); color: #fff; display: flex; align-items: baseline; gap: 14px; padding: 10px 18px; flex-shrink: 0; }
+.header-title { font-size: 16px; font-weight: bold; }
+.header-sub { font-size: 11px; color: #cfd8e3; }
+
+.main-layout { display: flex; flex: 1; min-height: 0; gap: 10px; padding: 10px; }
+
+/* ── 左控制面板 ── */
+.control-panel {
+  width: 420px; min-width: 380px; background: var(--card);
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px; overflow-y: auto; flex-shrink: 0;
+}
+.panel-section { margin-bottom: 12px; }
+.panel-section h3 {
+  font-size: 13px; color: var(--header-bg);
+  border-bottom: 2px solid var(--blue); padding-bottom: 4px; margin-bottom: 8px;
+}
+.file-row, .col-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.file-row label, .col-row label { width: 62px; text-align: right; color: var(--muted); flex-shrink: 0; }
+.file-name { flex: 1; color: #999; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-name.selected { color: #333; }
+.sel { flex: 1; padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; background: #fff; font-size: 13px; min-width: 0; }
+
+/* ── 按钮（三职能色 + hover 上浮微交互） ── */
+.btn {
+  border: none; border-radius: 6px; padding: 7px 14px; font-size: 13px;
+  cursor: pointer; color: #fff; font-family: inherit;
+  transition: filter .15s, transform .15s;
+}
+.btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+.btn-blue { background: var(--blue); }
+.btn-green { background: var(--green); }
+.btn-orange { background: var(--orange); }
+.btn-lg { font-weight: bold; }
+
+/* ── 方向警示条（业务规则上界面） ── */
+.direction-tip {
+  background: #FFF4E5; color: #663c00; font-size: 12px;
+  padding: 6px 8px; border-radius: 6px; margin: 4px 0 10px;
+}
+
+/* ── 统计卡（数字 28px + 等宽数字，仪表盘感） ── */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.stat-card { border: 1px solid var(--border); border-radius: 6px; text-align: center; padding: 6px 2px; background: #fafbfc; }
+.stat-value { font-size: 28px; font-weight: bold; font-variant-numeric: tabular-nums; }
+.c-blue { color: var(--blue); } .c-green { color: var(--green); } .c-orange { color: var(--orange); }
+.stat-label { font-size: 12px; color: var(--muted); }
+
+/* ── 深色日志盒（Console 风） ── */
+.log-box {
+  background: #0f1720; color: #d3e0ef; font-family: Consolas, monospace;
+  font-size: 11px; height: 110px; overflow-y: auto;
+  padding: 6px 8px; border-radius: 6px; line-height: 1.6;
+}
+
+/* ── 右结果面板 + tab ── */
+.result-panel { flex: 1; min-width: 0; background: var(--card); border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; }
+.tabs { display: flex; gap: 4px; padding: 8px 10px 0; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.tab-btn { border: 1px solid var(--border); border-bottom: none; background: #eef1f5; padding: 7px 18px; cursor: pointer; font-size: 13px; border-radius: 6px 6px 0 0; color: var(--muted); }
+.tab-btn.active { background: #fff; color: var(--header-bg); font-weight: bold; border-top: 2px solid var(--blue); }
+.table-wrap { flex: 1; overflow: auto; padding: 8px; }
+
+/* 结果表格斑马纹 + Excel 匹配三色行（业务语义直通配色） */
+table.result { border-collapse: collapse; width: 100%; font-size: 12px; }
+table.result th { background: #f5f7fa; border: 1px solid var(--border); padding: 5px 8px; position: sticky; top: 0; }
+table.result td { border: 1px solid var(--border); padding: 4px 8px; }
+table.result tr:nth-child(even) { background: #fafbfc; }
+tr.row-match td { background: var(--match-bg); }
+tr.row-diff td { background: var(--diff-bg); }
+tr.row-partial td { background: var(--partial-bg); }
