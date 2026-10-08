@@ -1,79 +1,76 @@
 # 🦞 我的工具库 - My App Hub
 
-个人自助工具合集，全部双击即用。
+个人工具库网站（GitHub Pages）：https://bgu253518.github.io/my-app-hub/
 
-## 📂 文件结构
+## 🗺️ 网站结构
+
+| 页面 | 作用 |
+|------|------|
+| `index.html` | 入口首页（卡片 + 分类分区 + 内联工具） |
+| `dww-tools.html` | DWW 工具合集下钻页（26 工具介绍 + **下载按钮**） |
+| `app-slide.html` | 工具板块交付演示页 |
+| `help.html` / `使用说明与操作指引/help.html` | 使用说明手册 |
+| `feedback.html` | 问题反馈收集页 |
+
+首页卡片数据来自 `apps.json`（顺序即展示顺序）：
+
+1. 🧰 DWW 常用工具合集（v1.1，Release 下载）
+2. 📊 ROU 租赁管理系统（Release 下载）
+3. 🧭 Levvia 指引执行助手（Release 下载）
+4. 🧠 TB 智能上数器（在线使用，wip）
+5. 💬 问题反馈收集器（Release 下载）
+
+## 📂 仓库目录
 
 ```
 my-app-hub/
-├── index.html                    ← 入口首页
-├── apps.json                     ← 工具配置清单
+├── index.html / apps.json        ← 首页与卡片数据
+├── dww-tools.html                ← DWW 合集下钻页（含下载按钮）
+├── app-slide.html / help.html / feedback.html
+├── <18 个工具文件夹>/             ← 每个文件夹一个独立工具页面
+│   （审计抽凭助手、TB自动上数器、ROU租赁测算器、智能待办、批量解压工具……）
+├── screenshots/                  ← 首页截图（被 index.html 引用）
+├── archive/                      ← 归档：散装脚本、AI 视频工作流残留、本地批处理
+├── tools/  scripts/  src/        ← 辅助脚本（Remotion 视频工程代码）
+├── public/  render_output/  workflow/  projects/  remotion-render/  ai-video-template/
 ├── CLAUDE.md / README.md         ← 文档
-│
-├── 使用说明与操作指引/             → help.html
-├── 审计抽凭助手/                   → audit-sampling.html
-├── TB自动上数器/                   → tb-autofill.html
-├── BKD底稿滚存与上数助手/          → bkd-rollforward.html
-├── Word报告上数与校验工作台/        → word-checkbench.html
-├── GDC审计任务工时管理系统/         → gdc-task-system.html
-├── 智能待办/                       → smart-todo.html
-├── 批量文件重命名工具/              → file-renamer.html
-├── CSV数据清洗器/                  → data-cleaner.html
-├── 图片批量压缩工具/               → image-toolbox.html
-├── 日志分析器/                     → log-analyzer.html
-├── ROU租赁测算器/                  → rou-calculator.html
-├── Excel多文件合并工具/            → excel-merger.html
-├── 文件批量提取工具/               → file-collector.html
-├── 智能筛选汇总工具/               → smart-filter.html
-├── 批量解压工具/                   → batch-unzip.html
-├── 五虾流水线/                     → 五虾流水线.html
-├── 信用评级查询/                   → rating_tool.html + rating_server.py
-├── Claude Code个人配置/            → claude-setup-tool.html
-│
-├── tools/                        ← 辅助 Python 脚本
-├── archive/                      ← 归档
-└── *.py / *.bat                  ← 其他脚本
+└── .nojekyll
 ```
 
-## 🛠️ 工具清单
+## 📦 Release 分发（大文件不进仓库）
+
+| Release | 内容 |
+|---------|------|
+| [DWW-toolkit-v1.1](https://github.com/Bgu253518/my-app-hub/releases/tag/DWW-toolkit-v1.1) | DWW 工具合集 v1.1（约 139MB，网页下载按钮指向这里） |
+| [extras-v1.0](https://github.com/Bgu253518/my-app-hub/releases/tag/extras-v1.0) | 工具箱外独立工具合集（11 项，仅 Release 提供下载） |
+| [ROU-lease-v1.0](https://github.com/Bgu253518/my-app-hub/releases/tag/ROU-lease-v1.0) | ROU 租赁管理系统独立包 |
+| [Levvia-guide-v1.0](https://github.com/Bgu253518/my-app-hub/releases/tag/Levvia-guide-v1.0) | Levvia 指引执行助手独立包 |
+| [Feedback-collector-v1.0](https://github.com/Bgu253518/my-app-hub/releases/tag/Feedback-collector-v1.0) | 问题反馈收集器独立包 |
+
+## 🛠️ 工具文件夹清单
 
 ### 审计类
-| 工具 | 文件夹 |
-|------|--------|
-| 审计抽凭助手 | `审计抽凭助手/` |
-| TB 自动上数器 | `TB自动上数器/` |
-| BKD 底稿滚存 | `BKD底稿滚存与上数助手/` |
-| Word 校验工作台 | `Word报告上数与校验工作台/` |
-| GDC 工时管理系统 | `GDC审计任务工时管理系统/` |
-| ROU 租赁测算 | `ROU租赁测算器/` |
+审计抽凭助手、TB 自动上数器、BKD 底稿滚存与上数助手、Word 报告上数与校验工作台、GDC 审计任务工时管理系统、ROU 租赁测算器
+
+### 数据 / Excel 类
+CSV 数据清洗器、Excel 多文件合并工具、智能筛选汇总工具
+
+### 文件管理类
+批量文件重命名工具、批量解压工具、文件批量提取工具、图片批量压缩工具
 
 ### AI / 创作类
-| 工具 | 文件夹 |
-|------|--------|
-| 五虾流水线（自媒体） | `五虾流水线/` |
-| 信用评级查询 | `信用评级查询/` |
-| Claude Code 配置 | `Claude Code个人配置/` |
-| CSV 数据清洗器 | `CSV数据清洗器/` |
+五虾流水线、信用评级查询（需本地启动服务）、Claude Code 个人配置
 
-### 实用工具
-| 工具 | 文件夹 |
-|------|--------|
-| 批量文件重命名 | `批量文件重命名工具/` |
-| 图片工具箱 | `图片批量压缩工具/` |
-| 智能待办 | `智能待办/` |
-| 日志分析器 | `日志分析器/` |
-| 使用帮助 | `使用说明与操作指引/` |
+### 其他
+智能待办、视频拆解工具（含 server.py）、使用说明与操作指引
 
-### 内联工具（在 index.html 中）
-- PDF 多功能工具箱
-- 应收账款账龄分析
-
-### ❌ 已删除
-- 审计项目工时任务协同系统（audit-hub.html）
+### 内联工具（在 index.html 中，无独立文件）
+PDF 多功能工具箱、应收账款账龄分析
 
 ## 🚀 信用评级查询工具启动
+
 ```
 cd 信用评级查询/
-双击 start_server.bat
+python rating_server.py
 浏览器打开 http://localhost:5000
 ```
