@@ -1,4 +1,4 @@
-﻿[
+[
   {
     "id": "tb-smart-autofill",
     "name": "TB 智能上数器",
@@ -67,7 +67,7 @@
       "业务工具：ROU 租赁管理系统、指引执行助手 等"
     ],
     "steps": [
-      "点击「⬇ 下载」下载 DWW-toolbox-v1.0.zip（约 124MB）",
+      "点击「⬇ 下载」下载 DWW-toolbox-v1.1.zip（约 139MB）",
       "解压到任意目录（建议英文路径，如 D:\\\\DWW-toolbox）",
       "双击「启动工具箱.bat」打开总界面，或直接双击对应工具 .exe",
       "内置便携 Python 3.13，无需安装任何环境"
@@ -76,7 +76,7 @@
       "仅支持 Windows 系统",
       "工具为自研脚本，非经过专业 QA 的商用软件，复杂边界情况可能需人工兜底",
       "部分工具依赖本地文件读写，被智能杀毒软件拦截时需放行",
-      "打包体积较大（约 124MB），下载与解压需一定时间"
+      "打包体积较大（约 139MB），下载与解压需一定时间"
     ],
     "checks": [
       "下载的 zip 校验是否完整（解压是否报错）",
@@ -96,11 +96,11 @@
     ],
     "category": "other",
     "status": "done",
-    "version": "v1.0",
+    "version": "v1.1",
     "icon": "🧰",
     "onlineTool": false,
-    "github": "https://github.com/Bgu253518/my-app-hub/releases/tag/DWW-toolkit-v1.0",
-    "download": "https://github.com/Bgu253518/my-app-hub/releases/download/DWW-toolkit-v1.0/DWW-toolbox-v1.0.zip"
+    "github": "https://github.com/Bgu253518/my-app-hub/releases/tag/DWW-toolkit-v1.1",
+    "download": "https://github.com/Bgu253518/my-app-hub/releases/download/DWW-toolkit-v1.1/DWW-toolbox-v1.1.zip"
   },
   {
     "id": "rou-lease",
