@@ -71,6 +71,10 @@ p.lead{font-size:clamp(15px,1.9vw,20px);color:var(--sub);max-width:820px;line-he
 .backlink{color:var(--cyan);font-size:14px;text-decoration:none;font-weight:600;display:inline-block}
 .cover .backlink{margin-top:14px}
 .backlink:hover{text-decoration:underline}
+.dlbtn{display:inline-flex;align-items:center;gap:10px;padding:14px 30px;border-radius:14px;font-size:16.5px;font-weight:800;color:#0b1020;
+  background:var(--grad);text-decoration:none;box-shadow:0 12px 34px rgba(139,92,246,.45);transition:.2s;letter-spacing:.5px}
+.dlbtn:hover{transform:translateY(-3px);filter:brightness(1.1);box-shadow:0 18px 44px rgba(34,211,238,.5)}
+.dlnote{margin-top:14px;color:var(--faint);font-size:12.5px;letter-spacing:.5px}
 
 /* ===== 工具地图 ===== */
 .maplist{display:flex;flex-direction:column;gap:14px;margin-top:8px}
@@ -203,6 +207,10 @@ p.lead{font-size:clamp(15px,1.9vw,20px);color:var(--sub);max-width:820px;line-he
     <div class="kicker" style="justify-content:center">DWW COMMON TOOLS</div>
     <h1 class="title">DWW 常用工具合集</h1>
     <p class="lead" style="margin:0 auto">33 款自研办公效率工具 · 绿色免安装 · 拷贝即用</p>
+    <div class="cta" style="margin-top:24px">
+      <a class="dlbtn" href="https://github.com/Bgu253518/my-app-hub/releases/download/DWW-toolkit-v1.1/DWW-toolbox-v1.1.zip" download>⬇ 下载工具合集 v1.1（约 139MB）</a>
+      <p class="dlnote">解压后双击「启动工具箱.bat」即可使用 · 内置便携 Python 运行时，无需安装环境</p>
+    </div>
     <div class="cta"><div class="statbar" id="stats" style="max-width:820px;margin:0 auto"></div></div>
     <p class="tip">按 ↓ 或 → 进入工具地图，点击任意工具查看其专属介绍页</p>
     <a class="backlink" href="index.html">← 返回应用工坊</a>
